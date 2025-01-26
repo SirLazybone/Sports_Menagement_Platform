@@ -24,6 +24,7 @@ public class Tournament {
     private UUID id;
 
     private String name;
+    @Enumerated(EnumType.STRING)
     private Sport sport;
     private String city;
     private int minMembers;

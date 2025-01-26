@@ -23,6 +23,7 @@ public class Team {
     private UUID id;
 
     private String name;
+    @Enumerated(EnumType.STRING)
     private Sport sport;
     private int countMembers;
     private int wins;
