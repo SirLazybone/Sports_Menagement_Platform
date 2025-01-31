@@ -38,6 +38,10 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public User saveNewUser(UserCreationDTO newUser) {
+        if (userRepository.findByTel(newUser.getTel()).isPresent()) {
+            throw new RuntimeException("Пользователь с таким телефоном уже существует");
+        }
+
         User user = userMapper.DTOToEntity(newUser);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRole(Role.USER);

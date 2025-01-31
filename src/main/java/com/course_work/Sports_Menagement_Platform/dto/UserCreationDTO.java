@@ -17,6 +17,7 @@ public class UserCreationDTO {
     @NotBlank
     private String surname;
     @NotBlank
-    private String password;
     private String tel;
+    @NotBlank
+    private String password;
 }
