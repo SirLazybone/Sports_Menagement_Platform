@@ -26,5 +26,10 @@ public class TestController {
         return "This is home";
     }
 
+    @GetMapping("/test")
+    public String test() {
+        return "test works!";
+    }
+
 
 }
