@@ -30,5 +30,6 @@ public class UserOrgCom {
 
     private boolean is_ref;
     private boolean invitation_accepted;
+    @Enumerated(EnumType.STRING)
     private Org orgRole;
 }
