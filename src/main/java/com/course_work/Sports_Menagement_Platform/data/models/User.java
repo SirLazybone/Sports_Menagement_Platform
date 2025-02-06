@@ -34,7 +34,7 @@ public class User implements UserDetails {
     @Column(name = "surname")
     private String surname;
 
-    @Column(name = "tel")
+    @Column(name = "tel", unique = true)
     private String tel;
 
     @Enumerated(EnumType.STRING)
@@ -60,7 +60,7 @@ public class User implements UserDetails {
     }
     @Override
     public String getUsername() {
-        return name;
+        return getTel();
     }
 
     @Override

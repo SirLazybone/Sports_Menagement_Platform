@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>User Profile</title>
+</head>
+<body>
+
+<h1>User Profile</h1>
+
+<div>
+    <h2>Personal Information</h2>
+    <table>
+        <tr>
+            <th>Name</th>
+            <td th:text="${user.name}">John Doe</td>
+        </tr>
+        <tr>
+            <th>Surname</th>
+            <td th:text="${user.surname}">john.doe@example.com</td>
+        </tr>
+        <tr>
+            <th>Phone</th>
+            <td th:text="${user.tel}">+1234567890</td>
+        </tr>
+    </table>
+</div>
+
+<div>
+    <a th:href="@{/user/edit}">Edit Profile</a>
+</div>
+
+<form th:action="@{/home}" method="get">
+    <button type="submit">Home</button>
+</form>
+
+</body>
+</html>

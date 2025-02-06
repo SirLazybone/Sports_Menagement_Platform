@@ -18,35 +18,6 @@ public class TestController {
         return "This is admin";
     }
 
-    @GetMapping("/user")
-    public String user() {
-        return "This is authenticated";
-    }
 
-    @GetMapping("/home")
-    public String home() {
-        return "This is home";
-    }
-
-    @GetMapping("/test")
-    public String test() {
-        return "test works!";
-    }
-
-    @GetMapping("path")
-    public String getMethodName(@RequestParam String param) {
-        return new String();
-    }
-
-
-    @GetMapping("/test2")
-    public String test2() {
-        return "test2";
-    }
-
-    @GetMapping("/test3")
-    public String test3() {
-        return "test3";
-    }
 
 }

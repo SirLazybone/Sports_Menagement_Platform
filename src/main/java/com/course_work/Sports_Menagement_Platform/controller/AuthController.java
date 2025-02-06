@@ -27,8 +27,9 @@ public class AuthController {
     }
 
     @PostMapping("/registration")
-    public String register(@Valid UserCreationDTO user, BindingResult result, Model model) {
-        if (result.hasErrors()) {
+    public String register(@Valid UserCreationDTO user, BindingResult bindingResult, Model model) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("user", new UserCreationDTO());
             return "registration";
         }
 
@@ -36,6 +37,7 @@ public class AuthController {
             userService.saveNewUser(user);
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
+            model.addAttribute("user", new UserCreationDTO());
             return "registration";
         }
         return "redirect:/auth/login";

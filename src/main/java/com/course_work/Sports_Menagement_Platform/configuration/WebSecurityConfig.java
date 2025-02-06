@@ -13,6 +13,10 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig {
+    private final CustomAuthenticationProvider customAuthenticationProvider;
+    public WebSecurityConfig(CustomAuthenticationProvider customAuthenticationProvider) {
+        this.customAuthenticationProvider = customAuthenticationProvider;
+    }
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
@@ -20,8 +24,9 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(
                         authorizeRequest -> authorizeRequest
                                 .requestMatchers("/admin").hasAuthority("ADMIN")
-                                .requestMatchers("/user").authenticated()
+                                .requestMatchers("/user/**").authenticated()
                                 .requestMatchers("/home").permitAll()
+                                .requestMatchers("/registration").permitAll()
                                 .anyRequest().permitAll()
                 )
                 .formLogin(form -> form
@@ -37,8 +42,6 @@ public class WebSecurityConfig {
                 .build();
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+
+
 }
