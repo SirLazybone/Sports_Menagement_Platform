@@ -12,12 +12,12 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserCreationDTO {
-    @NotBlank
+    @NotBlank(message = "Имя не может быть пустым")
     private String name;
-    @NotBlank
+    @NotBlank(message = "Фамилия не может быть пустой")
     private String surname;
-    @NotBlank
+    @NotBlank(message = "Телефон не может быть пустым")
     private String tel;
-    @NotBlank
+    @NotBlank(message = "Пароль не может быть пустым")
     private String password;
 }

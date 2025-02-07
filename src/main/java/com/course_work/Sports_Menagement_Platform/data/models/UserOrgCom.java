@@ -2,10 +2,7 @@ package com.course_work.Sports_Menagement_Platform.data.models;
 
 import com.course_work.Sports_Menagement_Platform.data.enums.Org;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.UUID;
 
@@ -15,6 +12,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class UserOrgCom {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

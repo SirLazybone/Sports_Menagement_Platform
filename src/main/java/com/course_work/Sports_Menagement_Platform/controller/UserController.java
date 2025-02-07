@@ -3,6 +3,7 @@ package com.course_work.Sports_Menagement_Platform.controller;
 import com.course_work.Sports_Menagement_Platform.data.models.User;
 import com.course_work.Sports_Menagement_Platform.dto.UserDTO;
 import com.course_work.Sports_Menagement_Platform.service.impl.UserServiceImpl;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.UserService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,9 +21,9 @@ import java.security.Principal;
 @Controller
 @RequestMapping("/user")
 public class UserController {
-    private final UserServiceImpl userService;
+    private final UserService userService;
 
-    public UserController(UserServiceImpl userService) {
+    public UserController(UserService userService) {
         this.userService = userService;
     }
 
