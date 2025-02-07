@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Пользователи в оргкомитете</title>
+</head>
+<body>
+<h1>Пользователи оргкомитета</h1>
+
+<table>
+    <thead>
+    <tr>
+        <th>Имя</th>
+        <th>Фамилия</th>
+        <th>Роль</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="user : ${members}">
+        <td th:text="${user.name}"></td>
+        <td th:text="${user.surname}"></td>
+        <td th:text="${user.orgRole}"></td>
+    </tr>
+    </tbody>
+</table>
+<div th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">
+    <form th:action="@{/org_com/create_invitation/{orgComId}(orgComId=${orgComId})}" method="get">
+        <button type="submit">Invite</button>
+    </form>
+</div>
+
+<div th:if="${error}">
+    <p th:text="${error}"></p>
+</div>
+</body>
+</html>

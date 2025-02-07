@@ -18,19 +18,19 @@ public class AuthController {
     }
     @GetMapping("/auth/login")
     public String login() {
-        return "login";
+        return "auth/login";
     }
 
     @GetMapping("/registration")
     public String registerForm(Model model) {
         model.addAttribute("user", new UserCreationDTO());
-        return "registration";
+        return "auth/registration";
     }
 
     @PostMapping("/registration")
     public String register(@Valid @ModelAttribute("user") UserCreationDTO user, BindingResult bindingResult, Model model) {
         if (bindingResult.hasErrors()) {
-            return "registration";
+            return "auth/registration";
         }
 
         try {
@@ -38,7 +38,7 @@ public class AuthController {
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
 //            model.addAttribute("user", new UserCreationDTO());
-            return "registration";
+            return "auth/registration";
         }
         return "redirect:/auth/login";
     }

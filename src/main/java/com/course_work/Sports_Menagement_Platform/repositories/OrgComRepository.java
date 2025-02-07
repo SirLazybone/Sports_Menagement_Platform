@@ -9,4 +9,6 @@ import java.util.UUID;
 @Repository
 public interface OrgComRepository extends JpaRepository<OrgCom, UUID> {
     boolean existsByName(String name);
+    OrgCom findByName(String name);
+
 }

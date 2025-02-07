@@ -36,7 +36,7 @@ public class UserController {
             model.addAttribute("error", e.getMessage());
             return "redirect:/home";
         }
-        return "profile";
+        return "user/profile";
     }
 
     @GetMapping("/edit")
@@ -46,14 +46,14 @@ public class UserController {
         UserDTO userDTO = UserDTO.builder().tel(user.getTel()).name(user.getName()).surname(user.getSurname()).build();
 
         model.addAttribute("user", userDTO);
-        return "edit_profile";
+        return "user/edit_profile";
     }
 
     @PostMapping("/edit")
     public String editProfile(@Valid UserDTO userDTO, BindingResult bindingResult, Model model, Principal principal) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("user", userDTO);
-            return "edit_profile";
+            return "user/edit_profile";
         }
         User user = userService.findByTel(principal.getName());
 
