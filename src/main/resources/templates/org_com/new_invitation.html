@@ -11,6 +11,23 @@
         <input type="text" th:field="*{tel}" id="tel" />
         <span th:if="${#fields.hasErrors('tel')}" th:errors="*{tel}"></span>
     </div>
+
+    <div>
+        <label for="orgRole">Роль:</label>
+        <select th:field="*{orgRole}" id="orgRole">
+            <option value="" disabled selected>Выберите роль</option>
+            <option th:each="role : ${T(com.course_work.Sports_Menagement_Platform.data.enums.Org).values()}"
+                    th:value="${role}"
+                    th:text="${role}"></option>
+        </select>
+        <span th:if="${#fields.hasErrors('orgRole')}" th:errors="*{orgRole}"></span>
+    </div>
+
+    <div>
+        <label for="isReferee">
+            <input type="checkbox" th:field="*{isRef}" id="isReferee" /> Судья
+        </label>
+    </div>
     <div>
         <button type="submit">Отправить</button>
     </div>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit</title>
+</head>
+<body>
+<form th:action="@{/org_com/edit/{orgComId}(orgComId=${orgComId})}" th:object="${orgCom}" method="post">
+    <div>
+        <label for="name">Имя:</label>
+        <input type="text" th:field="*{name}" id="name" />
+        <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+    </div>
+
+    <div>
+        <button type="submit">Изменить</button>
+    </div>
+
+    <div th:if="${error}">
+        <p style="color: red;" th:text="${error}"></p>
+    </div>
+
+</form>
+
+</body>
+</html>
