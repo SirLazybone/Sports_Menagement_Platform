@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Show All Orgcoms</title>
+</head>
+<body>
+<div th:if="${error}">
+    <p th:text="${error}"></p>
+</div>
+
+<h1>Список оргкомитетов</h1>
+
+<ul>
+    <li th:each="orgcom : ${orgcoms}">
+        <a th:href="@{/org_com/view/{id}(id=${orgcom.id})}" th:text="${orgcom.name}"></a>
+    </li>
+</ul>
+
+</body>
+</html>

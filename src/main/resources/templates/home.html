@@ -16,5 +16,11 @@
 <div th:if="${error}">
     <p style="color: red;" th:text="${error}"></p>
 </div>
+<form th:action="@{/org_com/new}" method="get">
+    <button type="submit">Сreate new Org Com</button>
+</form>
+<form th:action="@{/org_com/show_all}" method="get">
+    <button type="submit">Show my organizations</button>
+</form>
 </body>
 </html>

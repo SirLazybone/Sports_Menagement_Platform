@@ -6,8 +6,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class FirstUserParam {
-    private final String tel = "+7(915)999-99-99";
-    private final String password = "admin";
-    private final String name = "user";
-    private final String surname = "user";
+    private final String tel = "qwe";
+    private final String password = "qwe";
+    private final String name = "qwe";
+    private final String surname = "qwe";
 }

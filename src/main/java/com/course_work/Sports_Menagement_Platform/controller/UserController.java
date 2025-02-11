@@ -3,6 +3,7 @@ package com.course_work.Sports_Menagement_Platform.controller;
 import com.course_work.Sports_Menagement_Platform.data.models.User;
 import com.course_work.Sports_Menagement_Platform.dto.UserDTO;
 import com.course_work.Sports_Menagement_Platform.service.impl.UserServiceImpl;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.UserService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,9 +21,9 @@ import java.security.Principal;
 @Controller
 @RequestMapping("/user")
 public class UserController {
-    private final UserServiceImpl userService;
+    private final UserService userService;
 
-    public UserController(UserServiceImpl userService) {
+    public UserController(UserService userService) {
         this.userService = userService;
     }
 
@@ -35,7 +36,7 @@ public class UserController {
             model.addAttribute("error", e.getMessage());
             return "redirect:/home";
         }
-        return "profile";
+        return "user/profile";
     }
 
     @GetMapping("/edit")
@@ -45,14 +46,14 @@ public class UserController {
         UserDTO userDTO = UserDTO.builder().tel(user.getTel()).name(user.getName()).surname(user.getSurname()).build();
 
         model.addAttribute("user", userDTO);
-        return "edit_profile";
+        return "user/edit_profile";
     }
 
     @PostMapping("/edit")
     public String editProfile(@Valid UserDTO userDTO, BindingResult bindingResult, Model model, Principal principal) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("user", userDTO);
-            return "edit_profile";
+            return "user/edit_profile";
         }
         User user = userService.findByTel(principal.getName());
 
