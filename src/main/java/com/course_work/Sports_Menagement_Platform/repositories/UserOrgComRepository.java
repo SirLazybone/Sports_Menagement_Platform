@@ -17,14 +17,16 @@ import java.util.UUID;
 public interface UserOrgComRepository extends JpaRepository<UserOrgCom, UUID> {
     @Query("SELECT uoc.orgCom " +
             "FROM UserOrgCom uoc " +
-            "WHERE uoc.user.id = :userId")
-    List<OrgCom> findOrgComsByUserId(@Param("userId") UUID userId);
+            "WHERE uoc.user.id = :userId " +
+            "AND uoc.invitationStatus = com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus.ACCEPTED")
+    List<OrgCom> findActiveOrgComsByUserId(@Param("userId") UUID userId);
     List<User> findAllByOrgCom(OrgCom orgCom);
-    @Query("SELECT new com.course_work.Sports_Menagement_Platform.dto.UserOrgComDTO(u.name, u.surname, uoc.orgRole) " +
+    @Query("SELECT new com.course_work.Sports_Menagement_Platform.dto.UserOrgComDTO(u.name, u.surname, u.tel, uoc.orgRole, uoc.invitationStatus) " +
             "FROM UserOrgCom uoc " +
             "JOIN uoc.user u " +
             "WHERE uoc.orgCom.id = :orgComId")
     List<UserOrgComDTO> findUsersByOrgComId(@Param("orgComId") UUID orgComId);
 
     Optional<UserOrgCom> findByUser_IdAndOrgCom_Id(UUID userId, UUID orgComId);
+    List<UserOrgCom> findByUser(User user);
 }

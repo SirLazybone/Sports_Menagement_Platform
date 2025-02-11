@@ -4,9 +4,8 @@ import com.course_work.Sports_Menagement_Platform.data.enums.Org;
 import com.course_work.Sports_Menagement_Platform.data.models.Invitation;
 import com.course_work.Sports_Menagement_Platform.data.models.OrgCom;
 import com.course_work.Sports_Menagement_Platform.data.models.User;
-import com.course_work.Sports_Menagement_Platform.dto.InvitationDTO;
-import com.course_work.Sports_Menagement_Platform.dto.OrgComDTO;
-import com.course_work.Sports_Menagement_Platform.dto.UserOrgComDTO;
+import com.course_work.Sports_Menagement_Platform.data.models.UserOrgCom;
+import com.course_work.Sports_Menagement_Platform.dto.*;
 import com.course_work.Sports_Menagement_Platform.service.impl.OrgComServiceImpl;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.InvitationService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.OrgComService;
@@ -30,9 +29,11 @@ import java.util.UUID;
 public class OrgComController {
     private final OrgComService orgComService;
     private final InvitationService invitationService;
-    public OrgComController(OrgComService orgComService, InvitationService invitationService) {
+    private final UserService userService;
+    public OrgComController(OrgComService orgComService, InvitationService invitationService, UserService userService) {
         this.orgComService = orgComService;
         this.invitationService = invitationService;
+        this.userService = userService;
     }
 
     @GetMapping("/new")
@@ -57,7 +58,10 @@ public class OrgComController {
 
     @GetMapping("/invitations")
     public String showInvitations(Model model, @AuthenticationPrincipal User user) {
-        List<Invitation> list = invitationService.getAllInvitations(user);
+        List<UserOrgCom> list = orgComService.getAllInvitationsPending(user);
+        if (list == null || list.isEmpty()) {
+            model.addAttribute("error", "There are no invitations yet");
+        }
         model.addAttribute("invitations", list);
         return "org_com/invitations";
     }
@@ -70,13 +74,13 @@ public class OrgComController {
     }
 
     @PostMapping("/send_invitation/{orgComId}")
-    public String sendInvitation(@PathVariable @ModelAttribute("orgComId") UUID orgComId, @Valid @ModelAttribute("invitation") InvitationDTO invitation, BindingResult bindingResult, Model model, @AuthenticationPrincipal User user) {
+    public String sendInvitation(@PathVariable @ModelAttribute("orgComId") UUID orgComId, @Valid @ModelAttribute("invitation") InvitationDTO invitation, BindingResult bindingResult, Model model) {
         if (bindingResult.hasErrors()) {
             return "org_com/new_invitation";
         }
         try {
             OrgCom orgCom = orgComService.getById(orgComId);
-            invitationService.sendInvitation(invitation.getTel(), orgCom.getName(), user);
+            orgComService.createInvitation(orgCom, userService.findByTel(invitation.getTel()), invitation.getOrgRole(), invitation.getIsRef());
         } catch (UsernameNotFoundException e) {
             model.addAttribute("error", e.getMessage());
             return "org_com/new_invitation";
@@ -84,15 +88,13 @@ public class OrgComController {
             model.addAttribute("error", "smth really wrong");
             return "org_com/new_invitation";
         }
-        return "redirect:/org_com/view/{orgComId}";
+        return "redirect:/org_com/view/" + orgComId.toString();
     }
 
     @PostMapping("/invitation/{id}/accept")
-    public String acceptInvitation(@PathVariable UUID id, Model model) {
+    public String acceptInvitation(@PathVariable("id") UUID userOrgComId, Model model) {
         try {
-            Invitation invitation = invitationService.getInvitationById(id);
-            orgComService.addUserToOrgCom(invitation);
-            invitationService.deleteInvitation(id);
+            orgComService.acceptInvitation(userOrgComId);
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
             return "redirect:/org_com/invitations";
@@ -102,14 +104,18 @@ public class OrgComController {
     }
 
     @PostMapping("/invitation/{id}/decline")
-    public String declineInvitation(@PathVariable UUID id) {
-        invitationService.deleteInvitation(id);
+    public String declineInvitation(@PathVariable("id") UUID userOrgComId, Model model) {
+        try {
+            orgComService.declineInvitation(userOrgComId);
+        } catch (RuntimeException e) {
+            model.addAttribute("error", e.getMessage());
+        }
         return "org_com/invitations";
     }
 
     @GetMapping("/show_all")
     public String showAllOrgComs(Model model, @AuthenticationPrincipal User user) {
-        List<OrgCom> list = orgComService.getAllByUser(user);
+        List<OrgCom> list = orgComService.getAllActiveOrgComByUser(user);
 
         if (list == null || list.isEmpty()) {
             model.addAttribute("error", "There are no any orgcoms yet");
@@ -131,6 +137,65 @@ public class OrgComController {
         model.addAttribute("members", list);
         model.addAttribute("role", orgRole);
         model.addAttribute("orgComId", id);
+        model.addAttribute("orgComName", orgComService.getById(id).getName());
+        model.addAttribute("orgRoles", new OrgRoleDTO());
+        model.addAttribute("invitationStatuses", new InvitationStatusDTO());
         return "org_com/view";
+    }
+
+    @PostMapping("/left/{id}")
+    public String leftOrgCom(@PathVariable("id") UUID orgComId, Model model, @AuthenticationPrincipal User user) {
+        try {
+            orgComService.leftOrgCom(orgComId, user); // TODO: Проверить, не явлется ли пользователь единственным шефом
+        } catch (RuntimeException e) {
+            model.addAttribute("error", e.getMessage());
+        }
+        return "redirect:/org_com/show_all";
+    }
+
+    @PostMapping("/kick/{orgComId}/{userTel}")
+    public String kickUser(@PathVariable("orgComId") UUID orgComId, @PathVariable("userTel") String tel, Model model) {
+        try {
+            User user = userService.findByTel(tel);
+            orgComService.kickUser(orgComId, user.getId());
+        } catch (RuntimeException e) {
+            model.addAttribute("error", e.getMessage());
+        }
+
+        return "redirect:/org_com/view/" + orgComId.toString();
+    }
+
+    @PostMapping("/cancel/{orgComId}/{userTel}")
+    public String cancelInvitation(@PathVariable("orgComId") UUID orgComId, @PathVariable("userTel") String tel, Model model) {
+        try {
+            User user = userService.findByTel(tel);
+            orgComService.cancelInvitation(orgComId, user.getId());
+        } catch (RuntimeException e) {
+            model.addAttribute("error", e.getMessage());
+        }
+
+        return "redirect:/org_com/view/" + orgComId.toString();
+    }
+
+    @GetMapping("/edit/{orgComId}")
+    public String editOrgCom(@PathVariable UUID orgComId, Model model) {
+        model.addAttribute("orgCom", new OrgComDTO());
+        model.addAttribute("orgComId", orgComId);
+        return "org_com/edit";
+    }
+
+    @PostMapping("/edit/{orgComId}")
+    public String editOrgCom(@PathVariable @ModelAttribute("orgComId") UUID orgComId, @Valid @ModelAttribute("orgCom") OrgComDTO orgComDTO, BindingResult bindingResult, Model model) {
+        if (bindingResult.hasErrors()) {
+            return "org_com/edit/" + orgComId.toString();
+        }
+
+        try {
+            orgComService.editOrgCom(orgComId, orgComDTO);
+        } catch (RuntimeException e) {
+            model.addAttribute("error", e.getMessage());
+        }
+
+        return "redirect:/org_com/view/" + orgComId.toString();
     }
 }
