@@ -14,6 +14,7 @@ import com.course_work.Sports_Menagement_Platform.repositories.UserOrgComReposit
 import com.course_work.Sports_Menagement_Platform.service.interfaces.OrgComService;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -35,9 +36,12 @@ public class OrgComServiceImpl implements OrgComService {
             throw new RuntimeException("Организация с именем" + name + " уже существует");
         }
         OrgCom orgCom = OrgCom.builder().name(name).build();
-        orgComRepository.save(orgCom);
-
         UserOrgCom userOrgCom = UserOrgCom.builder().user(user).orgRole(Org.CHIEF).orgCom(orgCom).invitationStatus(InvitationStatus.ACCEPTED).build();
+
+        orgCom.getUserOrgComList().add(userOrgCom);
+        user.getUserOrgComList().add(userOrgCom);
+
+        orgComRepository.save(orgCom);
         userOrgComRepository.save(userOrgCom);
         return orgCom;
     }
@@ -65,8 +69,11 @@ public class OrgComServiceImpl implements OrgComService {
     }
 
     @Override
+    @Transactional
     public List<OrgCom> getAllActiveOrgComByUser(User user) {
-        return userOrgComRepository.findActiveOrgComsByUserId(user.getId());
+        List<UserOrgCom> userOrgCom = user.getUserOrgComList();
+        return userOrgCom.stream().filter(x -> x.getInvitationStatus() == InvitationStatus.ACCEPTED).map(UserOrgCom::getOrgCom).toList();
+//        return userOrgComRepository.findActiveOrgComsByUserId(user.getId());
     }
 
     @Override
@@ -111,6 +118,8 @@ public class OrgComServiceImpl implements OrgComService {
             return;
         }
         UserOrgCom userOrgCom = UserOrgCom.builder().orgRole(orgRole).user(user).orgCom(orgCom).invitationStatus(InvitationStatus.PENDING).build();
+        orgCom.getUserOrgComList().add(userOrgCom);
+        user.getUserOrgComList().add(userOrgCom);
         userOrgComRepository.save(userOrgCom);
     }
 

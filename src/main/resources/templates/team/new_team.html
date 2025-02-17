@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>New Team</title>
+</head>
+<body>
+<form th:action="@{/team/create}" th:object="${team}" method="post">
+  <div>
+    <label for="name">Имя:</label>
+    <input type="text" th:field="*{name}" id="name" />
+    <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+  </div>
+
+  <div>
+    <label for="sport">Спорт:</label>
+    <select th:field="*{sport}" id="sport">
+      <option value="" disabled selected>Выберите спорт</option>
+      <option th:each="sport : ${T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).values()}"
+              th:value="${sport}"
+              th:text="${sport}"></option>
+    </select>
+    <span th:if="${#fields.hasErrors('sport')}" th:errors="*{sport}"></span>
+  </div>
+
+  <div>
+    <label for="isCap">
+      <input type="checkbox" th:field="*{isCap}" id="isCap" /> Капитан
+    </label>
+  </div>
+
+  <div>
+    <button type="submit">Создать</button>
+  </div>
+
+  <div th:if="${error}">
+    <p style="color: red;" th:text="${error}"></p>
+  </div>
+
+</form>
+
+</body>
+</html>

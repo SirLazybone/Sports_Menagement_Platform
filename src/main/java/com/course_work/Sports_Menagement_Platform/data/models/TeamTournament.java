@@ -1,31 +1,29 @@
 package com.course_work.Sports_Menagement_Platform.data.models;
 
-import com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus;
+import com.course_work.Sports_Menagement_Platform.data.enums.AplicationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.UUID;
 
 @Entity
-@Table(name = "user_team")
+@Table(name = "team_tournament")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserTeam {
+public class TeamTournament {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
+    private AplicationStatus aplicationStatus;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
-
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_id")
     private Team team;
 
-    private boolean isCap;
-    private InvitationStatus invitationStatus;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tournament_id")
+    private Tournament tournament;
 }

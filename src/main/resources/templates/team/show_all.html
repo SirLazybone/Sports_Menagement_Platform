@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Show All Teams</title>
+</head>
+<body>
+<div th:if="${error}">
+  <p th:text="${error}"></p>
+</div>
+
+<h1 th:unless="${error}">Список Команд</h1>
+
+<ul th:unless="${error}">
+  <li th:each="team : ${teams}">
+    <a th:href="@{/team/view/{id}(id=${team.id})}" th:text="${team.name}"></a>
+  </li>
+</ul>
+
+</body>
+</html>

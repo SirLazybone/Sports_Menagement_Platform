@@ -68,13 +68,13 @@ public class OrgComController {
 
     @GetMapping("/create_invitation/{orgComId}")
     public String createInvitation(@PathVariable UUID orgComId, Model model) {
-        model.addAttribute("invitation", new InvitationDTO());
+        model.addAttribute("invitation", new InvitationOrgComDTO());
         model.addAttribute("orgComId", orgComId);
         return "org_com/new_invitation";
     }
 
     @PostMapping("/send_invitation/{orgComId}")
-    public String sendInvitation(@PathVariable @ModelAttribute("orgComId") UUID orgComId, @Valid @ModelAttribute("invitation") InvitationDTO invitation, BindingResult bindingResult, Model model) {
+    public String sendInvitation(@PathVariable @ModelAttribute("orgComId") UUID orgComId, @Valid @ModelAttribute("invitation") InvitationOrgComDTO invitation, BindingResult bindingResult, Model model) {
         if (bindingResult.hasErrors()) {
             return "org_com/new_invitation";
         }
@@ -187,13 +187,14 @@ public class OrgComController {
     @PostMapping("/edit/{orgComId}")
     public String editOrgCom(@PathVariable @ModelAttribute("orgComId") UUID orgComId, @Valid @ModelAttribute("orgCom") OrgComDTO orgComDTO, BindingResult bindingResult, Model model) {
         if (bindingResult.hasErrors()) {
-            return "org_com/edit/" + orgComId.toString();
+            return "org_com/edit";
         }
 
         try {
             orgComService.editOrgCom(orgComId, orgComDTO);
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
+            return "org_com/edit";
         }
 
         return "redirect:/org_com/view/" + orgComId.toString();

@@ -41,11 +41,9 @@ public class Tournament {
     @JoinColumn(name = "orgcom_id", referencedColumnName = "id")
     private OrgCom orgCom;
 
-    @ManyToMany
-    @JoinTable(name = "tournament_team",
-            joinColumns = @JoinColumn(name = "tournament_id"),
-            inverseJoinColumns = @JoinColumn(name = "team_id"))
-    private List<Team> teamList = new ArrayList<>();
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tournament")
+    private List<TeamTournament> teamTournamentList = new ArrayList<>();
 
     @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Stage> stages = new ArrayList<>();
