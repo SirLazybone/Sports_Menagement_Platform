@@ -2,18 +2,17 @@ package com.course_work.Sports_Menagement_Platform.service.impl;
 
 import com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus;
 import com.course_work.Sports_Menagement_Platform.data.enums.Org;
-import com.course_work.Sports_Menagement_Platform.data.models.Invitation;
-import com.course_work.Sports_Menagement_Platform.data.models.OrgCom;
-import com.course_work.Sports_Menagement_Platform.data.models.User;
-import com.course_work.Sports_Menagement_Platform.data.models.UserOrgCom;
+import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.OrgComDTO;
 import com.course_work.Sports_Menagement_Platform.dto.UserOrgComDTO;
 import com.course_work.Sports_Menagement_Platform.mapper.OrgComMapper;
 import com.course_work.Sports_Menagement_Platform.repositories.OrgComRepository;
 import com.course_work.Sports_Menagement_Platform.repositories.UserOrgComRepository;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.OrgComService;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -35,9 +34,12 @@ public class OrgComServiceImpl implements OrgComService {
             throw new RuntimeException("Организация с именем" + name + " уже существует");
         }
         OrgCom orgCom = OrgCom.builder().name(name).build();
-        orgComRepository.save(orgCom);
-
         UserOrgCom userOrgCom = UserOrgCom.builder().user(user).orgRole(Org.CHIEF).orgCom(orgCom).invitationStatus(InvitationStatus.ACCEPTED).build();
+
+//        orgCom.getUserOrgComList().add(userOrgCom);
+//        user.getUserOrgComList().add(userOrgCom);
+
+        orgComRepository.save(orgCom);
         userOrgComRepository.save(userOrgCom);
         return orgCom;
     }
@@ -65,6 +67,7 @@ public class OrgComServiceImpl implements OrgComService {
     }
 
     @Override
+    @Transactional
     public List<OrgCom> getAllActiveOrgComByUser(User user) {
         return userOrgComRepository.findActiveOrgComsByUserId(user.getId());
     }
@@ -111,6 +114,8 @@ public class OrgComServiceImpl implements OrgComService {
             return;
         }
         UserOrgCom userOrgCom = UserOrgCom.builder().orgRole(orgRole).user(user).orgCom(orgCom).invitationStatus(InvitationStatus.PENDING).build();
+        orgCom.getUserOrgComList().add(userOrgCom);
+        user.getUserOrgComList().add(userOrgCom);
         userOrgComRepository.save(userOrgCom);
     }
 
@@ -158,6 +163,19 @@ public class OrgComServiceImpl implements OrgComService {
         OrgCom edited = orgComRepository.findById(orgComId).orElseThrow(() -> new RuntimeException("No such OrgCom"));
         edited.setName(orgComDTO.getName());
         orgComRepository.save(edited);
+    }
+
+    @Override
+    public UserOrgCom getUserOrgComChief(String orgComName, UUID userId) {
+        OrgCom orgCom = orgComRepository.findByName(orgComName).orElseThrow(() -> new RuntimeException("Такой организации не сущетсвует"));
+        UserOrgCom userOrgCom = userOrgComRepository.findByUser_IdAndOrgCom_Id(userId, orgCom.getId()).orElseThrow(() -> new RuntimeException("Пользователь не относится к данной организации"));
+        if (userOrgCom.getInvitationStatus() != InvitationStatus.ACCEPTED) {
+            throw new RuntimeException("Не активный пользователь не может создать турнир от имени организации");
+        }
+        if (userOrgCom.getOrgRole() != Org.CHIEF) {
+            throw new RuntimeException("Не Старший организатор не может создать турнир");
+        }
+        return userOrgCom;
     }
 
 }

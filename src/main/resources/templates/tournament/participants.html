@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Участники</title>
+</head>
+<body>
+<h1>Участники турнира</h1>
+
+<div th:if="${error}">
+    <p style="color: red;" th:text="${error}"></p>
+</div>
+
+<table>
+    <thead>
+    <tr>
+        <th>Команда</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="participant : ${participants}">
+        <td>
+            <a th:href="@{/team/view/{teamId}(teamId=${participant.teamId})}"
+               th:text="${participant.teamName}">Название команды</a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<br>
+<form th:action="@{/tournament/show_all}" method="get">
+    <button type="submit">Вернуться к турнирам</button>
+</form>
+</body>
+</html>

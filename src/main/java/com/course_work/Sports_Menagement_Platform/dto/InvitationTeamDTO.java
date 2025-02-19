@@ -1,6 +1,5 @@
 package com.course_work.Sports_Menagement_Platform.dto;
 
-import com.course_work.Sports_Menagement_Platform.data.enums.Org;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,9 +10,8 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class InvitationDTO {
+public class InvitationTeamDTO {
     @NotBlank(message = "Телефон не может быть пустым")
     String tel;
-    Org orgRole;
-    Boolean isRef;
+    Boolean isCap;
 }

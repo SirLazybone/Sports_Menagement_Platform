@@ -23,7 +23,24 @@
     <button type="submit">Show my organizations</button>
 </form>
 <form th:action="@{/org_com/invitations}" method="get">
-    <button type="submit">Show my invitations</button>
+    <button type="submit">Show my invitations to Orgcoms</button>
+</form>
+<br>
+<form th:action="@{/team/new}" method="get">
+    <button type="submit">Create new team</button>
+</form>
+<form th:action="@{/team/show_all}" method="get">
+    <button type="submit">Show my teams</button>
+</form>
+<form th:action="@{/team/invitations}" method="get">
+    <button type="submit">Show my invitations to Teams</button>
+</form>
+<br>
+<form th:action="@{/tournament/show_all}" method="get">
+    <button type="submit">Show all tournaments</button>
+</form>
+<form th:action="@{/tournament/create}" method="get">
+    <button type="submit">Create Tournament</button>
 </form>
 </body>
 </html>

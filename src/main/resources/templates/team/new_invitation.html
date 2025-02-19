@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>New Invitation</title>
+</head>
+<body>
+<form th:action="@{/team/send_invitation/{teamId}(teamId=${teamId})}" th:object="${invitation}" method="post">
+  <div>
+    <label for="tel">Телефон:</label>
+    <input type="text" th:field="*{tel}" id="tel" />
+    <span th:if="${#fields.hasErrors('tel')}" th:errors="*{tel}"></span>
+  </div>
+
+  <div>
+    <label for="isCap">
+      <input type="checkbox" th:field="*{isCap}" id="isCap" /> Капитан
+    </label>
+  </div>
+  <div>
+    <button type="submit">Отправить</button>
+  </div>
+
+  <div th:if="${error}">
+    <p style="color: red;" th:text="${error}"></p>
+  </div>
+</form>
+
+</body>
+</html>

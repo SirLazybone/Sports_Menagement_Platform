@@ -1,10 +1,8 @@
 package com.course_work.Sports_Menagement_Platform.data.models;
 
+import com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.UUID;
 
@@ -14,6 +12,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class UserTeam {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -24,9 +23,9 @@ public class UserTeam {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "tram_id")
+    @JoinColumn(name = "team_id")
     private Team team;
 
-    private boolean is_cap;
-    private boolean invitation_accepted;
+    private boolean isCap;
+    private InvitationStatus invitationStatus;
 }
