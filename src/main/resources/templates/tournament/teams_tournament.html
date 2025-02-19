@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Турниры команды</title>
+</head>
+<body>
+<table>
+    <thead>
+    <tr>
+        <th>Название турнира</th>
+        <th>Статус участия</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="tournament : ${tournaments}">
+        <td>
+            <a th:href="@{/tournament/view/{id}(id=${tournament.tournamentId})}" th:text="${tournament.tournamentName}"></a>
+        </td>
+        <td>
+            <span th:switch="${tournament.applicationStatus}">
+                <span th:case="${applicationStatuses.accepted}">Участвует</span>
+                <span th:case="${applicationStatuses.pending}">Приглашение отправлено</span>
+                <span th:case="${applicationStatuses.declined}">Отказано</span>
+                <span th:case="${applicationStatuses.canceled}">Приглашение отменено</span>
+                <span th:case="*">Неизвестный статус</span>
+            </span>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<div th:if="${error}">
+    <p th:text="${error}"></p>
+</div>
+</body>
+</html>

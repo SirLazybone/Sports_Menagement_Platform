@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Создание турнира</title>
+</head>
+<body>
+<h2>Создание нового турнира</h2>
+<form th:action="@{/tournament/create}" th:object="${tournament}" method="post">
+  <div>
+    <label for="name">Название:</label>
+    <input type="text" id="name" th:field="*{name}" required/>
+    <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+  </div>
+  <br/>
+
+  <div>
+    <label for="sport">Вид спорта:</label>
+    <select id="sport" th:field="*{sport}">
+      <option th:each="sport : ${T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).values()}"
+              th:value="${sport}" th:text="${sport}"></option>
+    </select>
+    <span th:if="${#fields.hasErrors('sport')}" th:errors="*{sport}"></span>
+  </div>
+  <br/>
+
+  <div>
+    <label for="orgComName">Оргкомитет:</label>
+    <input type="text" id="orgComName" th:field="*{orgComName}" required/>
+    <span th:if="${#fields.hasErrors('orgComName')}" th:errors="*{orgComName}"></span>
+  </div>
+  <br/>
+
+  <div>
+    <label for="cityName">Город:</label>
+    <input type="text" id="cityName" th:field="*{cityName}" required/>
+    <span th:if="${#fields.hasErrors('cityName')}" th:errors="*{cityName}"></span>
+  </div>
+  <br/>
+
+  <div>
+    <label for="minMembers">Минимальное количество участников:</label>
+    <input type="number" id="minMembers" th:field="*{minMembers}" required/>
+    <span th:if="${#fields.hasErrors('minMembers')}" th:errors="*{minMembers}"></span>
+  </div>
+  <br/>
+
+  <div>
+    <label for="registerDeadline">Дата окончания регистрации:</label>
+    <input type="date" id="registerDeadline" th:field="*{registerDeadline}" required/>
+    <span th:if="${#fields.hasErrors('registerDeadline')}" th:errors="*{registerDeadline}"></span>
+  </div>
+  <br/>
+
+  <label for="description">Описание:</label>
+  <textarea id="description" th:field="*{description}"></textarea>
+  <br/>
+
+<!--  <label>-->
+<!--    <input type="checkbox" th:field="*{isStopped}" /> Турнир остановлен-->
+<!--  </label>-->
+<!--  <br/>-->
+
+<!--  <label for="logo">Ссылка на логотип:</label>-->
+<!--  <input type="text" id="logo" th:field="*{logo}"/>-->
+<!--  <br/>-->
+  <div th:if="${error}">
+    <p style="color: red;" th:text="${error}"></p>
+  </div>
+
+  <button type="submit">Создать турнир</button>
+</form>
+</body>
+</html>

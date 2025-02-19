@@ -28,4 +28,5 @@ public interface OrgComService {
     void kickUser(UUID orgComId, UUID userId);
     void cancelInvitation(UUID orgComId, UUID userId);
     void editOrgCom(UUID orgComId, OrgComDTO orgComDTO);
+    UserOrgCom getUserOrgComChief(String orgComName, UUID id);
 }

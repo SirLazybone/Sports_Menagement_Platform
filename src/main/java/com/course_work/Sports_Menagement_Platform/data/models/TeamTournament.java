@@ -1,6 +1,6 @@
 package com.course_work.Sports_Menagement_Platform.data.models;
 
-import com.course_work.Sports_Menagement_Platform.data.enums.AplicationStatus;
+import com.course_work.Sports_Menagement_Platform.data.enums.ApplicationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,7 +17,8 @@ public class TeamTournament {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
-    private AplicationStatus aplicationStatus;
+    @Enumerated(EnumType.STRING)
+    private ApplicationStatus applicationStatus;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_id")

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Детали турнира</title>
+</head>
+<body>
+<h1>Детали турнира</h1>
+
+<table border="1">
+  <tr>
+    <th>Название</th>
+    <td th:text="${tournament.name}"></td>
+  </tr>
+  <tr>
+    <th>Вид спорта</th>
+    <td th:text="${tournament.sport}"></td>
+  </tr>
+  <tr>
+    <th>Оргкомитет</th>
+    <td th:text="${tournament.orgComName}"></td>
+  </tr>
+  <tr>
+    <th>Город</th>
+    <td th:text="${tournament.cityName}"></td>
+  </tr>
+  <tr>
+    <th>Минимальное количество участников</th>
+    <td th:text="${tournament.minMembers}"></td>
+  </tr>
+  <tr>
+    <th>Дедлайн регистрации</th>
+    <td th:text="${#temporals.format(tournament.registerDeadline, 'dd.MM.yyyy')}"></td>
+  </tr>
+  <tr>
+    <th>Описание</th>
+    <td th:text="${tournament.description}"></td>
+  </tr>
+</table>
+
+<form th:action="@{/tournament/create_application/{id}(id=${tournamentId})}" method="get">
+  <button type="submit">Подать Заявку на турнир</button>
+</form>
+
+<form th:action="@{/tournament/participants/{id}(id=${tournamentId})}" method="get">
+  <button type="submit">Показать участников</button>
+</form>
+
+<form th:action="@{/tournament/applications/{id}(id=${tournamentId})}" method="get">
+  <button type="submit">Показать Заявки</button>
+</form>
+
+<form th:action="@{/tournament/show_all}" method="get">
+  <button type="submit">Вернуться ко всем турнирам</button>
+</form>
+
+<div th:if="${error}">
+  <p style="color: red;" th:text="${error}"></p>
+</div>
+</body>
+</html>

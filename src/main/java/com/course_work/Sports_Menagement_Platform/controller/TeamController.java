@@ -8,7 +8,6 @@ import com.course_work.Sports_Menagement_Platform.service.interfaces.TeamService
 import com.course_work.Sports_Menagement_Platform.service.interfaces.UserService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -73,9 +72,10 @@ public class TeamController {
         model.addAttribute("teamId", team.getId());
         model.addAttribute("team", TeamDTO.builder().name(team.getName()).sport(team.getSport()).countMembers(team.getCountMembers()).build());
         model.addAttribute("invitationStatuses", new InvitationStatusDTO());
-        if (teamService.isCap(id, user.getId())) {
+        try {
+            teamService.isCap(id, user.getId());
             model.addAttribute("isCap", "true");
-        }
+        } catch (RuntimeException ignored) {}
 
         return "team/view";
     }
@@ -88,7 +88,8 @@ public class TeamController {
     }
 
     @PostMapping("/send_invitation/{teamId}")
-    public String sendInvitation(@PathVariable @ModelAttribute("teamId") UUID teamId, @Valid @ModelAttribute("invitation") InvitationTeamDTO invitationTeamDTO, BindingResult bindingResult, Model model) {
+    public String sendInvitation(@PathVariable UUID teamId, @Valid @ModelAttribute("invitation") InvitationTeamDTO invitationTeamDTO, BindingResult bindingResult, Model model) {
+        model.addAttribute("teamId", teamId);
         if (bindingResult.hasErrors()) {
             return "team/new_invitation";
         }
@@ -178,7 +179,8 @@ public class TeamController {
     }
 
     @PostMapping("/edit/{teamId}")
-    public String editTeam(@PathVariable @ModelAttribute("teamId") UUID teamId, @Valid @ModelAttribute("team") TeamDTO team, BindingResult bindingResult, Model model) {
+    public String editTeam(@PathVariable UUID teamId, @Valid @ModelAttribute("team") TeamDTO team, BindingResult bindingResult, Model model) {
+        model.addAttribute("teamId", teamId);
         if (bindingResult.hasErrors()) {
             return "team/edit";
         }

@@ -19,11 +19,9 @@ import java.util.*;
 @Service
 public class TeamServiceImpl implements TeamService {
     private final TeamRepository teamRepository;
-    private final TeamTournamentRepository teamTournamentRepository;
     private final UserTeamRepository userTeamRepository;
-    public TeamServiceImpl(TeamTournamentRepository teamTournamentRepository, TeamRepository teamRepository, UserTeamRepository userTeamRepository) {
+    public TeamServiceImpl(TeamRepository teamRepository, UserTeamRepository userTeamRepository) {
         this.teamRepository = teamRepository;
-        this.teamTournamentRepository = teamTournamentRepository;
         this.userTeamRepository = userTeamRepository;
     }
 
@@ -78,7 +76,8 @@ public class TeamServiceImpl implements TeamService {
 
     @Override
     public Boolean isCap(UUID teamId, UUID userId) {
-        return userTeamRepository.findByUser_IdAndTeam_Id(userId, teamId).get().isCap();
+        UserTeam userTeam = userTeamRepository.findByUser_IdAndTeam_Id(userId, teamId).orElseThrow(() -> new RuntimeException("Пользователь не является членом данной команды"));
+        return userTeam.isCap();
     }
 
     @Override
@@ -162,5 +161,10 @@ public class TeamServiceImpl implements TeamService {
         team.setName(teamDTO.getName());
         team.setSport(teamDTO.getSport());
         teamRepository.save(team);
+    }
+
+    @Override
+    public Team getByName(String name) {
+        return teamRepository.findByName(name).orElseThrow(() -> new RuntimeException("Команды с таким именем не существует"));
     }
 }

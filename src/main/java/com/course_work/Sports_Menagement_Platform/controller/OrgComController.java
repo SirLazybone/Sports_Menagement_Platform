@@ -28,11 +28,9 @@ import java.util.UUID;
 @RequestMapping("/org_com")
 public class OrgComController {
     private final OrgComService orgComService;
-    private final InvitationService invitationService;
     private final UserService userService;
-    public OrgComController(OrgComService orgComService, InvitationService invitationService, UserService userService) {
+    public OrgComController(OrgComService orgComService, UserService userService) {
         this.orgComService = orgComService;
-        this.invitationService = invitationService;
         this.userService = userService;
     }
 
@@ -52,6 +50,7 @@ public class OrgComController {
             orgComService.create(orgComDTO.getName(), user);
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
+            return "org_com/new_orgcom";
         }
         return "redirect:/home";
     }
@@ -74,7 +73,8 @@ public class OrgComController {
     }
 
     @PostMapping("/send_invitation/{orgComId}")
-    public String sendInvitation(@PathVariable @ModelAttribute("orgComId") UUID orgComId, @Valid @ModelAttribute("invitation") InvitationOrgComDTO invitation, BindingResult bindingResult, Model model) {
+    public String sendInvitation(@PathVariable UUID orgComId, @Valid @ModelAttribute("invitation") InvitationOrgComDTO invitation, BindingResult bindingResult, Model model) {
+        model.addAttribute("orgComId", orgComId);
         if (bindingResult.hasErrors()) {
             return "org_com/new_invitation";
         }
@@ -185,7 +185,8 @@ public class OrgComController {
     }
 
     @PostMapping("/edit/{orgComId}")
-    public String editOrgCom(@PathVariable @ModelAttribute("orgComId") UUID orgComId, @Valid @ModelAttribute("orgCom") OrgComDTO orgComDTO, BindingResult bindingResult, Model model) {
+    public String editOrgCom(@PathVariable UUID orgComId, @Valid @ModelAttribute("orgCom") OrgComDTO orgComDTO, BindingResult bindingResult, Model model) {
+        model.addAttribute("orgComId", orgComId);
         if (bindingResult.hasErrors()) {
             return "org_com/edit";
         }
@@ -199,4 +200,5 @@ public class OrgComController {
 
         return "redirect:/org_com/view/" + orgComId.toString();
     }
+
 }

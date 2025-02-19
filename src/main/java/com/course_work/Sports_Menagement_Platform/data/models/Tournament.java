@@ -2,11 +2,9 @@ package com.course_work.Sports_Menagement_Platform.data.models;
 
 import com.course_work.Sports_Menagement_Platform.data.enums.Sport;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -18,6 +16,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Tournament {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -26,20 +25,19 @@ public class Tournament {
     private String name;
     @Enumerated(EnumType.STRING)
     private Sport sport;
-    private String city;
     private int minMembers;
-    private Date registerDeadline;
+    private LocalDate registerDeadline;
     private String description;
     private boolean is_stopped;
     private String logo;
 
     @OneToOne
-    @JoinColumn(name = "org_id", referencedColumnName = "id")
-    private User org;
+    @JoinColumn(name = "userOrgCom_id", referencedColumnName = "id")
+    private UserOrgCom userOrgCom;
 
     @OneToOne
-    @JoinColumn(name = "orgcom_id", referencedColumnName = "id")
-    private OrgCom orgCom;
+    @JoinColumn(name = "city_id", referencedColumnName = "id")
+    private City city;
 
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "tournament")

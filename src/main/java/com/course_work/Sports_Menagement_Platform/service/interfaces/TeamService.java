@@ -25,4 +25,6 @@ public interface TeamService {
     void leftTeam(UUID teamId, UUID userId);
     void editTeam(UUID teamId, TeamDTO teamDTO);
 
+    Team getByName(String name);
+
 }
