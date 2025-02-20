@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Создание слота</title>
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        padding: 20px;
+    }
+    .container {
+        width: 50%;
+        margin: auto;
+    }
+    label {
+        font-weight: bold;
+    }
+    input, select {
+        width: 100%;
+        padding: 8px;
+        margin: 5px 0;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    .btn {
+        display: inline-block;
+        padding: 10px 15px;
+        text-decoration: none;
+        color: white;
+        background-color: #007bff;
+        border-radius: 4px;
+        margin-top: 10px;
+    }
+    .btn:hover {
+        background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Создать слот</h2>
+
+  <form th:action="@{/slot/create/{matchId}(matchId=${matchId})}" th:object="${slot}" method="post">
+    <div>
+      <label for="date">Дата:</label>
+      <input type="date" id="date" th:field="*{date}" required/>
+      <span th:if="${#fields.hasErrors('date')}" th:errors="*{date}"></span>
+    </div>
+
+    <div>
+      <label for="time">Время:</label>
+      <input type="time" id="time" th:field="*{time}" required/>
+      <span th:if="${#fields.hasErrors('time')}" th:errors="*{time}"></span>
+    </div>
+
+    <div>
+      <label for="location">Локация:</label>
+      <select id="location" th:field="*{location}" required>
+        <option value="">Выберите локацию</option>
+        <option th:each="loc : ${locations}" th:value="${loc.id}" th:text="${loc.name}"></option>
+      </select>
+      <span th:if="${#fields.hasErrors('location')}" th:errors="*{location}"></span>
+    </div>
+
+    <button type="submit" class="btn">Создать слот</button>
+  </form>
+
+  <a th:href="@{/matches/{stageId}(stageId=${stageId})}" class="btn">Назад</a>
+</div>
+
+</body>
+</html>

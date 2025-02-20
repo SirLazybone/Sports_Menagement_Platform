@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Slot</title>
+</head>
+<body>
+
+<h1>Информация слота</h1>
+
+<div>
+    <table>
+        <tr>
+            <th>Дата</th>
+            <td th:text="${slot.date}"></td>
+        </tr>
+        <tr>
+            <th>Время</th>
+            <td th:text="${slot.time}"></td>
+        </tr>
+        <tr>
+            <th>Стадион</th>
+            <td th:text="${slot.location.name}"></td>
+        </tr>
+        <tr>
+            <th>Место</th>
+            <td th:text="${slot.location.address}"></td>
+        </tr>
+    </table>
+</div>
+
+<form th:action="@{/home}" method="get">
+    <button type="submit">Home</button>
+</form>
+
+</body>
+</html>
