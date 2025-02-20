@@ -10,6 +10,7 @@ import com.course_work.Sports_Menagement_Platform.repositories.CityRepository;
 import com.course_work.Sports_Menagement_Platform.repositories.TeamTournamentRepository;
 import com.course_work.Sports_Menagement_Platform.repositories.TournamentRepository;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.OrgComService;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.StageService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TeamService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
 import org.springframework.stereotype.Service;
@@ -139,5 +140,10 @@ public class TournamentServiceImpl implements TournamentService {
     public List<TeamTournamentDTO> getTournamentsByTeam(UUID teamId) {
         List<TeamTournament> teamTournaments = teamTournamentRepository.findAllTeamTournamentByTeamId(teamId);
         return teamTournaments.stream().map(x -> new TeamTournamentDTO(x.getTournament().getName(), x.getTournament().getId(), x.getApplicationStatus())).toList();
+    }
+
+    @Override
+    public List<Team> getAllTeamsByTournamentId(UUID tournamentId) {
+        return teamTournamentRepository.findAllTeamsByTournamentId(tournamentId);
     }
 }

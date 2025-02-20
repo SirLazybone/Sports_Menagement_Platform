@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Матчи этапа</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+        }
+        .match-container {
+            width: 50%;
+            margin: auto;
+            border-collapse: collapse;
+        }
+        .match-container th, .match-container td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        .match-container th {
+            background-color: #f4f4f4;
+        }
+        .btn {
+            display: inline-block;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: white;
+            background-color: #007bff;
+            border-radius: 4px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Матчи на этапе</h2>
+
+<div th:if="${error}">
+    <p style="color: red;" th:text="${error}"></p>
+</div>
+
+<table class="match-container" th:if="${matches != null and !matches.isEmpty()}">
+    <thead>
+    <tr>
+        <th>#</th>
+        <th>Команда 1</th>
+        <th>Команда 2</th>
+        <th>Слот</th>
+        <th>Действие</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="match, iterStat : ${matches}">
+        <td th:text="${iterStat.count}"></td>
+        <td th:text="${match.team1.name}"></td>
+        <td th:text="${match.team2.name}"></td>
+        <td>
+            <div th:if="${match.slot == null}" th:text="Не незначен"></div>
+            <div th:if="${match.slot != null}">
+                <a th:href="@{/slot/view/{id}(id=${match.slot.id})}" th:text="${match.slot.date}" class="btn"></a>
+            </div>
+        </td>
+        <td>
+            <div th:if="${match.slot == null}">
+                <a  th:href="@{/slot/create/{matchId}(matchId=${match.id})}" class="btn">Создать слот</a>
+            </div>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<a th:href="@{/tournament/stages/{stageId}(stageId=${stageId})}" class="btn">Назад к этапам</a>
+
+</body>
+</html>

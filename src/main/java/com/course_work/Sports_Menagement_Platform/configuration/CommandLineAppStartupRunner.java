@@ -5,6 +5,7 @@ import com.course_work.Sports_Menagement_Platform.data.models.User;
 import com.course_work.Sports_Menagement_Platform.repositories.UserRepository;
 import com.course_work.Sports_Menagement_Platform.service.impl.UserServiceImpl;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.CityService;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.LocationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -22,6 +23,8 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
     UserRepository userRepository;
     @Autowired
     CityService cityService;
+    @Autowired
+    LocationService locationService;
 
     private void createFirstUser() {
         User user = null;
@@ -41,5 +44,6 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
     public void run(String... args) throws Exception {
         createFirstUser();
         cityService.loadCitiesFromJson();
+        locationService.loadLocationsFromJson();
     }
 }

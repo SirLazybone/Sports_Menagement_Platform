@@ -1,10 +1,7 @@
 package com.course_work.Sports_Menagement_Platform.data.models;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -15,14 +12,16 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Stage {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    private boolean is_published;
-    private int best_place;
-    private int worst_place;
+    private String name;
+    private boolean isPublished;
+    private int bestPlace; // количество команд, которые выходят дальше
+    private int worstPlace; // количество команд, которые участвуют на этапе
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tournament_id")

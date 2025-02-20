@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Создание этапов</title>
+    <style>
+        .stage-container {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .stage-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .button {
+            padding: 5px 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        .button:hover {
+            background-color: #218838;
+        }
+        .error-message {
+            color: red;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+<h1>Этапы чемпионата</h1>
+
+<div th:if="${error}" class="error-message" th:text="${error}"></div>
+
+<!-- Список уже созданных этапов -->
+<div th:each="stage : ${stages}" class="stage-container">
+    <div class="stage-header">
+        Этап: <span th:text="${stage.name}"></span> <br>
+        Опубликован: <span th:text="${stage.isPublished ? 'Да' : 'Нет'}"></span> <br>
+        Лучшие места: <span th:text="${stage.bestPlace}"></span> <br>
+        Худшие места: <span th:text="${stage.worstPlace}"></span> <br>
+    </div>
+
+    <!-- Кнопка публикации этапа -->
+    <form th:action="@{/tournament/publish_stage/{id}(id=${stage.id})}" method="post">
+        <button type="submit" class="button">Опубликовать этап</button>
+    </form>
+
+    <!-- Кнопка заполнения этапа матчами -->
+    <form th:action="@{/tournament/fill_stage/{id}(id=${stage.id})}" method="get">
+        <button type="submit" class="button" style="background-color: #007bff;">Заполнить матчами</button>
+    </form>
+    <form th:action="@{/tournament/matches/{id}(id=${stage.id})}" method="get">
+        <button type="submit" class="button" style="background-color: #007bff;">Просмотреть матчи</button>
+    </form>
+</div>
+
+<h2>Создать новый этап</h2>
+<form th:action="@{/tournament/create_stage/{id}(id=${tournamentId})}" th:object="${stage}" method="post">
+    <div>
+        <label for="name">Название этапа:</label>
+        <input type="text" id="name" th:field="*{name}" required/>
+        <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+    </div>
+    <div>
+        <label for="bestPlace">Количество команд, которые выходят дальше:</label>
+        <input type="number" id="bestPlace" th:field="*{bestPlace}" required/>
+        <span th:if="${#fields.hasErrors('bestPlace')}" th:errors="*{bestPlace}"></span>
+    </div>
+    <div>
+        <label for="worstPlace">Количество команд, которые участвуют в этапе:</label>
+        <input type="number" id="worstPlace" th:field="*{worstPlace}" required/>
+        <span th:if="${#fields.hasErrors('worstPlace')}" th:errors="*{worstPlace}"></span>
+    </div>
+    <button type="submit" class="button">Создать этап</button>
+</form>
+</body>
+</html>

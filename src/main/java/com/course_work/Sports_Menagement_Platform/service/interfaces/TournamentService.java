@@ -1,8 +1,10 @@
 package com.course_work.Sports_Menagement_Platform.service.interfaces;
 
+import com.course_work.Sports_Menagement_Platform.data.models.Team;
 import com.course_work.Sports_Menagement_Platform.data.models.Tournament;
 import com.course_work.Sports_Menagement_Platform.data.models.User;
 import com.course_work.Sports_Menagement_Platform.dto.ApplicationDTO;
+import com.course_work.Sports_Menagement_Platform.dto.StageCreationDTO;
 import com.course_work.Sports_Menagement_Platform.dto.TeamTournamentDTO;
 import com.course_work.Sports_Menagement_Platform.dto.TournamentDTO;
 
@@ -31,4 +33,7 @@ public interface TournamentService {
     boolean isUserChiefOfTournament(UUID userId, UUID tournamentId);
 
     List<TeamTournamentDTO> getTournamentsByTeam(UUID teamId);
+
+
+    List<Team> getAllTeamsByTournamentId(UUID tournamentId);
 }

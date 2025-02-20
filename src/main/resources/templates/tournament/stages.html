@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Этапы чемпионата</title>
+    <style>
+        .stage-container {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .stage-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .no-matches {
+            font-style: italic;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+<h1>Этапы чемпионата</h1>
+
+<div th:if="${error}" style="color: red;" th:text="${error}"></div>
+
+<div th:each="stage : ${stages}" class="stage-container">
+    <div class="stage-header">
+        Этап: <span th:text="${stage.id}"></span> <br>
+        Опубликован: <span th:text="${stage.isPublished ? 'Да' : 'Нет'}"></span> <br>
+        Количество команд, которые проходят: <span th:text="${stage.bestPlace}"></span> <br>
+        Количество команд, участвующих в этапе: <span th:text="${stage.worstPlace}"></span>
+    </div>
+
+    <div th:if="${stage.matches != null and !#lists.isEmpty(stage.matches)}">
+        <table>
+            <thead>
+            <tr>
+                <th>Матч №</th>
+                <th>Команда 1</th>
+                <th>Команда 2</th>
+                <th>Слот</th>
+                <th>Результат опубликован</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="match, iterStat : ${stage.matches}">
+                <td th:text="${iterStat.index + 1}"></td>
+                <td th:text="${match.team1 != null ? match.team1.name : 'N/A'}"></td>
+                <td th:text="${match.team2 != null ? match.team2.name : 'N/A'}"></td>
+                <td th:text="${match.slot != null ? match.slot.id : 'N/A'}"></td>
+                <td th:text="${match.isResultPublished ? 'Да' : 'Нет'}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div th:if="${stage.matches == null or #lists.isEmpty(stage.matches)}" class="no-matches">
+        Матчи для этого этапа ещё не созданы.
+    </div>
+</div>
+</body>
+</html>
