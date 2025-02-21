@@ -39,7 +39,6 @@
 <!-- Список уже созданных этапов -->
 <div th:each="stage : ${stages}" class="stage-container">
     <div class="stage-header">
-        Этап: <span th:text="${stage.name}"></span> <br>
         Опубликован: <span th:text="${stage.isPublished ? 'Да' : 'Нет'}"></span> <br>
         Лучшие места: <span th:text="${stage.bestPlace}"></span> <br>
         Худшие места: <span th:text="${stage.worstPlace}"></span> <br>
@@ -51,16 +50,16 @@
     </form>
 
     <!-- Кнопка заполнения этапа матчами -->
-    <form th:action="@{/tournament/fill_stage/{id}(id=${stage.id})}" method="get">
+    <form th:action="@{/match/fill_stage/{id}(id=${stage.id})}" method="get">
         <button type="submit" class="button" style="background-color: #007bff;">Заполнить матчами</button>
     </form>
-    <form th:action="@{/tournament/matches/{id}(id=${stage.id})}" method="get">
+    <form th:action="@{/match/matches/{id}(id=${stage.id})}" method="get">
         <button type="submit" class="button" style="background-color: #007bff;">Просмотреть матчи</button>
     </form>
 </div>
 
 <h2>Создать новый этап</h2>
-<form th:action="@{/tournament/create_stage/{id}(id=${tournamentId})}" th:object="${stage}" method="post">
+<form th:action="@{/stage/create_stage/{id}(id=${tournamentId})}" th:object="${stage}" method="post">
     <div>
         <label for="name">Название этапа:</label>
         <input type="text" id="name" th:field="*{name}" required/>

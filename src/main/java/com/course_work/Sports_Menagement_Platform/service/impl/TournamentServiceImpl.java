@@ -10,7 +10,6 @@ import com.course_work.Sports_Menagement_Platform.repositories.CityRepository;
 import com.course_work.Sports_Menagement_Platform.repositories.TeamTournamentRepository;
 import com.course_work.Sports_Menagement_Platform.repositories.TournamentRepository;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.OrgComService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.StageService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TeamService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
 import org.springframework.stereotype.Service;
@@ -132,8 +131,16 @@ public class TournamentServiceImpl implements TournamentService {
 
     @Override
     public boolean isUserChiefOfTournament(UUID userId, UUID tournamentId) {
-        Tournament tournament = tournamentRepository.findById(tournamentId).get();
-        return Objects.equals(tournament.getUserOrgCom().getUser().getId(), userId);
+        Tournament tournament = getById(tournamentId);
+        OrgCom orgCom = tournament.getUserOrgCom().getOrgCom();
+        return orgComService.isUserOfOrgComChief(userId, orgCom.getId());
+    }
+
+    @Override
+    public boolean isUserRefOfTournament(UUID userId, UUID tournamentId) {
+        Tournament tournament = getById(tournamentId);
+        OrgCom orgCom = tournament.getUserOrgCom().getOrgCom();
+        return orgComService.isUserOfOrgComRef(userId, orgCom.getId());
     }
 
     @Override

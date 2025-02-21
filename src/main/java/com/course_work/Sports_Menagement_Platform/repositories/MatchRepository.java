@@ -18,4 +18,5 @@ public interface MatchRepository extends JpaRepository<Match, UUID> {
 
     @Query("SELECT m FROM Match m WHERE m.stage.id = :stageId")
     List<Match> findAllMatchesByStageId(@Param("stageId") UUID stageId);
+
 }

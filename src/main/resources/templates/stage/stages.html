@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Этапы чемпионата</title>
+    <style>
+        .stage-container { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        .stage-header { font-weight: bold; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        table, th, td { border: 1px solid #ddd; }
+        th, td { padding: 8px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        .no-matches { font-style: italic; color: #888; }
+    </style>
+</head>
+<body>
+<h1>Этапы чемпионата</h1>
+
+<!-- Ошибка -->
+<div th:if="${error}" style="color: red;" th:text="${error}"></div>
+
+<!-- Этапы -->
+<div th:unless="${error}" th:each="stage : ${stages}" class="stage-container">
+    <div class="stage-header">
+        Этап: <span th:text="${stage.id}"></span> <br>
+        Опубликован: <span th:text="${stage.isPublished ? 'Да' : 'Нет'}"></span> <br>
+        Лучшее место в этапе: <span th:text="${stage.bestPlace}"></span> <br>
+        Количество команд: <span th:text="${stage.worstPlace}"></span>
+    </div>
+
+    <!-- Матчи для этапа -->
+    <div th:if="${#lists.isEmpty(matchesMap[stage.id]) == false}">
+        <table>
+            <thead>
+            <tr>
+                <th>Матч №</th>
+                <th>Команда 1</th>
+                <th>Команда 2</th>
+                <th>Слот</th>
+                <th>Результат опубликован</th>
+                <th th:if="${isRef}">Судейство</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="match, iterStat : ${matchesMap[stage.id]}">
+                <td th:text="${iterStat.index + 1}"></td>
+                <td th:text="${match.team1 != null ? match.team1.name : 'N/A'}"></td>
+                <td th:text="${match.team2 != null ? match.team2.name : 'N/A'}"></td>
+                <td>
+                    <div th:if="${match.slot == null}" th:text="'N/A'"></div>
+                    <div th:if="${match.slot != null}">
+                        <a th:href="@{/slot/view/{id}(id=${match.slot.id})}" th:text="${match.slot.date}"></a>
+                    </div>
+                </td>
+                <td th:text="${match.isResultPublished ? 'Да' : 'Нет'}"></td>
+                <td th:if="${isRef}">
+                    <a th:href="@{/match/edit/{id}(id=${match.id})}" class="btn">Редактировать результат</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <span th:text="${isRef}"></span>
+
+
+    <!-- Если нет матчей -->
+    <div th:if="${#lists.isEmpty(matchesMap[stage.id])}" class="no-matches">
+        Матчи для этого этапа ещё не созданы.
+    </div>
+</div>
+
+
+</body>
+</html>

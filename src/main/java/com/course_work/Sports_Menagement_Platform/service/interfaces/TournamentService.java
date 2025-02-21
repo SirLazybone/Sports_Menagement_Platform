@@ -32,6 +32,8 @@ public interface TournamentService {
 
     boolean isUserChiefOfTournament(UUID userId, UUID tournamentId);
 
+    boolean isUserRefOfTournament(UUID userId, UUID tournamentId);
+
     List<TeamTournamentDTO> getTournamentsByTeam(UUID teamId);
 
 

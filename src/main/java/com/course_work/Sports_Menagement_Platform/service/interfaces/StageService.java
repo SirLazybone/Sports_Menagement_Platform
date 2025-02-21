@@ -19,11 +19,7 @@ public interface StageService {
 
     Stage getStageById(UUID stageId);
 
-    void createMatch(MatchDTO matchDTO);
-
     Tournament getTournamentByStage(UUID stageId);
 
     void publishStage(UUID stageId);
-
-    List<Match> getAllMatches(UUID stageId);
 }

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Создание матчей</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { width: 80%; margin: auto; }
+        .match-row { display: flex; align-items: center; margin-bottom: 15px; }
+        select { margin: 0 10px; padding: 5px; }
+        button { padding: 10px 15px; margin-top: 20px; }
+        .existing-match { background-color: #f0f0f0; padding: 10px; border-radius: 5px; }
+        .new-match { background-color: #e0f7fa; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1 th:text="${stage.tournament.name}"></h1>
+    <h2 th:text="${stage.bestPlace} + ' / ' + ${stage.worstPlace}"></h2>
+
+    <!-- Отображение существующих матчей -->
+    <div th:each="match : ${existingMatches}" class="match-row existing-match">
+        <span>Матч: </span>
+        <span th:text="${match.team1.name} + ' vs ' + ${match.team2.name}"></span>
+        <span> | Слот: </span>
+        <div th:if="${match.slot} == null">
+            <button type="button" th:action="@{/slot/create/{matchId}(matchId=${match.id})}" formmethod="get">Добавить слот</button>
+        </div>
+        <div th:if="${match.slot != null}">
+            <span th:text="${match.slot.date} + ' ' + ${match.slot.location.name}"></span>
+        </div>
+    </div>
+
+    <form th:action="@{/match/create_matches/{stageId}(stageId=${stage.id})}" th:object="${matchList}" method="post" >
+        <!-- Перебор новых матчей -->
+        <div th:each="match, iterStat : *{newMatches}" class="match-row new-match">
+            <!-- Скрытое поле для stageId -->
+            <input type="hidden" th:name="newMatches[__${iterStat.index}__].stageId" th:value="${stage.id}">
+
+            <!-- Выбор команды 1 -->
+            <select th:field="*{newMatches[__${iterStat.index}__].team1Id}" onchange="updateTeams(this)">
+                <option value="">Выберите команду</option>
+                <option th:each="team : ${availableTeams}"
+                        th:value="${team.id}"
+                        th:text="${team.name}"
+                        th:selected="${match.team1Id != null && match.team1Id == team.id}">
+                </option>
+            </select>
+
+            <!-- Выбор команды 2 -->
+            <select th:field="*{newMatches[__${iterStat.index}__].team2Id}" onchange="updateTeams(this)">
+                <option value="">Выберите команду</option>
+                <option th:each="team : ${availableTeams}"
+                        th:value="${team.id}"
+                        th:text="${team.name}"
+                        th:selected="${match.team2Id != null && match.team2Id == team.id}">
+                </option>
+            </select>
+        </div>
+
+        <button type="submit">Сохранить</button>
+    </form>
+
+
+</div>
+
+<div th:if="${error}">
+    <p style="color: red;" th:text="${error}"></p>
+</div>
+<div th:if="${success}">
+    <p style="color: green;" th:text="${success}"></p>
+</div>
+<script>
+    // Функция для обновления списка команд
+    function updateTeams(selectElement) {
+        const matchRow = selectElement.closest('.match-row');
+        const team1Select = matchRow.querySelector('select[name$="team1Id"]');
+        const team2Select = matchRow.querySelector('select[name$="team2Id"]');
+
+        const selectedTeam1 = team1Select.value;
+        const selectedTeam2 = team2Select.value;
+
+        // Обновляем список команд для team1Select
+        updateOptions(team1Select, selectedTeam2);
+        // Обновляем список команд для team2Select
+        updateOptions(team2Select, selectedTeam1);
+    }
+
+    // Функция для обновления опций в выпадающем списке
+    function updateOptions(selectElement, excludedTeamId) {
+        const options = selectElement.querySelectorAll('option');
+        options.forEach(option => {
+            if (option.value === excludedTeamId) {
+                option.style.display = 'none'; // Скрываем выбранную команду
+            } else {
+                option.style.display = ''; // Показываем остальные команды
+            }
+        });
+    }
+</script>
+</body>
+</html>

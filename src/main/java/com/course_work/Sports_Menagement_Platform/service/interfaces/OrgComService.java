@@ -29,4 +29,8 @@ public interface OrgComService {
     void cancelInvitation(UUID orgComId, UUID userId);
     void editOrgCom(UUID orgComId, OrgComDTO orgComDTO);
     UserOrgCom getUserOrgComChief(String orgComName, UUID id);
+
+    boolean isUserOfOrgComRef(UUID userId, UUID orgComId);
+
+    boolean isUserOfOrgComChief(UUID userId, UUID id);
 }

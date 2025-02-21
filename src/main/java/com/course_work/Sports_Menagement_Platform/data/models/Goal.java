@@ -19,10 +19,10 @@ public class Goal {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    private boolean is_penalty;
+    private boolean isPenalty; // для футбола или хоккея
     private int time;
-    private int points;
-    private int set_number;
+    private int points; // для баскетбола
+    private int set_number; // для воллейбола
 
     @OneToOne
     @JoinColumn(name = "team_id", referencedColumnName = "id")

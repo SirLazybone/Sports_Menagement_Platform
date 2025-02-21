@@ -25,6 +25,10 @@ public class Group {
     private String index;
     private int countTeams;
 
+    @OneToOne
+    @JoinColumn(referencedColumnName = "id")
+    private Tournament tournament;
+
     @ManyToMany
     @JoinTable(name = "group_team",
             joinColumns = @JoinColumn(name = "group_id"),

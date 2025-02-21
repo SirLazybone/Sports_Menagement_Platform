@@ -19,11 +19,11 @@ public class Match {
 
     private boolean isResultPublished;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "team_id_1", referencedColumnName = "id")
     private Team team1;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "team_id_2", referencedColumnName = "id")
     private Team team2;
 

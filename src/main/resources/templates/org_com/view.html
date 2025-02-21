@@ -37,7 +37,7 @@
         <td th:if="${role == orgRoles.chief}">
             <div th:switch="${user.invitationStatus}">
                 <div th:case="${invitationStatuses.accepted}">
-                    <form th:action="@{/org_com/kick/{orgComId}(orgComId=${orgComId})/{userTel}(userTel=${user.tel})}" method="post">
+                    <form th:action="@{/org_com/kick/{orgComId}/{userTel}(orgComId=${orgComId}, userTel=${user.tel})}" method="post">
                         <button type="submit">Исключить</button>
                     </form>
                 </div>

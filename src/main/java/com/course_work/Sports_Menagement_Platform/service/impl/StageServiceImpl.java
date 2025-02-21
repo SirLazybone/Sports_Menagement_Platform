@@ -21,14 +21,9 @@ import java.util.UUID;
 public class StageServiceImpl implements StageService {
     private final StageRepository stageRepository;
     private final TournamentService tournamentService;
-    private final MatchRepository matchRepository;
-    private final TeamService teamService;
-    public StageServiceImpl(StageRepository stageRepository, TournamentService tournamentService,
-                            MatchRepository matchRepository, TeamService teamService) {
+    public StageServiceImpl(StageRepository stageRepository, TournamentService tournamentService) {
         this.stageRepository = stageRepository;
         this.tournamentService = tournamentService;
-        this.matchRepository = matchRepository;
-        this.teamService = teamService;
     }
     @Override
     public void createStage(StageCreationDTO stageDTO, UUID tournamentId) {
@@ -63,29 +58,6 @@ public class StageServiceImpl implements StageService {
     }
 
     @Override
-    public void createMatch(MatchDTO matchDTO) {
-        Stage stage = getStageById(matchDTO.getStageId());
-        Team team1 = teamService.getById(matchDTO.getTeam1Id());
-        Team team2 = teamService.getById(matchDTO.getTeam2Id());
-
-        boolean team1Exists = matchRepository.existsByStageAndTeam(stage, team1);
-        boolean team2Exists = matchRepository.existsByStageAndTeam(stage, team2);
-
-        if (team1Exists || team2Exists) {
-            throw new RuntimeException("Одна из команд уже участвует в матче на этом этапе!");
-        }
-
-        Match match = Match.builder()
-                .stage(stage)
-                .team1(team1)
-                .team2(team2)
-                .isResultPublished(false)
-                .build();
-
-        matchRepository.save(match);
-    }
-
-    @Override
     public Tournament getTournamentByStage(UUID stageId) {
         return stageRepository.findByStageId(stageId).orElseThrow(() -> new RuntimeException("Нет такого турнира"));
     }
@@ -96,11 +68,4 @@ public class StageServiceImpl implements StageService {
         stage.setPublished(true);
         stageRepository.save(stage);
     }
-
-    @Override
-    public List<Match> getAllMatches(UUID stageId) {
-        return matchRepository.findAllMatchesByStageId(stageId);
-    }
-
-
 }

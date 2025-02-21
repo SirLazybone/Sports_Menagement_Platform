@@ -50,11 +50,11 @@
   <button type="submit">Показать Заявки</button>
 </form>
 
-<form th:action="@{/tournament/stages/{id}(id=${tournamentId})}" method="get">
+<form th:action="@{/stage/stages/{id}(id=${tournamentId})}" method="get">
   <button type="submit">Показать этапы турнира</button>
 </form>
 
-<form th:action="@{/tournament/create_stage/{id}(id=${tournamentId})}" method="get">
+<form th:action="@{/stage/create_stage/{id}(id=${tournamentId})}" method="get">
   <button type="submit">Созадть этап турнира</button>
 </form>
 

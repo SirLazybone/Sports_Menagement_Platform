@@ -7,7 +7,6 @@ import com.course_work.Sports_Menagement_Platform.dto.UserDTO;
 import com.course_work.Sports_Menagement_Platform.mapper.UserMapper;
 import com.course_work.Sports_Menagement_Platform.repositories.UserRepository;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.UserService;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -32,6 +31,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String tel) throws UsernameNotFoundException {
         return userRepository.findByTel(tel).orElseThrow(() -> new UsernameNotFoundException("Пользователь с таким телефоном уже существует"));
+    }
+
+    @Override
+    public User getById(UUID userId) {
+        return userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
     }
 
     @Override

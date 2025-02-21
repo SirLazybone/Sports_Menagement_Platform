@@ -18,9 +18,9 @@ public class Stage {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    private String name;
+//    private String name;
     private boolean isPublished;
-    private int bestPlace; // количество команд, которые выходят дальше
+    private int bestPlace; // лучшее возможное место
     private int worstPlace; // количество команд, которые участвуют на этапе
 
     @ManyToOne(fetch = FetchType.LAZY)
