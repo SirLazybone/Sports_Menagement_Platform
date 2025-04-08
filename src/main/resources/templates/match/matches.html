@@ -59,7 +59,7 @@
         <td th:text="${match.team1.name}"></td>
         <td th:text="${match.team2.name}"></td>
         <td>
-            <div th:if="${match.slot == null}" th:text="Не незначен"></div>
+            <div th:if="${match.slot == null}">Не назначен</div>
             <div th:if="${match.slot != null}">
                 <a th:href="@{/slot/view/{id}(id=${match.slot.id})}" th:text="${match.slot.date}" class="btn"></a>
             </div>

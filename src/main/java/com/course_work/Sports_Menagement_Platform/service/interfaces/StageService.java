@@ -22,4 +22,8 @@ public interface StageService {
     Tournament getTournamentByStage(UUID stageId);
 
     void publishStage(UUID stageId);
+
+    void createClassicScheme(Tournament tournament);
+
+    String getStageName(int bestPlace, int worstPlace);
 }

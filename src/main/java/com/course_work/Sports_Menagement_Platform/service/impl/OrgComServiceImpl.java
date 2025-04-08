@@ -4,13 +4,12 @@ import com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus;
 import com.course_work.Sports_Menagement_Platform.data.enums.Org;
 import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.OrgComDTO;
+import com.course_work.Sports_Menagement_Platform.dto.TournamentDTO;
 import com.course_work.Sports_Menagement_Platform.dto.UserOrgComDTO;
 import com.course_work.Sports_Menagement_Platform.mapper.OrgComMapper;
 import com.course_work.Sports_Menagement_Platform.repositories.OrgComRepository;
 import com.course_work.Sports_Menagement_Platform.repositories.UserOrgComRepository;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.OrgComService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -92,7 +91,8 @@ public class OrgComServiceImpl implements OrgComService {
         return list;
     }
 
-    private UserOrgCom getUserOrgComByUserAndOrgCom(UUID userId, UUID orgComId) {
+    @Override
+    public UserOrgCom getUserOrgComByUserAndOrgCom(UUID userId, UUID orgComId) {
         return userOrgComRepository.findByUser_IdAndOrgCom_Id(userId, orgComId).orElseThrow(() -> new RuntimeException("Пользователь не относится к данной организации"));
     }
 
@@ -193,5 +193,6 @@ public class OrgComServiceImpl implements OrgComService {
     public boolean isUserOfOrgComChief(UUID userId, UUID orgComId) {
         return getUserOrgComByUserAndOrgCom(userId, orgComId).getOrgRole().equals(Org.CHIEF);
     }
+
 
 }

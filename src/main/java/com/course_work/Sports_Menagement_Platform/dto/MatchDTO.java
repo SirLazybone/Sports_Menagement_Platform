@@ -13,4 +13,5 @@ public class MatchDTO {
     private UUID stageId;
     private UUID team1Id;
     private UUID team2Id;
+    private UUID slotId;
 }

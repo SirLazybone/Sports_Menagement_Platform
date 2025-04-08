@@ -36,10 +36,16 @@ public class StageController {
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/create_stage/{tournamentId}")
     public String createStages(@PathVariable UUID tournamentId, Model model, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
-        if (!tournamentService.isUserChiefOfTournament(user.getId(), tournamentId)) {
-            redirectAttributes.addFlashAttribute("error", "Only chief of the tournament can create stage");
+        try {
+            if (!tournamentService.isUserChiefOfTournament(user.getId(), tournamentId)) {
+                redirectAttributes.addFlashAttribute("error", "Only chief of the tournament can create stage");
+                return "redirect:/tournament/view/" + tournamentId.toString();
+            }
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/tournament/view/" + tournamentId.toString();
         }
+
 
         model.addAttribute("stage", new StageCreationDTO());
         model.addAttribute("group", new GroupDTO());

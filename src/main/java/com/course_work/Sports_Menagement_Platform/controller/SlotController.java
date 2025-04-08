@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.UUID;
 
@@ -23,21 +24,26 @@ public class SlotController {
         this.locationService = locationService;
     }
 
-    @GetMapping("/create/{matchId}")
-    public String createSlotForm(@PathVariable UUID matchId, Model model) {
+    @GetMapping("/create")
+    public String createSlotForm(Model model) {
         model.addAttribute("slot", new SlotCreationDTO());
-        model.addAttribute("matchId", matchId);
         model.addAttribute("locations", locationService.getAllLocations());
         return "tournament/create_slot";
     }
 
-    @PostMapping("/create/{matchId}")
-    public String createSlot(@PathVariable UUID matchId, @Valid @ModelAttribute("slot") SlotCreationDTO slotDTO, BindingResult bindingResult) {
+    @PostMapping("/create")
+    public String createSlot(@Valid @ModelAttribute("slot") SlotCreationDTO slotDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             return "tournament/create_slot";
         }
-        slotService.createSlot(slotDTO, matchId);
-        return "redirect:/tournament/matches/" + matchId;
+        try {
+            slotService.createSlot(slotDTO);
+            redirectAttributes.addFlashAttribute("success", "Слот успешно создан");
+        } catch (RuntimeException e) {
+            redirectAttributes.addAttribute("error", e.getMessage());
+        }
+
+        return "redirect:/slot/create";
     }
 
     @GetMapping("/view/{slotId}")

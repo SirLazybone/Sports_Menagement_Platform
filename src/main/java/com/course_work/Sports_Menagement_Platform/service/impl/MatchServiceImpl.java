@@ -1,12 +1,10 @@
 package com.course_work.Sports_Menagement_Platform.service.impl;
 
-import com.course_work.Sports_Menagement_Platform.data.models.Match;
-import com.course_work.Sports_Menagement_Platform.data.models.Stage;
-import com.course_work.Sports_Menagement_Platform.data.models.Team;
-import com.course_work.Sports_Menagement_Platform.data.models.User;
+import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.MatchDTO;
 import com.course_work.Sports_Menagement_Platform.repositories.MatchRepository;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.MatchService;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.SlotService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.StageService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TeamService;
 import org.springframework.stereotype.Service;
@@ -18,11 +16,13 @@ public class MatchServiceImpl implements MatchService {
     private final MatchRepository matchRepository;
     private final TeamService teamService;
     private final StageService stageService;
+    private final SlotService slotService;
     public MatchServiceImpl(MatchRepository matchRepository, TeamService teamService,
-                            StageService stageService) {
+                            StageService stageService, SlotService slotService) {
         this.matchRepository = matchRepository;
         this.teamService = teamService;
         this.stageService = stageService;
+        this.slotService = slotService;
     }
 
     @Override
@@ -57,6 +57,11 @@ public class MatchServiceImpl implements MatchService {
                     .team2(team2)
                     .isResultPublished(false)
                     .build();
+            try {
+                Slot slot = slotService.getById(matchDTO.getSlotId());
+                match.setSlot(slot);
+            } catch (RuntimeException ignored) {}
+
 
             matchRepository.save(match);
         }
@@ -77,5 +82,13 @@ public class MatchServiceImpl implements MatchService {
             matches.put(stage.getId() ,matchRepository.findAllMatchesByStageId(stage.getId()));
         }
         return matches;
+    }
+
+    @Override
+    public void assignSlotToMatch(UUID slotId, UUID matchId) {
+        Match match = getById(matchId);
+        Slot slot = slotService.getById(slotId);
+        match.setSlot(slot);
+        matchRepository.save(match);
     }
 }

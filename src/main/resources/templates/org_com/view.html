@@ -3,71 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <title>Пользователи в оргкомитете</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            display: flex;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .left-section, .right-section {
+            width: 48%;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .header img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        h1, h2, h3 {
+            margin: 10px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border-bottom: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #333;
+            color: white;
+        }
+        button {
+            background: black;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .tournaments {
+            margin-top: 20px;
+        }
+        .tournament {
+            background: #f4f4f4;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .tournament a {
+            text-decoration: none;
+            font-weight: bold;
+            color: black;
+        }
+    </style>
 </head>
 <body>
-<h1 th:text="${orgComName}"></h1>
-<h3>Пользователи оргкомитета</h3>
-
-<table>
-    <thead>
-    <tr>
-        <th>Имя</th>
-        <th>Фамилия</th>
-        <th>Роль</th>
-        <th>Статус</th>
-        <th th:if="${role == orgRoles.chief}">Действие</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="user : ${members}">
-        <td th:text="${user.name}"></td>
-        <td th:text="${user.surname}"></td>
-        <td th:text="${user.orgRole}"></td>
-        <td>
-            <span th:switch="${user.invitationStatus}">
-                <span th:case="${invitationStatuses.accepted}">Активный</span>
-                <span th:case="${invitationStatuses.pending}">Приглашение отправлено</span>
-                <span th:case="${invitationStatuses.declined}">Отказался</span>
-                <span th:case="${invitationStatuses.left}">Покинул</span>
-                <span th:case="${invitationStatuses.canceled}">Приглашение отменено</span>
-                <span th:case="${invitationStatuses.kicked}">Исключён</span>
-                <span th:case="*">Неизвестный статус</span>
-            </span>
-        </td>
-        <td th:if="${role == orgRoles.chief}">
-            <div th:switch="${user.invitationStatus}">
-                <div th:case="${invitationStatuses.accepted}">
-                    <form th:action="@{/org_com/kick/{orgComId}/{userTel}(orgComId=${orgComId}, userTel=${user.tel})}" method="post">
-                        <button type="submit">Исключить</button>
-                    </form>
-                </div>
-                <div th:case="${invitationStatuses.pending}">
-                    <form th:action="@{/org_com/cancel/{orgComId}/{userTel}(orgComId=${orgComId}, userTel=${user.tel})}" method="post">
-                        <button type="submit">Оменить приглашение</button>
-                    </form>
-                </div>
+<div class="container">
+    <div class="left-section">
+        <div class="header">
+            <h1 th:text="${orgComName}"></h1>
+        </div>
+        <h3>Пользователи оргкомитета</h3>
+        <table>
+            <thead>
+            <tr>
+                <th>Имя</th>
+                <th>Фамилия</th>
+                <th>Роль</th>
+                <th>Статус</th>
+                <th th:if="${role == orgRoles.chief}">Действие</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="user : ${members}">
+                <td th:text="${user.name}"></td>
+                <td th:text="${user.surname}"></td>
+                <td th:text="${user.orgRole}"></td>
+                <td>
+                    <span th:switch="${user.invitationStatus}">
+                        <span th:case="${invitationStatuses.accepted}">Активный</span>
+                        <span th:case="${invitationStatuses.pending}">Приглашение отправлено</span>
+                        <span th:case="${invitationStatuses.declined}">Отказался</span>
+                        <span th:case="${invitationStatuses.left}">Покинул</span>
+                        <span th:case="${invitationStatuses.canceled}">Приглашение отменено</span>
+                        <span th:case="${invitationStatuses.kicked}">Исключён</span>
+                        <span th:case="*">Неизвестный статус</span>
+                    </span>
+                </td>
+                <td th:if="${role == orgRoles.chief}">
+                    <div th:switch="${user.invitationStatus}">
+                        <div th:case="${invitationStatuses.accepted}">
+                            <form th:action="@{/org_com/kick/{orgComId}/{userTel}(orgComId=${orgComId}, userTel=${user.tel})}" method="post">
+                                <button type="submit">Исключить</button>
+                            </form>
+                        </div>
+                        <div th:case="${invitationStatuses.pending}">
+                            <form th:action="@{/org_com/cancel/{orgComId}/{userTel}(orgComId=${orgComId}, userTel=${user.tel})}" method="post">
+                                <button type="submit">Отменить приглашение</button>
+                            </form>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <div th:if="${role == orgRoles.chief}">
+            <form th:action="@{/org_com/create_invitation/{orgComId}(orgComId=${orgComId})}" method="get">
+                <button type="submit">Пригласить нового</button>
+            </form>
+        </div>
+    </div>
+    <div class="right-section">
+        <h2>Чемпионаты</h2>
+        <button th:if="${role == orgRoles.chief}" type="button">Добавить чемпионат</button>
+        <div class="tournaments">
+            <div class="tournament" th:each="tournament : ${tournaments}">
+                <a th:href="@{/tournament/view/{id}(id=${tournament.id})}" th:text="${tournament.name}"></a>
+                <p th:text="${tournament.sport}"></p>
+                <p th:text="${tournament.description}"></p>
             </div>
-
-        </td>
-    </tr>
-    </tbody>
-</table>
-<div th:if="${role == orgRoles.chief}">
-    <form th:action="@{/org_com/create_invitation/{orgComId}(orgComId=${orgComId})}" method="get">
-        <button type="submit">Invite</button>
-    </form>
-</div>
-<div th:if="${role == orgRoles.chief}">
-    <form th:action="@{/org_com/edit/{orgComId}(orgComId=${orgComId})}" method="get">
-        <button type="submit">Edit</button>
-    </form>
-</div>
-<form th:action="@{/org_com/left/{orgComId}(orgComId=${orgComId})}" method="post">
-    <button type="submit">Left Org Com</button>
-</form>
-
-<div th:if="${error}">
-    <p th:text="${error}"></p>
+        </div>
+    </div>
 </div>
 </body>
 </html>

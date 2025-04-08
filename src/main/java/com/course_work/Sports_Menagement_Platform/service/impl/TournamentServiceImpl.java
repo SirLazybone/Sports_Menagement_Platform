@@ -1,6 +1,7 @@
 package com.course_work.Sports_Menagement_Platform.service.impl;
 
 import com.course_work.Sports_Menagement_Platform.data.enums.ApplicationStatus;
+import com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus;
 import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.ApplicationDTO;
 import com.course_work.Sports_Menagement_Platform.dto.TeamTournamentDTO;
@@ -10,6 +11,7 @@ import com.course_work.Sports_Menagement_Platform.repositories.CityRepository;
 import com.course_work.Sports_Menagement_Platform.repositories.TeamTournamentRepository;
 import com.course_work.Sports_Menagement_Platform.repositories.TournamentRepository;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.OrgComService;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.StageService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TeamService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
 import org.springframework.stereotype.Service;
@@ -54,6 +56,10 @@ public class TournamentServiceImpl implements TournamentService {
         tournament.setCity(city);
 
         tournamentRepository.save(tournament);
+
+//        if (tournamentDTO.isClassicScheme()) {
+//            stageService.createClassicScheme(tournament);
+//        }
     }
 
     @Override
@@ -141,6 +147,17 @@ public class TournamentServiceImpl implements TournamentService {
         Tournament tournament = getById(tournamentId);
         OrgCom orgCom = tournament.getUserOrgCom().getOrgCom();
         return orgComService.isUserOfOrgComRef(userId, orgCom.getId());
+    }
+
+    @Override
+    public boolean isUserMemberOfOrgCom(UUID userId, OrgCom orgCom) {
+        UserOrgCom userOrgCom = orgComService.getUserOrgComByUserAndOrgCom(userId, orgCom.getId());
+        return userOrgCom.getInvitationStatus().equals(InvitationStatus.ACCEPTED);
+    }
+
+    @Override
+    public List<Tournament> getAllTournamentsOfOrgCom(UUID orgcomId) {
+        return tournamentRepository.findAllByOrgComId(orgcomId);
     }
 
     @Override

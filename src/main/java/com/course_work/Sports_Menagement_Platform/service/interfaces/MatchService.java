@@ -20,4 +20,6 @@ public interface MatchService {
     Map<UUID, List<User>> getTeamMembersMap(Team team1, Team team2);
 
     Map<UUID, List<Match>> getMatchesByStagesMap(List<Stage> stages);
+
+    void assignSlotToMatch(UUID slotId, UUID matchId);
 }

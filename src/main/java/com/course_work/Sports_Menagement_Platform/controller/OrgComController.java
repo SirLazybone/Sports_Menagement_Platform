@@ -1,14 +1,12 @@
 package com.course_work.Sports_Menagement_Platform.controller;
 
 import com.course_work.Sports_Menagement_Platform.data.enums.Org;
-import com.course_work.Sports_Menagement_Platform.data.models.Invitation;
-import com.course_work.Sports_Menagement_Platform.data.models.OrgCom;
-import com.course_work.Sports_Menagement_Platform.data.models.User;
-import com.course_work.Sports_Menagement_Platform.data.models.UserOrgCom;
+import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.*;
 import com.course_work.Sports_Menagement_Platform.service.impl.OrgComServiceImpl;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.InvitationService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.OrgComService;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.UserService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,9 +27,12 @@ import java.util.UUID;
 public class OrgComController {
     private final OrgComService orgComService;
     private final UserService userService;
-    public OrgComController(OrgComService orgComService, UserService userService) {
+    private final TournamentService tournamentService;
+    public OrgComController(OrgComService orgComService, UserService userService,
+                            TournamentService tournamentService) {
         this.orgComService = orgComService;
         this.userService = userService;
+        this.tournamentService = tournamentService;
     }
 
     @GetMapping("/new")
@@ -128,6 +129,7 @@ public class OrgComController {
     @GetMapping("/view/{id}")
     public String viewOrgCom(@PathVariable UUID id, Model model, @AuthenticationPrincipal User user) {
         List<UserOrgComDTO> list = orgComService.getAllUsersByOrgComId(id);
+        List<Tournament> tournaments = tournamentService.getAllTournamentsOfOrgCom(id);
         if (list == null || list.isEmpty()) {
             model.addAttribute("error", "There are no members");
             model.addAttribute("members", list);
@@ -140,6 +142,7 @@ public class OrgComController {
         model.addAttribute("orgComName", orgComService.getById(id).getName());
         model.addAttribute("orgRoles", new OrgRoleDTO());
         model.addAttribute("invitationStatuses", new InvitationStatusDTO());
+        model.addAttribute("tournaments", tournaments);
         return "org_com/view";
     }
 

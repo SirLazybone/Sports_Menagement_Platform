@@ -81,6 +81,11 @@ public class TournamentController {
         return "tournament/view";
     }
 
+//    @GetMapping("/view/{orgcomId}/{tournamentId}")
+//    public String viewInOrgCom(@PathVariable UUID orgcomId, @PathVariable UUID tournamentId, @AuthenticationPrincipal User user) {
+//
+//    }
+
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/create_application/{id}")
     public String createApplication(@PathVariable UUID id, Model model) {
@@ -174,6 +179,26 @@ public class TournamentController {
         model.addAttribute("applicationStatuses", new ApplicationStatusDTO());
 
         return "tournament/teams_tournament";
+    }
+
+    @GetMapping("org_com/view/{tournamentId}")
+    public String viewTournamentFotOrgCom(@PathVariable UUID tournamentId, Model model, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
+        Tournament tournament = tournamentService.getById(tournamentId);
+        if (!tournamentService.isUserMemberOfOrgCom(user.getId(), tournament.getUserOrgCom().getOrgCom())) {
+            redirectAttributes.addFlashAttribute("error", "User is not the member of the org com");
+            return "redirect:/home";
+        }
+
+        try {
+            List<Stage> stage = stageService.getStagesByTournament(tournamentId);
+            List<Team> teams = tournamentService.getAllTeamsByTournamentId(tournamentId);
+            model.addAttribute("stages", stage);
+            model.addAttribute("countTeams", teams.size());
+        } catch (RuntimeException e) {
+            model.addAttribute("error", e.getMessage());
+        }
+
+        return "org_com/tournament_view";
     }
 
 

@@ -26,6 +26,7 @@ public class MatchController {
     private final GoalService goalService;
     private final SlotService slotService;
 
+
     public MatchController(MatchService matchService, StageService stageService,
                            TournamentService tournamentService, GoalService goalService,
                            SlotService slotService, TeamService teamService) {
@@ -69,10 +70,13 @@ public class MatchController {
                     .filter(team -> !participatingTeamIds.contains(team.getId()))
                     .toList();
 
+            List<Slot> availableSlots = slotService.getAllNotInUse();
+
             model.addAttribute("stage", stage);
             model.addAttribute("availableTeams", availableTeams);
             model.addAttribute("existingMatches", existingMatches);
             model.addAttribute("matchList", matchList);
+            model.addAttribute("availableSlots", availableSlots);
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
         }
@@ -163,5 +167,25 @@ public class MatchController {
 
         goalService.addGoal(goal);
         return "redirect:/match/edit/" + goal.getMatchId().toString();
+    }
+
+    @PostMapping("/update_slot/{matchId}")
+    public String updateSlot(@PathVariable UUID matchId, @RequestParam UUID slotId, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
+        Match match = matchService.getById(matchId);
+        UUID tournamentId = match.getStage().getTournament().getId();
+
+        if (!tournamentService.isUserChiefOfTournament(user.getId(), tournamentId)) {
+            redirectAttributes.addFlashAttribute("error", "Only the chief of the tournament can update the slot for a match.");
+            return "redirect:/tournament/view/" + tournamentId.toString();
+        }
+
+        try {
+            matchService.assignSlotToMatch(slotId, matchId);
+            redirectAttributes.addFlashAttribute("success", "Slot successfully assigned to the match.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error while assigning slot: " + e.getMessage());
+        }
+
+        return "redirect:/match/fill_stage/" + match.getStage().getId().toString();
     }
 }

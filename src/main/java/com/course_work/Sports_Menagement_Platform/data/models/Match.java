@@ -20,11 +20,11 @@ public class Match {
     private boolean isResultPublished;
 
     @ManyToOne
-    @JoinColumn(name = "team_id_1", referencedColumnName = "id")
+    @JoinColumn(name = "team1", referencedColumnName = "id")
     private Team team1;
 
     @ManyToOne
-    @JoinColumn(name = "team_id_2", referencedColumnName = "id")
+    @JoinColumn(name = "team2", referencedColumnName = "id")
     private Team team2;
 
 //    @OneToOne
@@ -36,7 +36,7 @@ public class Match {
     private Slot slot;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "stage_id")
+    @JoinColumn(name = "stage")
     private Stage stage;
 
 }
