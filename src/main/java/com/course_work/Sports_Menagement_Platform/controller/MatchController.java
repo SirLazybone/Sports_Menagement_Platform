@@ -1,6 +1,7 @@
 package com.course_work.Sports_Menagement_Platform.controller;
 
 import com.course_work.Sports_Menagement_Platform.data.models.*;
+import com.course_work.Sports_Menagement_Platform.dto.AfterMatchPenaltyDTO;
 import com.course_work.Sports_Menagement_Platform.dto.GoalDTO;
 import com.course_work.Sports_Menagement_Platform.dto.MatchDTO;
 import com.course_work.Sports_Menagement_Platform.dto.MatchListDTO;
@@ -17,6 +18,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 @Controller
 @RequestMapping("/match")
 public class MatchController {
@@ -25,16 +28,22 @@ public class MatchController {
     private final TournamentService tournamentService;
     private final GoalService goalService;
     private final SlotService slotService;
-
+    private final TeamService teamService;
+    private final UserService userService;
+    private final AfterMatchPenaltyService afterMatchPenaltyService;
 
     public MatchController(MatchService matchService, StageService stageService,
                            TournamentService tournamentService, GoalService goalService,
-                           SlotService slotService, TeamService teamService) {
+                           SlotService slotService, TeamService teamService, UserService userService,
+                           AfterMatchPenaltyService afterMatchPenaltyService) {
         this.matchService = matchService;
         this.stageService = stageService;
         this.tournamentService = tournamentService;
         this.goalService = goalService;
         this.slotService = slotService;
+        this.teamService = teamService;
+        this.userService = userService;
+        this.afterMatchPenaltyService = afterMatchPenaltyService;
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -78,7 +87,8 @@ public class MatchController {
             model.addAttribute("matchList", matchList);
             model.addAttribute("availableSlots", availableSlots);
         } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/home";
         }
 
 
@@ -187,5 +197,143 @@ public class MatchController {
         }
 
         return "redirect:/match/fill_stage/" + match.getStage().getId().toString();
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/referee/{matchId}")
+    public String refereeMatch(@PathVariable UUID matchId, Model model, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
+        Match match = matchService.getById(matchId);
+        UUID tournamentId = match.getStage().getTournament().getId();
+
+        if (!tournamentService.isUserRefOfTournament(user.getId(), tournamentId)) {
+            redirectAttributes.addFlashAttribute("error", "Только судья турнира может судить матчи");
+            return "redirect:/tournament/view/" + tournamentId.toString();
+        }
+
+        try {
+            List<Team> teams = List.of(match.getTeam1(), match.getTeam2());
+
+            List<Map<String, String>> simplifiedTeams = new ArrayList<>();
+            for (Team team : teams) {
+                Map<String, String> teamMap = new HashMap<>();
+                teamMap.put("id", team.getId().toString());
+                teamMap.put("name", team.getName());
+                simplifiedTeams.add(teamMap);
+            }
+            model.addAttribute("teams", simplifiedTeams);
+
+            Map<UUID, List<User>> players = matchService.getTeamMembersMap(match.getTeam1(), match.getTeam2());
+
+            Map<String, List<Map<String, String>>> simplifiedPlayersMap = new HashMap<>();
+            for (Map.Entry<UUID, List<User>> entry : players.entrySet()) {
+                List<Map<String, String>> simplifiedUsers = new ArrayList<>();
+                for (User player : entry.getValue()) {
+                    Map<String, String> simplifiedUser = new HashMap<>();
+                    simplifiedUser.put("id", player.getId().toString());
+                    simplifiedUser.put("name", player.getName());
+                    simplifiedUsers.add(simplifiedUser);
+                }
+                simplifiedPlayersMap.put(entry.getKey().toString(), simplifiedUsers);
+            }
+
+            List<Goal> goals = goalService.getGoalsByMatch(matchId);
+            List<Goal> regularGoals = goals.stream().filter(goal -> !goal.isPenalty()).collect(Collectors.toList());
+            List<Goal> penaltyGoals = goals.stream().filter(Goal::isPenalty).collect(Collectors.toList());
+            
+            // Get after-match penalties
+            List<AfterMatchPenalty> afterMatchPenalties = afterMatchPenaltyService.getPenaltiesByMatch(matchId);
+            boolean hasAfterMatchPenalties = afterMatchPenaltyService.hasPenalties(matchId);
+
+            model.addAttribute("match", match);
+            model.addAttribute("teams", simplifiedTeams);
+            model.addAttribute("playersMap", simplifiedPlayersMap);
+            model.addAttribute("goals", regularGoals);
+            model.addAttribute("penalties", penaltyGoals);
+            model.addAttribute("afterMatchPenalties", afterMatchPenalties);
+            model.addAttribute("hasAfterMatchPenalties", hasAfterMatchPenalties);
+        } catch (RuntimeException e) {
+            model.addAttribute("error", e.getMessage());
+        }
+
+        return "match/referee_match";
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/add_goal")
+    public String addGoal(@ModelAttribute GoalDTO goalDTO, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
+        Match match = matchService.getById(goalDTO.getMatchId());
+        UUID tournamentId = match.getStage().getTournament().getId();
+
+        if (!tournamentService.isUserRefOfTournament(user.getId(), tournamentId)) {
+            redirectAttributes.addFlashAttribute("error", "Только судья турнира может добавлять голы");
+            return "redirect:/tournament/view/" + tournamentId.toString();
+        }
+
+        try {
+            goalService.addGoal(goalDTO);
+            redirectAttributes.addFlashAttribute("success", "Гол успешно добавлен");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Ошибка при добавлении гола: " + e.getMessage());
+        }
+
+        return "redirect:/match/referee/" + goalDTO.getMatchId().toString();
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/add_penalty")
+    public String addPenalty(@ModelAttribute GoalDTO goalDTO, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
+        Match match = matchService.getById(goalDTO.getMatchId());
+        UUID tournamentId = match.getStage().getTournament().getId();
+
+        if (!tournamentService.isUserRefOfTournament(user.getId(), tournamentId)) {
+            redirectAttributes.addFlashAttribute("error", "Только судья турнира может добавлять штрафные голы");
+            return "redirect:/tournament/view/" + tournamentId.toString();
+        }
+
+        try {
+            // Set isPenalty to true for penalty goals
+            goalDTO.setPenalty(true);
+            goalService.addGoal(goalDTO);
+            redirectAttributes.addFlashAttribute("success", "Штрафной гол успешно добавлен");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Ошибка при добавлении штрафного гола: " + e.getMessage());
+        }
+
+        return "redirect:/match/referee/" + goalDTO.getMatchId().toString();
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/add_after_match_penalties")
+    public String addAfterMatchPenalties(@RequestParam String penalties, @RequestParam UUID matchId, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
+        try {
+            // Преобразуем JSON строку в список DTO
+            ObjectMapper mapper = new ObjectMapper();
+            List<AfterMatchPenaltyDTO> penaltyDTOs = mapper.readValue(penalties, 
+                mapper.getTypeFactory().constructCollectionType(List.class, AfterMatchPenaltyDTO.class));
+            
+            if (penaltyDTOs.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", "Нет данных для сохранения");
+                return "redirect:/match/referee/" + matchId.toString();
+            }
+            
+            // Проверяем авторизацию для первого пенальти (все они для одного матча)
+            UUID tournamentId = matchService.getById(penaltyDTOs.get(0).getMatchId()).getStage().getTournament().getId();
+
+            if (!tournamentService.isUserRefOfTournament(user.getId(), tournamentId)) {
+                redirectAttributes.addFlashAttribute("error", "Только судья турнира может добавлять послематчевые пенальти");
+                return "redirect:/tournament/view/" + tournamentId.toString();
+            }
+
+            // Сохраняем каждый пенальти
+            for (AfterMatchPenaltyDTO penaltyDTO : penaltyDTOs) {
+                afterMatchPenaltyService.addPenalties(penaltyDTO);
+            }
+            
+            redirectAttributes.addFlashAttribute("success", "Послематчевые пенальти успешно добавлены");
+            return "redirect:/match/referee/" + penaltyDTOs.get(0).getMatchId().toString();
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Ошибка при добавлении послематчевых пенальти: " + e.getMessage());
+            return "redirect:/match/referee/" + matchId.toString();
+        }
     }
 }

@@ -54,7 +54,7 @@
                 </td>
                 <td th:text="${match.isResultPublished ? 'Да' : 'Нет'}"></td>
                 <td th:if="${isRef}">
-                    <a th:href="@{/match/edit/{id}(id=${match.id})}" class="btn">Редактировать результат</a>
+                    <a th:href="@{/match/referee/{matchId}(matchId=${match.id})}" class="btn">Редактировать результат</a>
                 </td>
             </tr>
             </tbody>

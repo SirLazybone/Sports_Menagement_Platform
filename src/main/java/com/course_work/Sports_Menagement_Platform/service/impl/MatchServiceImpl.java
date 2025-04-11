@@ -7,20 +7,26 @@ import com.course_work.Sports_Menagement_Platform.service.interfaces.MatchServic
 import com.course_work.Sports_Menagement_Platform.service.interfaces.SlotService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.StageService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TeamService;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.UserService;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class MatchServiceImpl implements MatchService {
     private final MatchRepository matchRepository;
     private final TeamService teamService;
+    private final UserService userService;
     private final StageService stageService;
     private final SlotService slotService;
+
     public MatchServiceImpl(MatchRepository matchRepository, TeamService teamService,
-                            StageService stageService, SlotService slotService) {
+                           UserService userService, StageService stageService,
+                           SlotService slotService) {
         this.matchRepository = matchRepository;
         this.teamService = teamService;
+        this.userService = userService;
         this.stageService = stageService;
         this.slotService = slotService;
     }

@@ -3,6 +3,8 @@ package com.course_work.Sports_Menagement_Platform.data.models;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -20,23 +22,19 @@ public class Match {
     private boolean isResultPublished;
 
     @ManyToOne
-    @JoinColumn(name = "team1", referencedColumnName = "id")
+    @JoinColumn(name = "team1_id")
     private Team team1;
 
     @ManyToOne
-    @JoinColumn(name = "team2", referencedColumnName = "id")
+    @JoinColumn(name = "team2_id")
     private Team team2;
 
-//    @OneToOne
-//    @JoinColumn(name = "tournament_id", referencedColumnName = "id")
-//    private Tournament tournament;
-
     @OneToOne
-    @JoinColumn(name = "slot", referencedColumnName = "id")
+    @JoinColumn(name = "slot_id")
     private Slot slot;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "stage")
+    @JoinColumn(name = "stage_id")
     private Stage stage;
 
 }

@@ -23,7 +23,7 @@ public class Stage {
     private int bestPlace; // лучшее возможное место
     private int worstPlace; // количество команд, которые участвуют на этапе
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "tournament_id")
     private Tournament tournament;
 

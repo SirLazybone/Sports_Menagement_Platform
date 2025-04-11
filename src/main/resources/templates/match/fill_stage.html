@@ -137,7 +137,7 @@
 <div class="container">
     <div class="header">
         <div class="tournament-info">
-            <h1 class="tournament-name" th:text="${stage.tournament.name}">Первая лига 2024</h1>
+            <h1 class="tournament-name" th:text="${stage != null && stage.tournament != null ? stage.tournament.name : 'Турнир не найден'}">Первая лига 2024</h1>
             <div class="tournament-organizer">НКО Московский футбол</div>
             <div class="tournament-location">футбол 8x8 Москва</div>
         </div>
