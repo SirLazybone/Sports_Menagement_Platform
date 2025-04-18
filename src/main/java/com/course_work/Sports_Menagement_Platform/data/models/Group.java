@@ -1,33 +1,36 @@
 package com.course_work.Sports_Menagement_Platform.data.models;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "groups")
+@Table(name = "group_table")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Group {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    private String champName;
-    private String index;
-    private int countTeams;
+    private String name;
+    private int maxTeams;
 
-    @ManyToMany
-    @JoinTable(name = "group_team",
-            joinColumns = @JoinColumn(name = "group_id"),
-            inverseJoinColumns = @JoinColumn(name = "team_id"))
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "stage_id")
+    private Stage stage;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "group_team",
+        joinColumns = @JoinColumn(name = "group_id"),
+        inverseJoinColumns = @JoinColumn(name = "team_id")
+    )
     private List<Team> teams = new ArrayList<>();
 }

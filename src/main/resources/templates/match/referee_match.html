@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Судейство матча</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #333;
+            color: white;
+            border-radius: 8px;
+        }
+        .team-score {
+            text-align: center;
+            font-size: 24px;
+        }
+        .score {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 0 20px;
+        }
+        .goals-section {
+            margin-top: 30px;
+        }
+        .goal-form {
+            background: #f8f8f8;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        select, input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #444;
+        }
+        .goals-list {
+            margin-top: 20px;
+        }
+        .goal-item {
+            background: #f8f8f8;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .penalties-section {
+            margin-top: 30px;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+        .after-match-penalties-section {
+            margin-top: 30px;
+            display: none;
+        }
+        .after-match-penalties-section.visible {
+            display: block;
+        }
+        .penalty-shootout {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .penalty-round {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .team-penalty {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .penalty-result {
+            display: flex;
+            gap: 10px;
+        }
+        .penalty-result button {
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+        .penalty-result button.scored {
+            background: #4CAF50;
+        }
+        .penalty-result button.missed {
+            background: #f44336;
+        }
+        .add-penalty-round {
+            margin-top: 10px;
+        }
+        .penalty-summary {
+            margin-top: 20px;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+<!--        <div class="match-header">-->
+<!--            <div class="team-score">-->
+<!--                <div th:text="${match.team1.name}"></div>-->
+<!--                <div class="score" th:text="${match.team1Score} + ' - ' + ${match.team2Score}"></div>-->
+<!--                <div th:text="${match.team2.name}"></div>-->
+<!--            </div>-->
+<!--        </div>-->
+
+        <div class="goals-section">
+            <h2>Добавить гол</h2>
+            <form th:action="@{/match/add_goal}" method="post" class="goal-form">
+                <input type="hidden" name="matchId" th:value="${match.id}"/>
+                
+                <div class="form-group">
+                    <label for="team">Команда:</label>
+                    <select name="teamId" id="team" onchange="updatePlayers(this, 'player')" required>
+                        <option value="">Выберите команду</option>
+                        <option th:each="team : ${teams}"
+                                th:value="${team.id}"
+                                th:text="${team.name}"></option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="player">Игрок:</label>
+                    <select name="playerId" id="player" required>
+                        <option value="">Выберите игрока</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="time">Время (минуты):</label>
+                    <input type="number" name="time" id="time" min="0" max="120" required/>
+                </div>
+
+                <button type="submit">Добавить гол</button>
+            </form>
+
+            <div class="goals-list">
+                <h3>Забитые голы</h3>
+                <div th:each="goal : ${goals}" class="goal-item">
+                    <span th:text="${goal.player.name} + ' (' + ${goal.team.name} + ') - ' + ${goal.time} + ' мин.'"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="penalties-section">
+            <h2>Добавить штрафной гол</h2>
+            <form th:action="@{/match/add_penalty}" method="post" class="goal-form">
+                <input type="hidden" name="matchId" th:value="${match.id}"/>
+                
+                <div class="form-group">
+                    <label for="penaltyTeam">Команда:</label>
+                    <select name="teamId" id="penaltyTeam" onchange="updatePlayers(this, 'penaltyPlayer')" required>
+                        <option value="">Выберите команду</option>
+                        <option th:each="team : ${teams}"
+                                th:value="${team.id}"
+                                th:text="${team.name}"></option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="penaltyPlayer">Игрок:</label>
+                    <select name="playerId" id="penaltyPlayer" required>
+                        <option value="">Выберите игрока</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="penaltyTime">Время (минуты):</label>
+                    <input type="number" name="time" id="penaltyTime" min="0" max="120" required/>
+                </div>
+
+                <button type="submit">Добавить штрафной гол</button>
+            </form>
+
+            <div class="goals-list">
+                <h3>Штрафные голы</h3>
+                <div th:each="penalty : ${penalties}" class="goal-item">
+                    <span th:text="${penalty.player.name} + ' (' + ${penalty.team.name} + ') - ' + ${penalty.time} + ' мин.'"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Секция послематчевых пенальти -->
+        <div class="after-match-penalties-section" id="afterMatchPenaltiesSection" th:classappend="${hasAfterMatchPenalties} ? 'visible'">
+            <h2>Послематчевые пенальти</h2>
+            
+            <!-- Отображение существующих пенальти -->
+            <div th:if="${hasAfterMatchPenalties}" class="goals-list">
+                <h3>Результаты пенальти</h3>
+                <div th:each="penalty : ${afterMatchPenalties}" class="goal-item">
+                    <span th:text="${penalty.player.name} + ' (' + ${penalty.team.name} + ') - ' + (${penalty.scored} ? 'Забил' : 'Промахнулся')"></span>
+                </div>
+            </div>
+            
+            <!-- Форма для добавления новых пенальти -->
+            <form th:action="@{/match/add_after_match_penalties}" method="post" class="goal-form" id="penaltiesForm">
+                <input type="hidden" name="matchId" th:value="${match.id}"/>
+                
+                <div class="penalty-shootout" id="penaltyShootout">
+                    <!-- Здесь будут добавляться раунды пенальти -->
+                </div>
+                
+                <button type="button" class="add-penalty-round" onclick="addPenaltyRound()">Добавить раунд</button>
+                
+                <div class="penalty-summary" id="penaltySummary">
+                    Счет по пенальти: <span id="team1PenaltyScore">0</span> - <span id="team2PenaltyScore">0</span>
+                </div>
+                
+                <button type="button" onclick="submitPenalties()" style="margin-top: 20px;">Сохранить результат пенальти</button>
+            </form>
+        </div>
+
+        <!-- Кнопка для показа/скрытия формы послематчевых пенальти -->
+        <div style="margin-top: 30px; text-align: center;">
+            <button type="button" onclick="toggleAfterMatchPenalties()" id="togglePenaltiesButton">
+                Послематчевые пенальти
+            </button>
+        </div>
+
+        <div th:if="${error}" class="error">
+            <p th:text="${error}"></p>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        // Получаем данные о игроках из Thymeleaf
+        const playersData = /*[[${playersMap}]]*/ {};
+        const teams = /*[[${teams}]]*/ [];
+        
+        function updatePlayers(teamSelect, playerSelectId) {
+            const playerSelect = document.getElementById(playerSelectId);
+            const selectedTeamId = teamSelect.value;
+            
+            // Очищаем текущий список игроков
+            playerSelect.innerHTML = '<option value="">Выберите игрока</option>';
+            
+            // Если команда выбрана, добавляем её игроков
+            if (selectedTeamId && playersData[selectedTeamId]) {
+                playersData[selectedTeamId].forEach(player => {
+                    const option = document.createElement('option');
+                    option.value = player.id;
+                    option.textContent = player.name;
+                    playerSelect.appendChild(option);
+                });
+            }
+        }
+        
+        // Функция для показа/скрытия формы послематчевых пенальти
+        function toggleAfterMatchPenalties() {
+            const section = document.getElementById('afterMatchPenaltiesSection');
+            const button = document.getElementById('togglePenaltiesButton');
+            
+            if (section.classList.contains('visible')) {
+                section.classList.remove('visible');
+                button.textContent = 'Послематчевые пенальти';
+            } else {
+                section.classList.add('visible');
+                button.textContent = 'Скрыть пенальти';
+                
+                // Если это первое открытие, добавляем первый раунд
+                if (document.querySelectorAll('.penalty-round').length === 0) {
+                    addPenaltyRound();
+                }
+            }
+        }
+        
+        // Функция для добавления нового раунда пенальти
+        function addPenaltyRound() {
+            const shootout = document.getElementById('penaltyShootout');
+            const roundNumber = document.querySelectorAll('.penalty-round').length + 1;
+            
+            const round = document.createElement('div');
+            round.className = 'penalty-round';
+            round.innerHTML = `
+                <div class="team-penalty">
+                    <span>${teams[0].name}:</span>
+                    <select name="team1PlayerId" required>
+                        <option value="">Выберите игрока</option>
+                    </select>
+                    <div class="penalty-result">
+                        <button type="button" class="scored" onclick="updatePenaltyResult(this, 1, true)">Забил</button>
+                        <button type="button" class="missed" onclick="updatePenaltyResult(this, 1, false)">Промахнулся</button>
+                    </div>
+                </div>
+                <div class="team-penalty">
+                    <span>${teams[1].name}:</span>
+                    <select name="team2PlayerId" required>
+                        <option value="">Выберите игрока</option>
+                    </select>
+                    <div class="penalty-result">
+                        <button type="button" class="scored" onclick="updatePenaltyResult(this, 2, true)">Забил</button>
+                        <button type="button" class="missed" onclick="updatePenaltyResult(this, 2, false)">Промахнулся</button>
+                    </div>
+                </div>
+                <input type="hidden" name="isTeam1Scored" value="false"/>
+                <input type="hidden" name="isTeam2Scored" value="false"/>
+            `;
+            
+            shootout.appendChild(round);
+            
+            // Заполняем списки игроков
+            const team1Select = round.querySelector('select[name="team1PlayerId"]');
+            const team2Select = round.querySelector('select[name="team2PlayerId"]');
+            
+            if (playersData[teams[0].id]) {
+                playersData[teams[0].id].forEach(player => {
+                    const option = document.createElement('option');
+                    option.value = player.id;
+                    option.textContent = player.name;
+                    team1Select.appendChild(option);
+                });
+            }
+            
+            if (playersData[teams[1].id]) {
+                playersData[teams[1].id].forEach(player => {
+                    const option = document.createElement('option');
+                    option.value = player.id;
+                    option.textContent = player.name;
+                    team2Select.appendChild(option);
+                });
+            }
+        }
+        
+        // Функция для обновления результата пенальти
+        function updatePenaltyResult(button, teamNumber, scored) {
+            // Сбрасываем стили всех кнопок в этом раунде для этой команды
+            const round = button.closest('.penalty-round');
+            const teamButtons = round.querySelectorAll(`.team-penalty:nth-child(${teamNumber}) .penalty-result button`);
+            teamButtons.forEach(btn => {
+                btn.style.backgroundColor = '';
+            });
+            
+            // Устанавливаем стиль для нажатой кнопки
+            button.style.backgroundColor = scored ? '#4CAF50' : '#f44336';
+            
+            // Обновляем скрытое поле с результатом
+            const hiddenField = round.querySelector(`input[name="isTeam${teamNumber}Scored"]`);
+            hiddenField.value = scored;
+            
+            // Обновляем счет
+            updatePenaltyScore();
+        }
+        
+        // Функция для обновления общего счета по пенальти
+        function updatePenaltyScore() {
+            let team1Score = 0;
+            let team2Score = 0;
+            
+            // Подсчитываем забитые пенальти для каждой команды
+            document.querySelectorAll('.penalty-round').forEach(round => {
+                const team1Result = round.querySelector('input[name="isTeam1Scored"]').value === 'true';
+                const team2Result = round.querySelector('input[name="isTeam2Scored"]').value === 'true';
+                
+                if (team1Result) {
+                    team1Score++;
+                }
+                
+                if (team2Result) {
+                    team2Score++;
+                }
+            });
+            
+            // Обновляем отображение счета
+            document.getElementById('team1PenaltyScore').textContent = team1Score;
+            document.getElementById('team2PenaltyScore').textContent = team2Score;
+        }
+
+        // Функция для отправки формы с пенальти
+        function submitPenalties() {
+            const form = document.getElementById('penaltiesForm');
+            const matchId = form.querySelector('input[name="matchId"]').value;
+            const rounds = document.querySelectorAll('.penalty-round');
+            const penalties = [];
+
+            rounds.forEach((round, index) => {
+                const team1PlayerId = round.querySelector('select[name="team1PlayerId"]').value;
+                const team2PlayerId = round.querySelector('select[name="team2PlayerId"]').value;
+                const isTeam1Scored = round.querySelector('input[name="isTeam1Scored"]').value === 'true';
+                const isTeam2Scored = round.querySelector('input[name="isTeam2Scored"]').value === 'true';
+
+                if (team1PlayerId && team2PlayerId) {
+                    penalties.push({
+                        matchId: matchId,
+                        team1PlayerId: team1PlayerId,
+                        team2PlayerId: team2PlayerId,
+                        isTeam1Scored: isTeam1Scored,
+                        isTeam2Scored: isTeam2Scored
+                    });
+                }
+            });
+
+            // Создаем скрытые input'ы для отправки данных
+            const penaltiesInput = document.createElement('input');
+            penaltiesInput.type = 'hidden';
+            penaltiesInput.name = 'penalties';
+            penaltiesInput.value = JSON.stringify(penalties);
+            form.appendChild(penaltiesInput);
+
+            const matchIdInput = document.createElement('input');
+            matchIdInput.type = 'hidden';
+            matchIdInput.name = 'matchId';
+            matchIdInput.value = matchId;
+            form.appendChild(matchIdInput);
+
+            form.submit();
+        }
+    </script>
+</body>
+</html> 

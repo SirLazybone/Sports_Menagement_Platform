@@ -42,7 +42,7 @@
 <div class="container">
   <h2>Создать слот</h2>
 
-  <form th:action="@{/slot/create/{matchId}(matchId=${matchId})}" th:object="${slot}" method="post">
+  <form th:action="@{/slot/create}" th:object="${slot}" method="post">
     <div>
       <label for="date">Дата:</label>
       <input type="date" id="date" th:field="*{date}" required/>
@@ -66,9 +66,13 @@
 
     <button type="submit" class="btn">Создать слот</button>
   </form>
-
-  <a th:href="@{/matches/{stageId}(stageId=${stageId})}" class="btn">Назад</a>
 </div>
 
+<div th:if="${error}" class="error-message">
+  <p th:text="${error}"></p>
+</div>
+<div th:if="${success}" class="success-message">
+  <p th:text="${success}"></p>
+</div>
 </body>
 </html>

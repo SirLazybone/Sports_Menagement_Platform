@@ -1,6 +1,7 @@
 package com.course_work.Sports_Menagement_Platform.service.impl;
 
 import com.course_work.Sports_Menagement_Platform.data.enums.ApplicationStatus;
+import com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus;
 import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.ApplicationDTO;
 import com.course_work.Sports_Menagement_Platform.dto.TeamTournamentDTO;
@@ -54,6 +55,10 @@ public class TournamentServiceImpl implements TournamentService {
         tournament.setCity(city);
 
         tournamentRepository.save(tournament);
+
+//        if (tournamentDTO.isClassicScheme()) {
+//            stageService.createClassicScheme(tournament);
+//        }
     }
 
     @Override
@@ -131,8 +136,27 @@ public class TournamentServiceImpl implements TournamentService {
 
     @Override
     public boolean isUserChiefOfTournament(UUID userId, UUID tournamentId) {
-        Tournament tournament = tournamentRepository.findById(tournamentId).get();
-        return Objects.equals(tournament.getUserOrgCom().getUser().getId(), userId);
+        Tournament tournament = getById(tournamentId);
+        OrgCom orgCom = tournament.getUserOrgCom().getOrgCom();
+        return orgComService.isUserOfOrgComChief(userId, orgCom.getId());
+    }
+
+    @Override
+    public boolean isUserRefOfTournament(UUID userId, UUID tournamentId) {
+        Tournament tournament = getById(tournamentId);
+        OrgCom orgCom = tournament.getUserOrgCom().getOrgCom();
+        return orgComService.isUserOfOrgComRef(userId, orgCom.getId());
+    }
+
+    @Override
+    public boolean isUserMemberOfOrgCom(UUID userId, OrgCom orgCom) {
+        UserOrgCom userOrgCom = orgComService.getUserOrgComByUserAndOrgCom(userId, orgCom.getId());
+        return userOrgCom.getInvitationStatus().equals(InvitationStatus.ACCEPTED);
+    }
+
+    @Override
+    public List<Tournament> getAllTournamentsOfOrgCom(UUID orgcomId) {
+        return tournamentRepository.findAllByOrgComId(orgcomId);
     }
 
     @Override

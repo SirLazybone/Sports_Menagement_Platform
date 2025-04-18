@@ -1,6 +1,5 @@
 package com.course_work.Sports_Menagement_Platform.service.impl;
 
-import com.course_work.Sports_Menagement_Platform.data.models.Match;
 import com.course_work.Sports_Menagement_Platform.data.models.Slot;
 import com.course_work.Sports_Menagement_Platform.dto.SlotCreationDTO;
 import com.course_work.Sports_Menagement_Platform.repositories.MatchRepository;
@@ -9,6 +8,7 @@ import com.course_work.Sports_Menagement_Platform.service.interfaces.LocationSer
 import com.course_work.Sports_Menagement_Platform.service.interfaces.SlotService;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -23,21 +23,23 @@ public class SlotServiceImpl implements SlotService {
     }
 
     @Override
-    public void createSlot(SlotCreationDTO slotDTO, UUID matchId) {
-        Match match = matchRepository.findById(matchId).orElseThrow(() -> new RuntimeException("Нет такого матча"));
+    public void createSlot(SlotCreationDTO slotDTO) {
         Slot slot = Slot.builder()
                 .date(slotDTO.getDate())
                 .time(slotDTO.getTime())
                 .location(locationService.getById(slotDTO.getLocation())).build();
 
-        match.setSlot(slot);
-
         slotRepository.save(slot);
-        matchRepository.save(match);
     }
 
     @Override
     public Slot getById(UUID slotId) {
         return slotRepository.findById(slotId).orElseThrow(() -> new RuntimeException("Слот не существует"));
     }
+
+    @Override
+    public List<Slot> getAllNotInUse() {
+        return slotRepository.findAllNotInUse();
+    }
+
 }

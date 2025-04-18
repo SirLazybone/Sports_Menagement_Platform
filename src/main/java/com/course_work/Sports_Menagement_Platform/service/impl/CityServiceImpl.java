@@ -1,4 +1,4 @@
-package com.course_work.Sports_Menagement_Platform.services;
+package com.course_work.Sports_Menagement_Platform.service.impl;
 
 import com.course_work.Sports_Menagement_Platform.data.models.City;
 import com.course_work.Sports_Menagement_Platform.repositories.CityRepository;

@@ -81,6 +81,11 @@ public class TournamentController {
         return "tournament/view";
     }
 
+//    @GetMapping("/view/{orgcomId}/{tournamentId}")
+//    public String viewInOrgCom(@PathVariable UUID orgcomId, @PathVariable UUID tournamentId, @AuthenticationPrincipal User user) {
+//
+//    }
+
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/create_application/{id}")
     public String createApplication(@PathVariable UUID id, Model model) {
@@ -176,142 +181,43 @@ public class TournamentController {
         return "tournament/teams_tournament";
     }
 
-    @PreAuthorize("isAuthenticated()")
-    @GetMapping("/create_stage/{tournamentId}")
-    public String createStages(@PathVariable UUID tournamentId, Model model, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
-        if (!tournamentService.isUserChiefOfTournament(user.getId(), tournamentId)) {
-            redirectAttributes.addFlashAttribute("error", "Only chief of the tournament can create stage");
-            return "redirect:/tournament/view/" + tournamentId.toString();
-        }
-
-        model.addAttribute("stage", new StageCreationDTO());
-        model.addAttribute("tournamnetId", tournamentId);
-        List<Stage> list = stageService.getStagesByTournament(tournamentId);
-        if (list == null || list.isEmpty()) {
-            model.addAttribute("error", "Этапы пока не созданы или не опубликованы");
-        }
-        model.addAttribute("stages", list);
-        return "tournament/create_stage";
-    }
-
-    @PreAuthorize("isAuthenticated()")
-    @PostMapping("/create_stage/{tournamentId}")
-    public String createStage(@PathVariable UUID tournamentId, @Valid @ModelAttribute("stage") StageCreationDTO stageDTO, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
-        if (!tournamentService.isUserChiefOfTournament(user.getId(), tournamentId)) {
-            redirectAttributes.addFlashAttribute("error", "Only chief of the tournament can create stage");
-            return "redirect:/tournament/view/" + tournamentId.toString();
-        }
-
-        model.addAttribute("tournamentId", tournamentId);
-        if (bindingResult.hasErrors()) {
-            return "tournament/create_stage";
-        }
-
-        try {
-            stageService.createStage(stageDTO, tournamentId);
-        } catch (RuntimeException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-        }
-
-        return "redirect:/tournament/create_stage/" + tournamentId.toString();
-    }
-
-    @GetMapping("/stages/{tournamentId}") // для всех
-    public String showStages(@PathVariable UUID tournamentId, Model model) {
-        List<Stage> list = stageService.getStagesByTournament(tournamentId);
-        if (list == null || list.isEmpty()) {
-            model.addAttribute("error", "Этапы пока не созданы или не опубликованы");
-        }
-        model.addAttribute("stages", list);
-        return "tournament/stages";
-    }
-
-    @PreAuthorize("isAuthenticated()")
-    @GetMapping("/fill_stage/{stageId}")
-    public String fillStage(@PathVariable UUID stageId, Model model, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
-        UUID tournamentId = null;
-        try {
-            tournamentId = stageService.getTournamentByStage(stageId).getId();
-        } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
+    @GetMapping("org_com/view/{tournamentId}")
+    public String viewTournamentFotOrgCom(@PathVariable UUID tournamentId, Model model, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
+        Tournament tournament = tournamentService.getById(tournamentId);
+        if (!tournamentService.isUserMemberOfOrgCom(user.getId(), tournament.getUserOrgCom().getOrgCom())) {
+            redirectAttributes.addFlashAttribute("error", "User is not the member of the org com");
             return "redirect:/home";
         }
-        if (!tournamentService.isUserChiefOfTournament(user.getId(), tournamentId)) {
-            redirectAttributes.addFlashAttribute("error", "Only chief of the tournament can fill stage");
-            return "redirect:/tournament/view/" + tournamentId.toString();
-        }
 
         try {
-            Stage stage = stageService.getStageById(stageId);
-            List<Team> teams = stageService.getTeamsByStageId(stageId);
-            model.addAttribute("math", new MatchDTO());
-            model.addAttribute("teams", teams);
-            model.addAttribute("stage", stage);
+            List<Stage> stage = stageService.getStagesByTournament(tournamentId);
+            List<Team> teams = tournamentService.getAllTeamsByTournamentId(tournamentId);
+            model.addAttribute("stages", stage);
+            model.addAttribute("countTeams", teams.size());
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
         }
 
-        return "tournament/fill_stage";
-    }
-
-    @PreAuthorize("isAuthenticated()")
-    @PostMapping("/create_matches")
-    public String createMatches(@ModelAttribute("match") MatchDTO matchDTO, RedirectAttributes redirectAttributes, Model model, @AuthenticationPrincipal User user) {
-        UUID tournamentId = null;
-        try {
-            tournamentId = stageService.getTournamentByStage(matchDTO.getStageId()).getId();
-        } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
-            return "redirect:/home";
-        }
-        if (!tournamentService.isUserChiefOfTournament(user.getId(), tournamentId)) {
-            redirectAttributes.addFlashAttribute("error", "Only chief of the tournament can create match");
-            return "redirect:/tournament/view/" + tournamentId.toString();
-        }
-
-        try {
-            stageService.createMatch(matchDTO);
-            redirectAttributes.addFlashAttribute("success", "Матч успешно создан!");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Ошибка при создании матча: " + e.getMessage());
-        }
-        return "redirect:/tournament/fill_stage/" + matchDTO.getStageId();
-    }
-
-    @PostMapping("/publish_stage/{stageId}")
-    public String publishStage(@PathVariable UUID stageId, Model model, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
-        UUID tournamentId = null;
-        try {
-            tournamentId = stageService.getTournamentByStage(stageId).getId();
-        } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
-            return "redirect:/home";
-        }
-        if (!tournamentService.isUserChiefOfTournament(user.getId(), tournamentId)) {
-            redirectAttributes.addFlashAttribute("error", "Only chief of the tournament can create match");
-            return "redirect:/tournament/view/" + tournamentId.toString();
-        }
-
-        try {
-            stageService.publishStage(stageId);
-        } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
-        }
-        return "redirect:tournament/create_stage/" + stageId.toString();
-    }
-
-    @GetMapping("/matches/{stageId}")
-    public String showMatches(@PathVariable UUID stageId, Model model) {
-        List<Match> list = stageService.getAllMatches(stageId);
-        if (list == null || list.isEmpty()) {
-            model.addAttribute("error", "There are no matches yet");
-        }
-        model.addAttribute("matches", list);
-        model.addAttribute("stageId", stageId);
-
-        return "tournament/matches";
+        return "org_com/tournament_view";
     }
 
 
+//    @PostMapping("/create_group/{tournamentId}")
+//    public String createGroup(@PathVariable UUID tournamentId, @Valid @ModelAttribute GroupDTO group, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
+//        if (!tournamentService.isUserChiefOfTournament(user.getId(), tournamentId)) {
+//            redirectAttributes.addFlashAttribute("error", "Only chief of the tournament can create group");
+//            return "redirect:/tournament/view/" + tournamentId.toString();
+//        }
+//
+//        model.addAttribute("tournamentId", tournamentId);
+//        if (bindingResult.hasErrors()) {
+//            return "tournament/create_stage";
+//        }
+//
+//        try {
+//
+//        }
+//        return null;
+//    }
 }
 

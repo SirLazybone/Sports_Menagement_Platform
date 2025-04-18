@@ -167,4 +167,5 @@ public class TeamServiceImpl implements TeamService {
     public Team getByName(String name) {
         return teamRepository.findByName(name).orElseThrow(() -> new RuntimeException("Команды с таким именем не существует"));
     }
+
 }

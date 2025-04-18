@@ -2,16 +2,16 @@ package com.course_work.Sports_Menagement_Platform.data.models;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.util.UUID;
 
 @Entity
 @Table(name = "goal")
-@Getter
-@Setter
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Goal {
@@ -19,20 +19,20 @@ public class Goal {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    private boolean is_penalty;
+    private boolean isPenalty; // для футбола или хоккея
     private int time;
-    private int points;
-    private int set_number;
+    private int points; // для баскетбола
+    private int set_number; // для воллейбола
 
-    @OneToOne
-    @JoinColumn(name = "team_id", referencedColumnName = "id")
+    @ManyToOne
+    @JoinColumn(name = "team_id")
     private Team team;
 
-    @OneToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private User user;
+    @ManyToOne
+    @JoinColumn(name = "player_id")
+    private User player;
 
-    @OneToOne
-    @JoinColumn(name = "match_id", referencedColumnName = "id")
+    @ManyToOne
+    @JoinColumn(name = "match_id")
     private Match match;
 }

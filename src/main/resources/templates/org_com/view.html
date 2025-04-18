@@ -3,6 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <title>Пользователи в оргкомитете</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            display: flex;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .left-section, .right-section {
+            width: 48%;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .header img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        h1, h2, h3 {
+            margin: 10px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border-bottom: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #333;
+            color: white;
+        }
+        button {
+            background: black;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .tournaments {
+            margin-top: 20px;
+        }
+        .tournament {
+            background: #f4f4f4;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .tournament a {
+            text-decoration: none;
+            font-weight: bold;
+            color: black;
+        }
+    </style>
 </head>
 <body>
 <h1 th:text="${orgComName}"></h1>
@@ -112,6 +185,7 @@
 
 <div th:if="${error}">
     <p th:text="${error}"></p>
+
 </div>
 </body>
 </html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Создание этапов</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .tournament-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .tournament-name {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .tournament-organizer {
+            font-size: 18px;
+            margin: 5px 0;
+        }
+        .tournament-location {
+            font-size: 16px;
+            color: #555;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background-color: #ddd;
+        }
+        .user-name {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .stage-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stage-header {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .stage-info {
+            margin-bottom: 15px;
+        }
+        .stage-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: white;
+            font-size: 16px;
+        }
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .btn-primary {
+            background-color: #333;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #555;
+            color: white;
+        }
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid #333;
+            color: #333;
+        }
+        .error-message {
+            color: red;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .success-message {
+            color: green;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .group-stage-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="tournament-info">
+            <h1 class="tournament-name" th:text="${tournament != null ? tournament.name : 'Турнир не найден'}">Название турнира</h1>
+            <div class="tournament-organizer" th:text="${tournament != null && tournament.userOrgCom != null ? tournament.userOrgCom.user.name : 'Организатор не указан'}">Организатор</div>
+            <div class="tournament-location" th:text="${tournament != null && tournament.city != null ? tournament.city.name : 'Город не указан'}">Город</div>
+        </div>
+        <div class="user-info">
+            <div class="user-avatar"></div>
+            <div class="user-name" th:text="${user != null ? user.name : 'Пользователь'}">Пользователь</div>
+        </div>
+    </div>
+
+    <div th:if="${error}" class="error-message">
+        <p th:text="${error}"></p>
+    </div>
+    <div th:if="${success}" class="success-message">
+        <p th:text="${success}"></p>
+    </div>
+
+    <!-- Секция группового этапа -->
+    <div class="group-stage-section">
+        <h2>Групповой этап</h2>
+        <div th:if="${groupStage == null}">
+            <form th:action="@{/stage/create_group_stage/{id}(id=${tournamentId})}" method="post">
+                <button type="submit" class="btn btn-primary">Создать групповой этап</button>
+            </form>
+        </div>
+        <div th:if="${groupStage != null}">
+            <div class="stage-info">
+                <p>Групповой этап уже создан</p>
+            </div>
+            <div class="stage-actions">
+                <a th:href="@{/stage/manage_groups/{id}(id=${groupStage.id})}" class="btn btn-primary">Управление группами</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Список уже созданных этапов -->
+    <div th:each="stage : ${stages}" class="stage-container">
+        <div class="stage-header">
+            <h3 th:text="${stage.bestPlace} + ' / ' + ${stage.worstPlace}">Этап</h3>
+        </div>
+        <div class="stage-info">
+            <p>Опубликован: <span th:text="${stage.isPublished ? 'Да' : 'Нет'}"></span></p>
+        </div>
+        <div class="stage-actions">
+            <form th:action="@{/tournament/publish_stage/{id}(id=${stage.id})}" method="post">
+                <button type="submit" class="btn btn-outline">Опубликовать этап</button>
+            </form>
+            <form th:action="@{/match/fill_stage/{id}(id=${stage.id})}" method="get">
+                <button type="submit" class="btn btn-outline">Заполнить матчами</button>
+            </form>
+            <form th:action="@{/match/matches/{id}(id=${stage.id})}" method="get">
+                <button type="submit" class="btn btn-outline">Просмотреть матчи</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Форма создания нового этапа -->
+    <div class="stage-container">
+        <h2>Создать новый этап</h2>
+        <form th:action="@{/stage/create_stage/{id}(id=${tournamentId})}" th:object="${stage}" method="post">
+            <div class="form-group">
+                <label for="bestPlace">Количество команд, которые выходят дальше:</label>
+                <input type="number" id="bestPlace" th:field="*{bestPlace}" required/>
+                <span th:if="${#fields.hasErrors('bestPlace')}" class="error-message" th:errors="*{bestPlace}"></span>
+            </div>
+            <div class="form-group">
+                <label for="worstPlace">Количество команд, которые участвуют в этапе:</label>
+                <input type="number" id="worstPlace" th:field="*{worstPlace}" required/>
+                <span th:if="${#fields.hasErrors('worstPlace')}" class="error-message" th:errors="*{worstPlace}"></span>
+            </div>
+            <div class="stage-actions">
+                <button type="submit" class="btn btn-primary">Создать этап</button>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

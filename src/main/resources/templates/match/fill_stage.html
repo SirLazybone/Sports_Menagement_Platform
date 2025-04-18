@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Создание матчей</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .tournament-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .tournament-name {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .tournament-organizer {
+            font-size: 18px;
+            margin: 5px 0;
+        }
+        .tournament-location {
+            font-size: 16px;
+            color: #555;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background-color: #ddd;
+        }
+        .user-name {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .stage-title {
+            font-size: 22px;
+            margin: 20px 0;
+        }
+        .match-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        .match-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .existing-match {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            align-items: center;
+        }
+        .existing-match-teams {
+            font-weight: bold;
+        }
+        .slot-info {
+            font-size: 16px;
+        }
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .btn-primary {
+            background-color: #333;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #555;
+            color: white;
+        }
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid #333;
+            color: #333;
+        }
+        .error-message {
+            color: red;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .success-message {
+            color: green;
+            padding: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="tournament-info">
+            <h1 class="tournament-name" th:text="${stage != null && stage.tournament != null ? stage.tournament.name : 'Турнир не найден'}">Первая лига 2024</h1>
+            <div class="tournament-organizer">НКО Московский футбол</div>
+            <div class="tournament-location">футбол 8x8 Москва</div>
+        </div>
+        <div class="user-info">
+            <div class="user-avatar"></div>
+            <div class="user-name">Петр Иванов</div>
+        </div>
+    </div>
+
+    <h2 class="stage-title" th:text="${stage.bestPlace} + ' / ' + ${stage.worstPlace}">1 / 8 финала</h2>
+
+    <!-- Отображение существующих матчей -->
+    <div th:each="match : ${existingMatches}" class="existing-match">
+        <div class="existing-match-teams" th:text="${match.team1.name} + ' vs ' + ${match.team2.name}"></div>
+        <div class="slot-info" th:if="${match.slot != null}" th:text="${match.slot.date} + ' ' + ${match.slot.location.name}"></div>
+        <div th:if="${match.slot == null}">
+            <form th:action="@{/match/update_slot/{matchId}(matchId=${match.id})}" method="post" onsubmit="return validateSlotSelection(this)">
+                <select name="slotId">
+                    <option value="">Выберите слот</option>
+                    <option th:each="slot : ${availableSlots}"
+                            th:value="${slot.id}"
+                            th:text="${slot.date} + ' ' + ${slot.location.name}"></option>
+                </select>
+                <button type="submit" class="btn btn-outline" style="margin-top: 10px;">Добавить слот</button>
+            </form>
+        </div>
+    </div>
+
+    <form th:action="@{/match/create_matches/{stageId}(stageId=${stage.id})}" th:object="${matchList}" method="post" onsubmit="return validateMatches()">
+        <!-- Перебор новых матчей -->
+        <div th:each="match, iterStat : *{newMatches}" class="match-row">
+            <!-- Скрытое поле для stageId -->
+            <input type="hidden" th:name="newMatches[__${iterStat.index}__].stageId" th:value="${stage.id}">
+
+            <div>
+                <div class="match-label">Слот</div>
+                <select th:field="*{newMatches[__${iterStat.index}__].slotId}" onchange="updateSlots(this)">
+                    <option value="">Выберите слот</option>
+                    <option th:each="slot : ${availableSlots}"
+                            th:value="${slot.id}"
+                            th:text="${slot.date} + ' ' + ${slot.location.name}"
+                            th:selected="${match.slotId != null && match.slotId == slot.id}">
+                    </option>
+                </select>
+            </div>
+
+            <div>
+                <div class="match-label">Команда 1</div>
+                <select th:field="*{newMatches[__${iterStat.index}__].team1Id}" onchange="updateTeams(this)">
+                    <option value="">Выберите команду</option>
+                    <option th:each="team : ${availableTeams}"
+                            th:value="${team.id}"
+                            th:text="${team.name}"
+                            th:selected="${match.team1Id != null && match.team1Id == team.id}">
+                    </option>
+                </select>
+            </div>
+
+            <div>
+                <div class="match-label">Команда 2</div>
+                <select th:field="*{newMatches[__${iterStat.index}__].team2Id}" onchange="updateTeams(this)">
+                    <option value="">Выберите команду</option>
+                    <option th:each="team : ${availableTeams}"
+                            th:value="${team.id}"
+                            th:text="${team.name}"
+                            th:selected="${match.team2Id != null && match.team2Id == team.id}">
+                    </option>
+                </select>
+            </div>
+        </div>
+
+        <div class="actions">
+            <a href="/slot/create" class="btn btn-secondary">Создать слот</a>
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+        </div>
+    </form>
+</div>
+
+<div th:if="${error}" class="error-message">
+    <p th:text="${error}"></p>
+</div>
+<div th:if="${success}" class="success-message">
+    <p th:text="${success}"></p>
+</div>
+
+<script>
+    // Функция для обновления списка команд
+    function updateTeams(selectElement) {
+        const allTeamSelects = document.querySelectorAll('select[name$="team1Id"], select[name$="team2Id"]');
+        const selectedTeams = [];
+
+        // Собираем все выбранные команды
+        allTeamSelects.forEach(select => {
+            if (select.value) {
+                selectedTeams.push(select.value);
+            }
+        });
+
+        // Обновляем доступность команд во всех селекторах
+        allTeamSelects.forEach(select => {
+            const currentValue = select.value;
+            const options = select.querySelectorAll('option');
+
+            options.forEach(option => {
+                if (option.value && option.value !== currentValue && selectedTeams.includes(option.value)) {
+                    option.disabled = true;
+                    option.style.display = 'none';
+                } else {
+                    option.disabled = false;
+                    option.style.display = '';
+                }
+            });
+        });
+    }
+
+    // Функция для обновления списка слотов
+    function updateSlots(selectElement) {
+        const allSlotSelects = document.querySelectorAll('select[name$="slotId"]');
+        const selectedSlots = [];
+
+        // Собираем все выбранные слоты
+        allSlotSelects.forEach(select => {
+            if (select.value) {
+                selectedSlots.push(select.value);
+            }
+        });
+
+        // Обновляем доступность слотов во всех селекторах
+        allSlotSelects.forEach(select => {
+            const currentValue = select.value;
+            const options = select.querySelectorAll('option');
+
+            options.forEach(option => {
+                if (option.value && option.value !== currentValue && selectedSlots.includes(option.value)) {
+                    option.disabled = true;
+                    option.style.display = 'none';
+                } else {
+                    option.disabled = false;
+                    option.style.display = '';
+                }
+            });
+        });
+    }
+
+    function validateMatches() {
+        let isValid = true;
+        let matchRows = document.querySelectorAll('.match-row');
+
+        matchRows.forEach(row => {
+            let team1 = row.querySelector('select[name$="team1Id"]').value;
+            let team2 = row.querySelector('select[name$="team2Id"]').value;
+
+            if ((team1 && !team2) || (!team1 && team2)) {
+                isValid = false;
+                alert("Если выбрана одна команда, необходимо выбрать и вторую.");
+                return false;
+            }
+        });
+
+        return isValid;
+    }
+
+    // Validate that a slot is selected before submitting the form
+    function validateSlotSelection(form) {
+        const slotSelect = form.querySelector('select[name="slotId"]');
+        if (!slotSelect.value) {
+            alert("Пожалуйста, выберите слот перед добавлением.");
+            return false;
+        }
+        return true;
+    }
+
+    // Инициализация при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        const teamSelects = document.querySelectorAll('select[name$="team1Id"], select[name$="team2Id"]');
+        const slotSelects = document.querySelectorAll('select[name$="slotId"]');
+
+        // Инициализация команд
+        if (teamSelects.length > 0) {
+            updateTeams(teamSelects[0]);
+        }
+
+        // Инициализация слотов
+        if (slotSelects.length > 0) {
+            updateSlots(slotSelects[0]);
+        }
+    });
+</script>
+</body>
+</html>

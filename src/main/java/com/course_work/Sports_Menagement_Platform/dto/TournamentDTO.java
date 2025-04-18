@@ -23,5 +23,6 @@ public class TournamentDTO {
     private int minMembers;
     private LocalDate registerDeadline;
     private String description;
+    private boolean isClassicScheme;
 //    private String logo;
 }

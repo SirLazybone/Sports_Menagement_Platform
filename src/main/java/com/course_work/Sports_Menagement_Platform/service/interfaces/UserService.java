@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface UserService {
+    User getById(UUID userId);
     User findByUsername(String username);
     User saveNewUser(UserCreationDTO user);
     void deleteUser(UUID id);

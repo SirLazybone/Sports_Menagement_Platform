@@ -4,13 +4,12 @@ import com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus;
 import com.course_work.Sports_Menagement_Platform.data.enums.Org;
 import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.OrgComDTO;
+import com.course_work.Sports_Menagement_Platform.dto.TournamentDTO;
 import com.course_work.Sports_Menagement_Platform.dto.UserOrgComDTO;
 import com.course_work.Sports_Menagement_Platform.mapper.OrgComMapper;
 import com.course_work.Sports_Menagement_Platform.repositories.OrgComRepository;
 import com.course_work.Sports_Menagement_Platform.repositories.UserOrgComRepository;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.OrgComService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -93,8 +92,13 @@ public class OrgComServiceImpl implements OrgComService {
     }
 
     @Override
+    public UserOrgCom getUserOrgComByUserAndOrgCom(UUID userId, UUID orgComId) {
+        return userOrgComRepository.findByUser_IdAndOrgCom_Id(userId, orgComId).orElseThrow(() -> new RuntimeException("Пользователь не относится к данной организации"));
+    }
+
+    @Override
     public Org getOrgRoleByUserAndOrgCom(UUID userId, UUID orgComId) {
-        UserOrgCom userOrgCom = userOrgComRepository.findByUser_IdAndOrgCom_Id(userId, orgComId).orElseThrow(() -> new RuntimeException("No such UserOrgCom"));
+        UserOrgCom userOrgCom = getUserOrgComByUserAndOrgCom(userId, orgComId);
         return userOrgCom.getOrgRole();
     }
 
@@ -105,15 +109,17 @@ public class OrgComServiceImpl implements OrgComService {
     }
 
     @Override
-    public void createInvitation(OrgCom orgCom, User user, Org orgRole, boolean is_ref) {
+    public void createInvitation(OrgCom orgCom, User user, Org orgRole, boolean isRef) {
         Optional<UserOrgCom> optionalUserOrgCom = userOrgComRepository.findByUser_IdAndOrgCom_Id(user.getId(), orgCom.getId());
         if (optionalUserOrgCom.isPresent()) {
             UserOrgCom presentedUserOrgCom = optionalUserOrgCom.get();
             presentedUserOrgCom.setInvitationStatus(InvitationStatus.PENDING);
+            presentedUserOrgCom.setOrgRole(orgRole);
+            presentedUserOrgCom.setRef(isRef);
             userOrgComRepository.save(presentedUserOrgCom);
             return;
         }
-        UserOrgCom userOrgCom = UserOrgCom.builder().orgRole(orgRole).user(user).orgCom(orgCom).invitationStatus(InvitationStatus.PENDING).build();
+        UserOrgCom userOrgCom = UserOrgCom.builder().orgRole(orgRole).user(user).orgCom(orgCom).invitationStatus(InvitationStatus.PENDING).isRef(isRef).build();
         orgCom.getUserOrgComList().add(userOrgCom);
         user.getUserOrgComList().add(userOrgCom);
         userOrgComRepository.save(userOrgCom);
@@ -134,22 +140,22 @@ public class OrgComServiceImpl implements OrgComService {
     }
 
     @Override
-    public void leftOrgCom(UUID orgComID, User user) {
-        UserOrgCom userOrgCom = userOrgComRepository.findByUser_IdAndOrgCom_Id(user.getId(), orgComID).orElseThrow(() -> new RuntimeException("Нет такой сущности UserOrgCom"));
+    public void leftOrgCom(UUID orgComId, User user) {
+        UserOrgCom userOrgCom = getUserOrgComByUserAndOrgCom(user.getId(), orgComId);
         userOrgCom.setInvitationStatus(InvitationStatus.LEFT);
         userOrgComRepository.save(userOrgCom);
     }
 
     @Override
     public void kickUser(UUID orgComId, UUID userId) {
-        UserOrgCom userOrgCom = userOrgComRepository.findByUser_IdAndOrgCom_Id(userId, orgComId).orElseThrow(() -> new RuntimeException("No such UserOrgCom"));
+        UserOrgCom userOrgCom = getUserOrgComByUserAndOrgCom(userId, orgComId);
         userOrgCom.setInvitationStatus(InvitationStatus.KICKED);
         userOrgComRepository.save(userOrgCom);
     }
 
     @Override
     public void cancelInvitation(UUID orgComId, UUID userId) {
-        UserOrgCom userOrgCom = userOrgComRepository.findByUser_IdAndOrgCom_Id(userId, orgComId).orElseThrow(() -> new RuntimeException("No such UserOrgCom"));
+        UserOrgCom userOrgCom = getUserOrgComByUserAndOrgCom(userId, orgComId);
         userOrgCom.setInvitationStatus(InvitationStatus.CANCELED);
         userOrgComRepository.save(userOrgCom);
     }
@@ -168,7 +174,7 @@ public class OrgComServiceImpl implements OrgComService {
     @Override
     public UserOrgCom getUserOrgComChief(String orgComName, UUID userId) {
         OrgCom orgCom = orgComRepository.findByName(orgComName).orElseThrow(() -> new RuntimeException("Такой организации не сущетсвует"));
-        UserOrgCom userOrgCom = userOrgComRepository.findByUser_IdAndOrgCom_Id(userId, orgCom.getId()).orElseThrow(() -> new RuntimeException("Пользователь не относится к данной организации"));
+        UserOrgCom userOrgCom = getUserOrgComByUserAndOrgCom(userId, orgCom.getId());
         if (userOrgCom.getInvitationStatus() != InvitationStatus.ACCEPTED) {
             throw new RuntimeException("Не активный пользователь не может создать турнир от имени организации");
         }
@@ -177,5 +183,16 @@ public class OrgComServiceImpl implements OrgComService {
         }
         return userOrgCom;
     }
+
+    @Override
+    public boolean isUserOfOrgComRef(UUID userId, UUID orgComId) {
+        return getUserOrgComByUserAndOrgCom(userId, orgComId).isRef();
+    }
+
+    @Override
+    public boolean isUserOfOrgComChief(UUID userId, UUID orgComId) {
+        return getUserOrgComByUserAndOrgCom(userId, orgComId).getOrgRole().equals(Org.CHIEF);
+    }
+
 
 }

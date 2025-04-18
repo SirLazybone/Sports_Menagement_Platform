@@ -1,35 +1,40 @@
 package com.course_work.Sports_Menagement_Platform.service.impl;
 
-import com.course_work.Sports_Menagement_Platform.data.models.Match;
 import com.course_work.Sports_Menagement_Platform.data.models.Stage;
 import com.course_work.Sports_Menagement_Platform.data.models.Team;
 import com.course_work.Sports_Menagement_Platform.data.models.Tournament;
-import com.course_work.Sports_Menagement_Platform.dto.MatchDTO;
+import com.course_work.Sports_Menagement_Platform.data.models.Group;
 import com.course_work.Sports_Menagement_Platform.dto.StageCreationDTO;
-import com.course_work.Sports_Menagement_Platform.repositories.MatchRepository;
+import com.course_work.Sports_Menagement_Platform.dto.GroupDTO;
+import com.course_work.Sports_Menagement_Platform.dto.GroupsDTO;
 import com.course_work.Sports_Menagement_Platform.repositories.StageRepository;
+import com.course_work.Sports_Menagement_Platform.repositories.GroupRepository;
+import com.course_work.Sports_Menagement_Platform.repositories.TeamRepository;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.StageService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.TeamService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.TeamService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class StageServiceImpl implements StageService {
     private final StageRepository stageRepository;
     private final TournamentService tournamentService;
-    private final MatchRepository matchRepository;
     private final TeamService teamService;
-    public StageServiceImpl(StageRepository stageRepository, TournamentService tournamentService,
-                            MatchRepository matchRepository, TeamService teamService) {
+    private final GroupRepository groupRepository;
+    private final TeamRepository teamRepository;
+
+    public StageServiceImpl(StageRepository stageRepository, TournamentService tournamentService, TeamService teamService, GroupRepository groupRepository, TeamRepository teamRepository) {
         this.stageRepository = stageRepository;
         this.tournamentService = tournamentService;
-        this.matchRepository = matchRepository;
         this.teamService = teamService;
+        this.groupRepository = groupRepository;
+        this.teamRepository = teamRepository;
     }
+
     @Override
     public void createStage(StageCreationDTO stageDTO, UUID tournamentId) {
         Optional<Stage> optionalStage = stageRepository.findByPlaceAndTournamentId(stageDTO.getBestPlace(), stageDTO.getWorstPlace(), tournamentId);
@@ -63,29 +68,6 @@ public class StageServiceImpl implements StageService {
     }
 
     @Override
-    public void createMatch(MatchDTO matchDTO) {
-        Stage stage = getStageById(matchDTO.getStageId());
-        Team team1 = teamService.getById(matchDTO.getTeam1Id());
-        Team team2 = teamService.getById(matchDTO.getTeam2Id());
-
-        boolean team1Exists = matchRepository.existsByStageAndTeam(stage, team1);
-        boolean team2Exists = matchRepository.existsByStageAndTeam(stage, team2);
-
-        if (team1Exists || team2Exists) {
-            throw new RuntimeException("Одна из команд уже участвует в матче на этом этапе!");
-        }
-
-        Match match = Match.builder()
-                .stage(stage)
-                .team1(team1)
-                .team2(team2)
-                .isResultPublished(false)
-                .build();
-
-        matchRepository.save(match);
-    }
-
-    @Override
     public Tournament getTournamentByStage(UUID stageId) {
         return stageRepository.findByStageId(stageId).orElseThrow(() -> new RuntimeException("Нет такого турнира"));
     }
@@ -98,9 +80,134 @@ public class StageServiceImpl implements StageService {
     }
 
     @Override
-    public List<Match> getAllMatches(UUID stageId) {
-        return matchRepository.findAllMatchesByStageId(stageId);
+    public void createClassicScheme(Tournament tournament) {
+        Stage groupStage = Stage.builder().bestPlace(0).worstPlace(0).isPublished(false).tournament(tournament).build();
+        Stage firstStage = Stage.builder().bestPlace(1).worstPlace(8).isPublished(false).tournament(tournament).build();
+        Stage secondStage = Stage.builder().bestPlace(1).worstPlace(4).isPublished(false).tournament(tournament).build();
+        Stage finStage = Stage.builder().bestPlace(1).worstPlace(2).isPublished(false).tournament(tournament).build();
+
+        stageRepository.save(groupStage);
+        stageRepository.save(firstStage);
+        stageRepository.save(secondStage);
+        stageRepository.save(finStage);
     }
 
+    @Override
+    public String getStageName(int bestPlace, int worstPlace) {
+        if (worstPlace == 0) {
+            return "Групповой этап";
+        } else if (worstPlace == 8 && bestPlace == 1) {
+            return "1/8 финала";
+        } else if (worstPlace == 4 && bestPlace == 1) {
+            return "1/4 финала";
+        } else if (worstPlace == 2 && bestPlace == 1) {
+            return "Финал";
+        } else {
+            return "Дополнительные матчи";
+        }
+    }
 
+    @Override
+    @Transactional
+    public void createGroups(GroupsDTO groupsDTO) {
+        if (groupsDTO.getGroups().isEmpty()) {
+            throw new RuntimeException("No groups provided");
+        }
+
+        Stage stage = getStageById(groupsDTO.getGroups().get(0).getStageId());
+        if (!isGroupStage(stage.getId())) {
+            throw new RuntimeException("This stage is not a group stage");
+        }
+
+        // Check for duplicate group names
+        Set<String> groupNames = new HashSet<>();
+        for (GroupDTO groupDTO : groupsDTO.getGroups()) {
+            if (!groupNames.add(groupDTO.getName())) {
+                throw new RuntimeException("Duplicate group name: " + groupDTO.getName());
+            }
+        }
+
+        // Create all groups in a single transaction
+        for (GroupDTO groupDTO : groupsDTO.getGroups()) {
+            Group group = Group.builder()
+                    .name(groupDTO.getName())
+                    .maxTeams(groupDTO.getMaxTeams())
+                    .stage(stage)
+                    .teams(new ArrayList<>())
+                    .build();
+            groupRepository.save(group);
+        }
+    }
+
+    @Override
+    public List<Group> getGroupsByStage(UUID stageId) {
+        Stage stage = getStageById(stageId);
+        if (!isGroupStage(stageId)) {
+            throw new RuntimeException("This stage is not a group stage");
+        }
+
+        return groupRepository.findByStageId(stageId);
+    }
+
+    @Override
+    @Transactional
+    public void addTeamsToGroup(GroupDTO groupDTO) {
+        Stage stage = getStageById(groupDTO.getStageId());
+        if (!isGroupStage(stage.getId())) {
+            throw new RuntimeException("This stage is not a group stage");
+        }
+
+        Group group = groupRepository.findByStageIdAndName(stage.getId(), groupDTO.getName())
+                .orElseThrow(() -> new RuntimeException("Group not found"));
+
+        if (group.getTeams().size() + groupDTO.getTeamIds().size() > group.getMaxTeams()) {
+            throw new RuntimeException("Adding these teams would exceed the group's maximum team limit");
+        }
+
+        List<Team> teams = groupDTO.getTeamIds().stream()
+                .map(teamService::getById)
+                .collect(Collectors.toList());
+
+        // Check if any team is already in another group
+        for (Team team : teams) {
+            List<Group> existingGroups = groupRepository.findByStageId(stage.getId());
+            for (Group existingGroup : existingGroups) {
+                if (existingGroup.getTeams().contains(team)) {
+                    throw new RuntimeException("Team " + team.getName() + " is already in group " + existingGroup.getName());
+                }
+            }
+        }
+
+        group.getTeams().addAll(teams);
+        groupRepository.save(group);
+    }
+
+    @Override
+    public boolean isGroupStage(UUID stageId) {
+        Stage stage = getStageById(stageId);
+        return stage.getBestPlace() == 0 && stage.getWorstPlace() == 0;
+    }
+
+    @Override
+    public Stage getStageByGroup(UUID groupId) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new RuntimeException("Group not found"));
+        return group.getStage();
+    }
+
+    @Override
+    public void removeTeamFromGroup(UUID groupId, UUID teamId) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new RuntimeException("Group not found"));
+        
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new RuntimeException("Team not found"));
+        
+        if (!group.getTeams().contains(team)) {
+            throw new RuntimeException("Team is not in this group");
+        }
+        
+        group.getTeams().remove(team);
+        groupRepository.save(group);
+    }
 }

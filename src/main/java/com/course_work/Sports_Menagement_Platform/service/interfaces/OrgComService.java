@@ -6,6 +6,7 @@ import com.course_work.Sports_Menagement_Platform.data.models.OrgCom;
 import com.course_work.Sports_Menagement_Platform.data.models.User;
 import com.course_work.Sports_Menagement_Platform.data.models.UserOrgCom;
 import com.course_work.Sports_Menagement_Platform.dto.OrgComDTO;
+import com.course_work.Sports_Menagement_Platform.dto.TournamentDTO;
 import com.course_work.Sports_Menagement_Platform.dto.UserOrgComDTO;
 
 import java.util.List;
@@ -19,6 +20,9 @@ public interface OrgComService {
     List<OrgCom> getAllActiveOrgComByUser(User user);
     OrgCom getById(UUID id);
     List<UserOrgComDTO> getAllUsersByOrgComId(UUID id);
+
+    UserOrgCom getUserOrgComByUserAndOrgCom(UUID userId, UUID orgComId);
+
     Org getOrgRoleByUserAndOrgCom(UUID userId, UUID orgComId);
 
     List<UserOrgCom> getAllInvitationsPending(User user);
@@ -30,4 +34,9 @@ public interface OrgComService {
     void cancelInvitation(UUID orgComId, UUID userId);
     void editOrgCom(UUID orgComId, OrgComDTO orgComDTO);
     UserOrgCom getUserOrgComChief(String orgComName, UUID id);
+
+    boolean isUserOfOrgComRef(UUID userId, UUID orgComId);
+
+    boolean isUserOfOrgComChief(UUID userId, UUID id);
+
 }
