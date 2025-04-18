@@ -1,6 +1,7 @@
 package com.course_work.Sports_Menagement_Platform.repositories;
 
 import com.course_work.Sports_Menagement_Platform.data.models.OrgCom;
+import com.course_work.Sports_Menagement_Platform.data.models.Tournament;
 import com.course_work.Sports_Menagement_Platform.data.models.User;
 import com.course_work.Sports_Menagement_Platform.data.models.UserOrgCom;
 import com.course_work.Sports_Menagement_Platform.dto.UserOrgComDTO;
@@ -21,12 +22,19 @@ public interface UserOrgComRepository extends JpaRepository<UserOrgCom, UUID> {
             "AND uoc.invitationStatus = com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus.ACCEPTED")
     List<OrgCom> findActiveOrgComsByUserId(@Param("userId") UUID userId);
     List<User> findAllByOrgCom(OrgCom orgCom);
-    @Query("SELECT new com.course_work.Sports_Menagement_Platform.dto.UserOrgComDTO(u.name, u.surname, u.tel, uoc.orgRole, uoc.invitationStatus) " +
+    @Query("SELECT new com.course_work.Sports_Menagement_Platform.dto.UserOrgComDTO(u.id, u.name, u.surname, u.tel, uoc.orgRole, uoc.invitationStatus, uoc.isRef) " +
             "FROM UserOrgCom uoc " +
             "JOIN uoc.user u " +
             "WHERE uoc.orgCom.id = :orgComId")
     List<UserOrgComDTO> findUsersByOrgComId(@Param("orgComId") UUID orgComId);
 
+    @Query("SELECT uoc " +
+            "FROM UserOrgCom uoc " +
+            "JOIN uoc.user u " +
+            "WHERE uoc.orgCom.id = :orgComId")
+    List<UserOrgCom> findUsersByOrgComIdNotDTO(@Param("orgComId") UUID orgComId);
+
     Optional<UserOrgCom> findByUser_IdAndOrgCom_Id(UUID userId, UUID orgComId);
     List<UserOrgCom> findByUser(User user);
+
 }

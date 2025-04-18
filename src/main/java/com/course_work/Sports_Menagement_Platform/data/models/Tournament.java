@@ -31,11 +31,11 @@ public class Tournament {
     private boolean is_stopped;
     private String logo;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "userOrgCom_id", referencedColumnName = "id")
     private UserOrgCom userOrgCom;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "city_id", referencedColumnName = "id")
     private City city;
 

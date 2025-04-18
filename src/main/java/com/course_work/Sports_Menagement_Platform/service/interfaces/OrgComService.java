@@ -20,6 +20,7 @@ public interface OrgComService {
     OrgCom getById(UUID id);
     List<UserOrgComDTO> getAllUsersByOrgComId(UUID id);
     Org getOrgRoleByUserAndOrgCom(UUID userId, UUID orgComId);
+
     List<UserOrgCom> getAllInvitationsPending(User user);
     void createInvitation(OrgCom orgCom, User user, Org orgRole, boolean is_ref);
     void acceptInvitation(UUID userOrgComId);

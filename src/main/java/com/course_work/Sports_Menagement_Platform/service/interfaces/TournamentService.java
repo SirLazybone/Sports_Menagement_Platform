@@ -36,4 +36,6 @@ public interface TournamentService {
 
 
     List<Team> getAllTeamsByTournamentId(UUID tournamentId);
+
+    List<Tournament> getAllTournamentsByUserOrgComId(UUID userOrgComId);
 }

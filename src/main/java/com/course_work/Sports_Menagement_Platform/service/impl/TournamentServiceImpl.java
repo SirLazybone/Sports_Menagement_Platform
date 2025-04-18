@@ -10,7 +10,6 @@ import com.course_work.Sports_Menagement_Platform.repositories.CityRepository;
 import com.course_work.Sports_Menagement_Platform.repositories.TeamTournamentRepository;
 import com.course_work.Sports_Menagement_Platform.repositories.TournamentRepository;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.OrgComService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.StageService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TeamService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
 import org.springframework.stereotype.Service;
@@ -146,4 +145,10 @@ public class TournamentServiceImpl implements TournamentService {
     public List<Team> getAllTeamsByTournamentId(UUID tournamentId) {
         return teamTournamentRepository.findAllTeamsByTournamentId(tournamentId);
     }
+
+    @Override
+    public List<Tournament> getAllTournamentsByUserOrgComId(UUID userOrgComId) {
+        return tournamentRepository.findAllTournamentsByUserOrgComId(userOrgComId);
+    }
+
 }

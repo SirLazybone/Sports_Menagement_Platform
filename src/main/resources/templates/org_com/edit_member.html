@@ -9,28 +9,28 @@
 <div th:if = "${userOrgCom.orgRole != T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">
 
 
-    <a th:href="@{/user_org_com/assign_to_chief/{orgComId}/{userId}(orgComId=${userOrgCom.orgCom.id}, userId=${userOrgCom.user.id})}" th:text="Назначить старшим организатором"></a>
+    <a th:href="@{/user_org_com/assign_to_chief/{orgComId}/{userId}(orgComId=${userOrgCom.orgCom.id}, userId=${userOrgCom.user.id})}" th:text="'Назначить старшим организатором'"></a>
 
 </div>
 
 <div th:if = "${userOrgCom.orgRole != T(com.course_work.Sports_Menagement_Platform.data.enums.Org).ORG}">
-    <a th:href="@{/user_org_com/assign_to_org/{orgComId}/{userId}(orgComId=${userOrgCom.orgCom.id}, userId=${userOrgCom.user.id})}" th:text="Назначить организатором (не старшим)"></a>
+    <a th:href="@{/user_org_com/assign_to_org/{orgComId}/{userId}(orgComId=${userOrgCom.orgCom.id}, userId=${userOrgCom.user.id})}" th:text="'Назначить организатором (не старшим)'"></a>
 
 
 </div>
 
 <div th:if = "${userOrgCom.orgRole != T(com.course_work.Sports_Menagement_Platform.data.enums.Org).NONE}">
-    <a th:href="@{/user_org_com/assign_to_none/{orgComId}/{userId}(orgComId=${userOrgCom.orgCom.id}, userId=${userOrgCom.user.id})}" th:text="Забрать права организатора"></a>
+    <a th:href="@{/user_org_com/assign_to_none/{orgComId}/{userId}(orgComId=${userOrgCom.orgCom.id}, userId=${userOrgCom.user.id})}" th:text="'Забрать права организатора'"></a>
 
 </div>
 
 <div th:unless = "${userOrgCom.isRef}">
-    <a th:href="@{/assign_to_referee/assign_to_none/{orgComId}/{userId}(orgComId=${userOrgCom.orgCom.id}, userId=${userOrgCom.user.id})}" th:text="Назначить судьей"></a>
+    <a th:href="@{/user_org_com/assign_to_referee/{orgComId}/{userId}(orgComId=${userOrgCom.orgCom.id}, userId=${userOrgCom.user.id})}" th:text="'Назначить судьей'"></a>
 
 </div>
 
 <div th:if = "${userOrgCom.isRef}">
-    <a th:href="@{/remove_as_referee/assign_to_none/{orgComId}/{userId}(orgComId=${userOrgCom.orgCom.id}, userId=${userOrgCom.user.id})}" th:text="Забрать права судьи"></a>
+    <a th:href="@{/user_org_com/remove_as_referee/{orgComId}/{userId}(orgComId=${userOrgCom.orgCom.id}, userId=${userOrgCom.user.id})}" th:text="'Забрать права судьи'"></a>
 
 </div>
 
