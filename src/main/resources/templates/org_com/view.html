@@ -135,7 +135,9 @@
     </div>
     <div class="right-section">
         <h2>Чемпионаты</h2>
-        <button th:if="${role == orgRoles.chief}" type="button">Добавить чемпионат</button>
+        <a th:href="@{/tournament/create}">
+            <button th:if="${role == orgRoles.chief}" type="button">Добавить чемпионат</button>
+        </a>
         <div class="tournaments">
             <div class="tournament" th:each="tournament : ${tournaments}">
                 <a th:href="@{/tournament/view/{id}(id=${tournament.id})}" th:text="${tournament.name}"></a>
