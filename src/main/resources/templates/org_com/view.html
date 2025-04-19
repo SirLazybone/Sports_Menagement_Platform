@@ -93,15 +93,15 @@
     </thead>
     <tbody>
     <tr th:each="user : ${members}">
-        <div th:if="${user.invitationStatus == T(com.course_work.Sports_Menagement_Platform.data.enums.invitationStatuses).ACCEPTED}">
-            <td th:text="${user.name}"></td>
-            <td th:text="${user.surname}"></td>
-            <td th:text="${user.orgRole}"></td>
-            <td>
-                <div th:if="${user.isRef}">
-                    Судья.
-                </div>
-            </td>
+        <div th:if="${user.invitationStatus == invitationStatuses.accepted}">
+        <td th:text="${user.name}"></td>
+        <td th:text="${user.surname}"></td>
+        <td th:text="${user.orgRole}"></td>
+        <td>
+            <div th:if="${user.isRef}">
+                Судья.
+            </div>
+        </td>
             <div th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">
                 <td>
                     <a th:href="@{/user_org_com/edit/{orgComId}/{userId}(orgComId=${orgComId}, userId=${user.id})}" th:text="'Изменить настройки'"></a>
@@ -119,41 +119,41 @@
 
 <div th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">
 
-    <h3>Еще не ответили на приглашение</h3>
+<h3>Еще не ответили на приглашение</h3>
 
-    <table>
-        <thead>
-        <tr>
-            <th>Имя</th>
-            <th>Фамилия</th>
-            <th>Роль</th>
-            <th>Статус</th>
-            <th th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">Действие</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="user : ${members}">
-            <div th:if="${user.invitationStatus == invitationStatuses.pending}">
-                <td th:text="${user.name}"></td>
-                <td th:text="${user.surname}"></td>
-                <td th:text="${user.orgRole}"></td>
-                <td>
-                    <div th:if="${user.isRef}">
-                        Судья.
-                    </div>
-                </td>
-                <div th:if="${role == orgRoles.chief}">
-                    <td>
-                        <a th:href="@{/user_org_com/edit/{orgComId}/{userId}(orgComId=${orgComId}, userId=${user.id})}" th:text="'Изменить настройки'"></a>
-                    </td>
+<table>
+    <thead>
+    <tr>
+        <th>Имя</th>
+        <th>Фамилия</th>
+        <th>Роль</th>
+        <th>Статус</th>
+        <th th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">Действие</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="user : ${members}">
+        <div th:if="${user.invitationStatus == invitationStatuses.pending}">
+            <td th:text="${user.name}"></td>
+            <td th:text="${user.surname}"></td>
+            <td th:text="${user.orgRole}"></td>
+            <td>
+                <div th:if="${user.isRef}">
+                    Судья.
                 </div>
-
-
+            </td>
+            <div th:if="${role == orgRoles.chief}">
+                <td>
+                    <a th:href="@{/user_org_com/edit/{orgComId}/{userId}(orgComId=${orgComId}, userId=${user.id})}" th:text="'Изменить настройки'"></a>
+                </td>
             </div>
-        </tr>
-        </tbody>
-    </table>
-</div>
+
+
+        </div>
+    </tr>
+    </tbody>
+</table>
+   </div>
 
 
 
@@ -172,9 +172,10 @@
 </form>
 
 <div th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">
-    <form th:action="@{/tournament/create/{orgComId}(orgComId=${orgComId})}" method="post">
-        <button type="submit">Создать чемпионат</button>
-    </form>
+
+<form th:action="@{/tournament/create/{orgComId}(orgComId=${orgComId})}" method="post">
+    <button type="submit">Создать чемпионат</button>
+</form>
 </div>
 
 

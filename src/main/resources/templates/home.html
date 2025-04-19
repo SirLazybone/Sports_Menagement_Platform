@@ -6,41 +6,22 @@
     <title>Home</title>
 </head>
 <body>
-<div>Hello</div>
+
 <div sec:authorize="isAuthenticated()">
-  <a th:href="@{/user/profile}">View Profile</a>
+    <a th:href="@{/user/profile}">Мой профиль</a>
+    <a th:href="@{/logout}">Выйти</a>
+    <a th:href="@{/tournament/show_all}">Чемпионаты</a>
+    <a th:href="@{/org_com/show_all}">Оргкомитеты</a>
+    <a th:href="@{/team/show_all}">Команды</a>
+    <a th:href="@{/users/show_all}">Люди</a>
+    <a th:href="@{/org_com/new}">Создать оргкомитет</a>
+    <a th:href="@{/team/new}">Создать команду</a>
 </div>
-<div>
-    <a th:href="@{/logout}">Log Out</a>
+<div th:unless="${#authentication != null and #authentication.isAuthenticated()}">
+    <a th:href="@{/auth/login}">Войти</a> |
+    <a th:href="@{/auth/register}">Зарегистрироваться</a>
 </div>
-<div th:if="${error}">
-    <p style="color: red;" th:text="${error}"></p>
-</div>
-<form th:action="@{/org_com/new}" method="get">
-    <button type="submit">Сreate new Org Com</button>
-</form>
-<form th:action="@{/org_com/show_all}" method="get">
-    <button type="submit">Show my organizations</button>
-</form>
-<form th:action="@{/org_com/invitations}" method="get">
-    <button type="submit">Show my invitations to Orgcoms</button>
-</form>
-<br>
-<form th:action="@{/team/new}" method="get">
-    <button type="submit">Create new team</button>
-</form>
-<form th:action="@{/team/show_all}" method="get">
-    <button type="submit">Show my teams</button>
-</form>
-<form th:action="@{/team/invitations}" method="get">
-    <button type="submit">Show my invitations to Teams</button>
-</form>
-<br>
-<form th:action="@{/tournament/show_all}" method="get">
-    <button type="submit">Show all tournaments</button>
-</form>
-<form th:action="@{/tournament/create}" method="get">
-    <button type="submit">Create Tournament</button>
-</form>
+
+
 </body>
 </html>
