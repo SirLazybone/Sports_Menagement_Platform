@@ -13,6 +13,4 @@ public class TeamDTO {
     @NotBlank(message = "name can't be empty")
     String name;
     Sport sport;
-    Boolean isCap;
-    int countMembers;
 }

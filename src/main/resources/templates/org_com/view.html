@@ -172,6 +172,7 @@
 </form>
 
 <div th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">
+
 <form th:action="@{/tournament/create/{orgComId}(orgComId=${orgComId})}" method="post">
     <button type="submit">Создать чемпионат</button>
 </form>
