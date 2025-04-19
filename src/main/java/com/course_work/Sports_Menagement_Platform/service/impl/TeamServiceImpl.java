@@ -85,7 +85,7 @@ public class TeamServiceImpl implements TeamService {
     }
 
     @Override
-    public void createInvitation(UUID teamId, Boolean isCap, User user) {
+    public void createInvitation(UUID teamId, Boolean isCap, Boolean notPlaying, User user) {
         Team team = teamRepository.findById(teamId).get();
         Optional<UserTeam> optionalUserTeam = userTeamRepository.findByUser_IdAndTeam_Id(user.getId(), teamId);
         if (optionalUserTeam.isPresent()) {
@@ -94,7 +94,7 @@ public class TeamServiceImpl implements TeamService {
             userTeamRepository.save(userTeam);
             return;
         }
-        UserTeam userTeam = UserTeam.builder().team(team).user(user).isCap(isCap).invitationStatus(InvitationStatus.PENDING).build();
+        UserTeam userTeam = UserTeam.builder().team(team).user(user).isCap(isCap).isPlaying(!notPlaying).invitationStatus(InvitationStatus.PENDING).build();
 
         team.getUserTeamList().add(userTeam);
         user.getUserTeamList().add(userTeam);
@@ -106,7 +106,6 @@ public class TeamServiceImpl implements TeamService {
         UserTeam userTeam = userTeamRepository.findById(userTeamId).get();
         userTeam.setInvitationStatus(InvitationStatus.ACCEPTED);
         Team team = userTeam.getTeam();
-        team.setCountMembers(team.getCountMembers() + 1);
 
         teamRepository.save(team);
         userTeamRepository.save(userTeam);
@@ -124,7 +123,6 @@ public class TeamServiceImpl implements TeamService {
         UserTeam userTeam = userTeamRepository.findByUser_IdAndTeam_Id(userId, teamId).get();
         userTeam.setInvitationStatus(InvitationStatus.KICKED);
         Team team = userTeam.getTeam();
-        team.setCountMembers(team.getCountMembers() - 1);
 
         teamRepository.save(team);
         userTeamRepository.save(userTeam);
@@ -142,7 +140,6 @@ public class TeamServiceImpl implements TeamService {
         UserTeam userTeam = userTeamRepository.findByUser_IdAndTeam_Id(userId, teamId).get();
         userTeam.setInvitationStatus(InvitationStatus.LEFT);
         Team team = userTeam.getTeam();
-        team.setCountMembers(team.getCountMembers() - 1);
 
         teamRepository.save(team);
         userTeamRepository.save(userTeam);

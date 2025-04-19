@@ -7,7 +7,6 @@
 <body>
 <h1 th:text="${team.name}"></h1>
 <h2 th:text="${team.sport}"></h2>
-<h2 th:text="${team.countMembers}"></h2>
 <h3>Активные члены команды</h3>
 
 <table>
@@ -22,7 +21,7 @@
     <tbody>
 
     <tr th:each="user : ${members}">
-        <div th:if="${user.invitationStatus == T(com.course_work.Sports_Menagement_Platform.data.enums.invitationStatuses).ACCEPTED}}"></div>
+        <div th:if="${user.invitationStatus == T(com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus).ACCEPTED}">
         <td th:text="${user.name}"></td>
         <td th:text="${user.surname}"></td>
         <td>
@@ -34,16 +33,56 @@
             </p>
         </td>
         <td th:if="${isCap}">
-           <a th:href="@{/team/edit_member/{userTeamId}(userTeamId=${userTeamId})}" th:text="'Изменить права'"></a>
+           <a th:href="@{/edit_user_team/{userTeamId}(userTeamId=${user.userTeamId})}" th:text="'Изменить права'"></a>
 
         </td>
+        </div>
     </tr>
     </tbody>
 </table>
 
 
 <table th:if="${isCap}">
+    <thead>
+    <tr>
+        <th>Имя</th>
+        <th>Фамилия</th>
+        <th>Статус</th>
+        <th></th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
 
+    <tr th:each="user : ${members}">
+        <div th:unless="${user.invitationStatus == T(com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus).ACCEPTED}">
+        <td th:text="${user.name}"></td>
+        <td th:text="${user.surname}"></td>
+        <td>
+            <p th:if="${user.isCap}">1
+                Капитан
+            </p>
+            <p th:unless="${user.isPlaying}">
+                Не играет
+            </p>
+        </td>
+        <td>
+            <a th:href="@{/edit_user_team/{userTeamId}(userTeamId=${user.userTeamId})}" th:text="'Изменить права'"></a>
+        </td>
+        <td>
+            <span th:switch="${user.invitationStatus}">
+                        <span th:case="${invitationStatuses.accepted}">Активный</span>
+                        <span th:case="${invitationStatuses.pending}">Приглашение отправлено</span>
+                        <span th:case="${invitationStatuses.declined}">Отказался</span>
+                        <span th:case="${invitationStatuses.left}">Покинул</span>
+                        <span th:case="${invitationStatuses.canceled}">Приглашение отменено</span>
+                        <span th:case="${invitationStatuses.kicked}">Исключён</span>
+                        <span th:case="*">Неизвестный статус</span>
+                    </span>
+        </td>
+        </div>
+    </tr>
+    </tbody>
 </table>
 
 <form th:action="@{/tournament/teams/{teamId}(teamId=${teamId})}" method="get">

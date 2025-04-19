@@ -12,16 +12,6 @@
     <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
   </div>
 
-  <div>
-    <label for="sport">Спорт:</label>
-    <select th:field="*{sport}" id="sport">
-      <option value="" disabled selected>Выберите спорт</option>
-      <option th:each="sport : ${T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).values()}"
-              th:value="${sport}"
-              th:text="${sport}"></option>
-    </select>
-    <span th:if="${#fields.hasErrors('sport')}" th:errors="*{sport}"></span>
-  </div>
 
   <div>
     <button type="submit">Изменить</button>

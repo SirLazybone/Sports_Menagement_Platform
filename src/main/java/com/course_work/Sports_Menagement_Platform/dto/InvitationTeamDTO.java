@@ -14,4 +14,5 @@ public class InvitationTeamDTO {
     @NotBlank(message = "Телефон не может быть пустым")
     String tel;
     Boolean isCap;
+    Boolean notPlaying;
 }

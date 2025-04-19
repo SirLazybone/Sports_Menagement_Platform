@@ -16,7 +16,7 @@ public interface TeamService {
     List<User> getAllUserByTeam(UUID teamId);
     Boolean isCap(UUID teamId, UUID userId);
     List<UserTeamDTO> getAllUserByTeamDTO(UUID teamId);
-    void createInvitation(UUID teamId, Boolean isCap, User user);
+    void createInvitation(UUID teamId, Boolean isCap, Boolean notPlaying, User user);
     List<UserTeam> getActiveInvitations(User user);
     void acceptInvitation(UUID userTeamId);
     void declineInvitation(UUID userTeamId);

@@ -28,10 +28,12 @@ public interface UserTeamRepository extends JpaRepository<UserTeam, UUID> {
 
     Optional<UserTeam> findByUser_IdAndTeam_Id(UUID userId, UUID teamId);
 
-    @Query("SELECT new com.course_work.Sports_Menagement_Platform.dto.UserTeamDTO(ut.userTeamId, ut.isCap, ut.isPlaying, u.name, u.surname, u.tel, ut.invitationStatus) " +
+    @Query("SELECT new com.course_work.Sports_Menagement_Platform.dto.UserTeamDTO(ut.id, ut.isCap, ut.isPlaying, u.name, u.surname, u.tel, ut.invitationStatus) " +
             "FROM UserTeam ut " +
             "JOIN ut.user u " +
             "WHERE ut.team.id = :teamId")
     List<UserTeamDTO> findAllUserByTeamAndGetDTO(@Param("teamId") UUID teamId);
     List<UserTeam> findByUser(User user);
+
+    Optional<UserTeam> findById(UUID id);
 }

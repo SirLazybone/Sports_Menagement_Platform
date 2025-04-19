@@ -72,7 +72,7 @@ public class TeamController {
         }
         Team team = teamService.getById(id);
         model.addAttribute("teamId", team.getId());
-        //model.addAttribute("team", TeamDTO.builder().name(team.getName()).sport(team.getSport()).countMembers(team.getCountMembers()).build());
+        model.addAttribute("team", TeamDTO.builder().name(team.getName()).sport(team.getSport()).build());
         model.addAttribute("invitationStatuses", new InvitationStatusDTO());
         try {
             teamService.isCap(id, user.getId());
@@ -97,7 +97,7 @@ public class TeamController {
         }
 
         try {
-            teamService.createInvitation(teamId, invitationTeamDTO.getIsCap(), userService.findByTel(invitationTeamDTO.getTel()));
+            teamService.createInvitation(teamId, invitationTeamDTO.getIsCap(), invitationTeamDTO.getNotPlaying(), userService.findByTel(invitationTeamDTO.getTel()));
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
             return "team/new_invitation";

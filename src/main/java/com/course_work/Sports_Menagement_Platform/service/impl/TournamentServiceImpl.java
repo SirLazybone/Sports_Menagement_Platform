@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class TournamentServiceImpl implements TournamentService {
@@ -100,7 +101,7 @@ public class TournamentServiceImpl implements TournamentService {
         if (tournament.getSport() != team.getSport()) {
             throw new RuntimeException("Спорт турнира отличается от вида спорта команды");
         }
-        if (tournament.getMinMembers() > team.getCountMembers()) {
+        if (tournament.getMinMembers() > team.getUserTeamList().stream().filter(i -> i.isPlaying()).collect(Collectors.toList()).size()) {
             throw new RuntimeException("Количество участников команды меньше, чем допускает регламент турнира");
         }
         if (tournament.getRegisterDeadline().isBefore(LocalDate.now())) {
