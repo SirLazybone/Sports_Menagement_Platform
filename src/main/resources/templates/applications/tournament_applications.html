@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Заявки на участие</title>
+</head>
+<body>
+<h1>Заявки на участие</h1>
+
+<div th:if="${error}">
+  <p style="color: red;" th:text="${error}"></p>
+</div>
+
+<table>
+  <thead>
+  <tr>
+    <th>Команда</th>
+    <th th:if="${actions_allowed}">Статус</th>
+    <th th:if="${actions_allowed}">Действия</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr th:each="appl : ${applications}">
+    <div th:if="${actions_allowed or appl.applicationStatus == T(com.course_work.Sports_Menagement_Platform.data.enums.ApplicationStatus).ACCEPTED}">
+
+
+    <td>
+      <a th:href="@{/team/view/{teamId}(teamId=${appl.team.id})}"
+         th:text="${appl.team.name}"> </a>
+    </td>
+
+     <td th:if="${actions_allowed}">
+
+       <span th:switch="${appl.applicationStatus}">
+                        <span th:case="${T(com.course_work.Sports_Menagement_Platform.data.enums.ApplicationStatus).PENDING}">Ожидание</span>
+                        <span th:case="${T(com.course_work.Sports_Menagement_Platform.data.enums.ApplicationStatus).ACCEPTED}">Заявка принята</span>
+                        <span th:case="${T(com.course_work.Sports_Menagement_Platform.data.enums.ApplicationStatus).DECLINED}">Заявка отклонена</span>
+                        <span th:case="${T(com.course_work.Sports_Menagement_Platform.data.enums.ApplicationStatus).CANCELED}">Заявка отменена</span>
+                        <span th:case="*">Неизвестный статус</span>
+                    </span>
+     </td>
+
+    <td th:if="${appl.applicationStatus == T(com.course_work.Sports_Menagement_Platform.data.enums.ApplicationStatus).PENDING}">
+      <form th:action="@{/applications/approve/{tournamentId}/{teamId}(tournamentId=${tournamentId}, teamId=${appl.team.id})}" method="post" style="display:inline;">
+        <button type="submit">Одобрить</button>
+      </form>
+      <form th:action="@{/applications/reject/{tournamentId}/{teamId}(tournamentId=${tournamentId}, teamId=${appl.team.id})}" method="post" style="display:inline;">
+        <button type="submit">Отклонить</button>
+      </form>
+    </td>
+
+    </div>
+  </tr>
+  </tbody>
+</table>
+
+<br>
+<form th:action="@{/tournament/show_all}" method="get">
+  <button type="submit">Вернуться к турнирам</button>
+</form>
+</body>
+</html>

@@ -16,13 +16,10 @@ public class TournamentDTO {
     @NotBlank(message = "Не может быть пустым")
     private String name;
     private Sport sport;
-    @NotBlank(message = "Не может быть пустым")
-    private String orgComName;
+
     @NotBlank(message = "Не может быть пустым")
     private String cityName;
     private int minMembers;
     private LocalDate registerDeadline;
     private String description;
-    private boolean isClassicScheme;
-//    private String logo;
 }

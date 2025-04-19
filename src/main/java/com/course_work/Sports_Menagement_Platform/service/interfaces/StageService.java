@@ -33,7 +33,9 @@ public interface StageService {
 
     // Group stage methods
     void createGroups(GroupsDTO groupsDTO);
-    
+
+    Stage createGroupStageIfNotExists(UUID tournamentId);
+
     List<Group> getGroupsByStage(UUID stageId);
     
     void addTeamsToGroup(GroupDTO groupDTO);
@@ -42,4 +44,8 @@ public interface StageService {
 
     Stage getStageByGroup(UUID groupId);
     void removeTeamFromGroup(UUID groupId, UUID teamId);
+
+    Stage getGroupStage(UUID tournamentId);
+
+
 }

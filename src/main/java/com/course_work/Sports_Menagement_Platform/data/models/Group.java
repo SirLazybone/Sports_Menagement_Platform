@@ -20,7 +20,6 @@ public class Group {
     private UUID id;
 
     private String name;
-    private int maxTeams;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "stage_id")

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Заявка</title>
+</head>
+<body>
+<h2>Подать заявку на участие в турниире</h2>
+<form th:action="@{/applications/create_application/{id}(id=${tournamentId})}" th:object="${application}" method="post">
+
+  <div>
+      <label for="team">Команда:</label>
+      <select id="team" th:field="*{team}">
+        <option th:each="team : ${teams}"
+                th:value="${team.id}" th:text="${team.name}"></option>
+      </select>
+      <span th:if="${#fields.hasErrors('team')}" th:errors="*{team}"></span>
+  </div>
+
+  <div th:if="${error}">
+    <p style="color: red;" th:text="${error}"></p>
+  </div>
+
+  <button type="submit">Подать заявку</button>
+</form>
+</body>
+</html>

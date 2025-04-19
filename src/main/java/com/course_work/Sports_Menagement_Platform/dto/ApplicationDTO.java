@@ -10,10 +10,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 public class ApplicationDTO {
-    private String teamName;
-    private UUID teamId;
+    private UUID team;
 
-    public ApplicationDTO(String teamName) {
-        this.teamName = teamName;
-    }
+
 }

@@ -18,11 +18,11 @@
   </tr>
   <tr>
     <th>Оргкомитет</th>
-    <td th:text="${tournament.orgComName}"></td>
+    <td th:text="${tournament.userOrgCom.orgCom.name}"></td>
   </tr>
   <tr>
     <th>Город</th>
-    <td th:text="${tournament.cityName}"></td>
+    <td th:text="${tournament.city.name}"></td>
   </tr>
   <tr>
     <th>Минимальное количество участников</th>
@@ -38,32 +38,19 @@
   </tr>
 </table>
 
-<form th:action="@{/tournament/create_application/{id}(id=${tournamentId})}" method="get">
-  <button type="submit">Подать Заявку на турнир</button>
-</form>
-
-<form th:action="@{/tournament/participants/{id}(id=${tournamentId})}" method="get">
-  <button type="submit">Показать участников</button>
-</form>
-
-<form th:action="@{/tournament/applications/{id}(id=${tournamentId})}" method="get">
-  <button type="submit">Показать Заявки</button>
-</form>
-
-<form th:action="@{/stage/stages/{id}(id=${tournamentId})}" method="get">
-  <button type="submit">Показать этапы турнира</button>
-</form>
-
-<form th:action="@{/stage/create_stage/{id}(id=${tournamentId})}" method="get">
-  <button type="submit">Созадть этап турнира</button>
-</form>
-
-<form th:action="@{/tournament/show_all}" method="get">
-  <button type="submit">Вернуться ко всем турнирам</button>
-</form>
-
-<div th:if="${error}">
-  <p style="color: red;" th:text="${error}"></p>
+<div th:if="${registrationOpen}">
+  <form th:action="@{/applications/create_application/{id}(id=${tournament.id})}" method="get">
+    <button type="submit">Подать заявку</button>
+  </form>
 </div>
+<div>
+  <form th:action="@{/applications/applications/{id}(id=${tournament.id})}" method="get">
+    <button type="submit">Команды</button>
+  </form>
+</div>
+
+
+
+
 </body>
 </html>

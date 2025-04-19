@@ -23,8 +23,7 @@ public class Stage {
     private int bestPlace; // лучшее возможное место
     private int worstPlace; // количество команд, которые участвуют на этапе
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "tournament_id")
+    @ManyToOne
     private Tournament tournament;
 
     @OneToMany(mappedBy = "stage", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)

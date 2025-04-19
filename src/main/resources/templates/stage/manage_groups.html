@@ -2,228 +2,189 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Manage Groups</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <title>Edit Tournament Groups</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 0;
-        }
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background-color: white;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .tournament-info {
-            display: flex;
-            flex-direction: column;
-        }
-        .tournament-name {
-            font-size: 32px;
-            font-weight: bold;
-            margin: 0;
-        }
-        .tournament-organizer {
-            font-size: 18px;
-            margin: 5px 0;
-        }
-        .tournament-location {
-            font-size: 16px;
-            color: #555;
-        }
-        .user-info {
-            display: flex;
-            align-items: center;
-        }
-        .user-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            margin-right: 10px;
-            background-color: #ddd;
-        }
-        .user-name {
-            font-size: 24px;
-            font-weight: bold;
-        }
         .group-container {
-            background-color: white;
             border: 1px solid #ddd;
-            padding: 20px;
+            padding: 15px;
             margin-bottom: 20px;
             border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
         }
         .team-list {
-            margin-top: 15px;
+            margin-left: 20px;
+            margin-top: 10px;
         }
         .team-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px;
-            border-bottom: 1px solid #eee;
+            margin: 5px 0;
+            padding: 5px;
+            background-color: #f5f5f5;
         }
-        .team-select {
-            margin-bottom: 10px;
+        .available-teams {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #f0f8ff;
         }
-        .btn {
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .btn-primary {
-            background-color: #007bff;
-            color: white;
-            border: none;
-        }
-        .btn-danger {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-        }
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-            border: none;
+        .delete-group-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="tournament-info">
-            <h1 class="tournament-name" th:text="${tournament != null ? tournament.name : 'Турнир не найден'}">Название турнира</h1>
-            <div class="tournament-organizer" th:text="${tournament != null && tournament.userOrgCom != null ? tournament.userOrgCom.user.name : 'Организатор не указан'}">Организатор</div>
-            <div class="tournament-location" th:text="${tournament != null && tournament.city != null ? tournament.city.name : 'Город не указан'}">Город</div>
-        </div>
-        <div class="user-info">
-            <div class="user-avatar"></div>
-            <div class="user-name" th:text="${user != null ? user.name : 'Пользователь'}">Пользователь</div>
-        </div>
-    </div>
+<h1>Edit Tournament Groups</h1>
+<h2 th:text="'Tournament ID: ' + ${tournamentId}"></h2>
 
-    <div class="container">
-        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+<form th:action="@{'/stage/create_groups/' + ${tournamentId}}" method="post">
 
-        <div class="mb-4">
-            <h2>Create New Groups</h2>
-            <form th:action="@{/stage/create_groups/{stageId}(stageId=${stageId})}" method="post" th:object="${groupsDTO}">
-                <div id="groups-container">
-                    <div class="group-container">
-                        <div class="mb-3">
-                            <label class="form-label">Group Name</label>
-                            <input type="text" class="form-control" th:field="*{groups[0].name}" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Max Teams</label>
-                            <input type="number" class="form-control" th:field="*{groups[0].maxTeams}" min="2" required>
-                        </div>
-                    </div>
+    <!-- Display existing groups -->
+    <div th:each="groupEntry : ${groups}" th:with="groupName=${groupEntry.key}, groupTeams=${groupEntry.value}">
+        <div class="group-container">
+            <button type="button" class="btn btn-danger delete-group-btn" onclick="deleteGroup(this)">Delete Group</button>
+            <h3>
+                <span th:text="${groupName}">Group Name</span>
+                <input type="hidden" th:name="|groupNames[${groupName}]|" th:value="${groupName}"/>
+            </h3>
+
+            <!-- Display teams in this group -->
+            <div class="team-list">
+                <div th:each="team, teamStat : ${groupTeams}" class="team-item">
+                    <span th:text="${team.second}">Team Name</span>
+                    <input type="hidden"
+                           th:name="|groupTeams[${groupName}][${teamStat.index}]|"
+                           th:value="${team.first}"/>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="removeTeam(this)">Remove</button>
                 </div>
-                <button type="button" class="btn btn-secondary" onclick="addGroup()">Add Another Group</button>
-                <button type="submit" class="btn btn-primary">Create Groups</button>
-            </form>
-        </div>
+            </div>
 
-        <div th:if="${not #lists.isEmpty(groups)}">
-            <h2>Manage Existing Groups</h2>
-            <div th:each="group : ${groups}" class="group-container">
-                <h3 th:text="${group.name}"></h3>
-                <p>Max Teams: <span th:text="${group.maxTeams}"></span></p>
-                
-                <form th:action="@{/stage/add_teams_to_group/{stageId}(stageId=${stageId})}" method="post">
-                    <input type="hidden" name="name" th:value="${group.name}">
-                    
-                    <div class="team-selects">
-                        <div th:each="i : ${#numbers.sequence(1, group.maxTeams)}" class="team-select">
-                            <select class="form-select" th:name="teamIds">
-                                <option value="">Select a team</option>
-                                <option th:each="team : ${availableTeams}" 
-                                        th:value="${team.id}"
-                                        th:text="${team.name}"
-                                        th:disabled="${#lists.contains(group.teams, team)}">
-                                </option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="team-list">
-                        <h4>Current Teams:</h4>
-                        <div th:each="team : ${group.teams}" class="team-item">
-                            <span th:text="${team.name}"></span>
-                            <button type="button" class="btn btn-danger" 
-                                    th:data-group-id="${group.id}"
-                                    th:data-team-id="${team.id}"
-                                    onclick="removeTeam(this)">Remove</button>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary mt-3">Save Teams</button>
-                </form>
+            <!-- Add team to this group -->
+            <div class="add-team">
+                <select th:id="|teamSelect-${groupName}|">
+                    <option value="">-- Select a team --</option>
+                    <option th:each="team : ${teams}"
+                            th:value="${team.first}"
+                            th:text="${team.second}"></option>
+                </select>
+                <button type="button"
+                        class="btn btn-primary"
+                        th:data-group-name="${groupName}"
+                        onclick="addTeamToGroup(this)">Add Team</button>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        let groupCount = 1;
+    <!-- Add new group -->
+    <div class="group-container" id="newGroupForm">
+        <h3>Create New Group</h3>
+        <div>
+            <label for="newGroupName">Group Name:</label>
+            <input type="text" id="newGroupName" name="newGroupName" th:value="${newGroupName}"/>
+        </div>
+        <div>
+            <select id="newGroupTeamSelect">
+                <option value="">-- Select a team --</option>
+                <option th:each="team : ${teams}"
+                        th:value="${team.first}"
+                        th:text="${team.second}"></option>
+            </select>
+            <button type="button" class="btn btn-success" onclick="createNewGroup()">Create Group</button>
+        </div>
+    </div>
 
-        function addGroup() {
-            const container = document.getElementById('groups-container');
-            const newGroup = document.createElement('div');
-            newGroup.className = 'group-container';
-            newGroup.innerHTML = `
-                <div class="mb-3">
-                    <label class="form-label">Group Name</label>
-                    <input type="text" class="form-control" name="groups[${groupCount}].name" required>
+    <div style="margin-top: 20px;">
+        <button type="submit" class="btn btn-primary">Save All Changes</button>
+    </div>
+</form>
+
+<script>
+    function addTeamToGroup(button) {
+        const groupName = button.getAttribute('data-group-name');
+        const select = document.getElementById(`teamSelect-${groupName}`);
+        const selectedOption = select.options[select.selectedIndex];
+
+        if (selectedOption.value) {
+            const teamList = select.closest('.group-container').querySelector('.team-list');
+
+            // Create new team item
+            const teamItem = document.createElement('div');
+            teamItem.className = 'team-item';
+            teamItem.innerHTML = `
+                <span>${selectedOption.text}</span>
+                <input type="hidden" name="groupTeams[${groupName}][${teamList.children.length}]" value="${selectedOption.value}"/>
+                <button type="button" class="btn btn-sm btn-danger" onclick="removeTeam(this)">Remove</button>
+            `;
+
+            teamList.appendChild(teamItem);
+            select.selectedIndex = 0;
+        }
+    }
+
+    function createNewGroup() {
+        const newGroupInput = document.getElementById('newGroupName');
+        const select = document.getElementById('newGroupTeamSelect');
+        const selectedOption = select.options[select.selectedIndex];
+
+        if (newGroupInput.value && selectedOption.value) {
+            const form = document.querySelector('form');
+            const groupName = newGroupInput.value;
+
+            // Create new group container
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'group-container';
+            groupDiv.innerHTML = `
+                <button type="button" class="btn btn-danger delete-group-btn" onclick="deleteGroup(this)">Delete Group</button>
+                <h3>
+                    <span>${groupName}</span>
+                    <input type="hidden" name="groupNames[${groupName}]" value="${groupName}"/>
+                </h3>
+
+                <div class="team-list">
+                    <div class="team-item">
+                        <span>${selectedOption.text}</span>
+                        <input type="hidden" name="groupTeams[${groupName}][0]" value="${selectedOption.value}"/>
+                        <button type="button" class="btn btn-sm btn-danger" onclick="removeTeam(this)">Remove</button>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Max Teams</label>
-                    <input type="number" class="form-control" name="groups[${groupCount}].maxTeams" min="2" required>
+
+                <div class="add-team">
+                    <select id="teamSelect-${groupName}">
+                        <option value="">-- Select a team --</option>
+                        ${document.getElementById('newGroupTeamSelect').innerHTML}
+                    </select>
+                    <button type="button" class="btn btn-primary" data-group-name="${groupName}" onclick="addTeamToGroup(this)">Add Team</button>
                 </div>
             `;
-            container.appendChild(newGroup);
-            groupCount++;
-        }
 
-        function removeTeam(button) {
-            if (confirm('Are you sure you want to remove this team from the group?')) {
-                const groupId = button.dataset.groupId;
-                const teamId = button.dataset.teamId;
+            // Insert before the "Create New Group" div
+            form.insertBefore(groupDiv, document.getElementById('newGroupForm'));
 
-                fetch(`/stage/remove_team_from_group/${groupId}/${teamId}`, {
-                    method: 'POST',
-                    redirect: 'follow'
-                })
-                .then(response => {
-                    if (response.redirected) {
-                        window.location.href = response.url;
-                    } else if (response.ok) {
-                        window.location.reload();
-                    } else {
-                        alert('Error removing team from group');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error removing team from group');
-                });
-            }
+            // Clear inputs
+            newGroupInput.value = '';
+            select.selectedIndex = 0;
         }
-    </script>
+    }
+
+    function removeTeam(button) {
+        const teamItem = button.closest('.team-item');
+        const teamUuid = teamItem.querySelector('input').value;
+        teamItem.remove();
+
+        // We need to reindex the remaining teams in this group
+        const teamList = teamItem.parentElement;
+        const groupName = teamItem.querySelector('input').name.match(/groupTeams\[(.*?)\]/)[1];
+
+        Array.from(teamList.children).forEach((child, index) => {
+            const input = child.querySelector('input');
+            input.name = `groupTeams[${groupName}][${index}]`;
+        });
+    }
+
+    function deleteGroup(button) {
+            const groupContainer = button.closest('.group-container');
+            groupContainer.remove();
+    }
+</script>
 </body>
-</html> 
+</html>

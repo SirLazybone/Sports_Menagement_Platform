@@ -35,5 +35,7 @@ public interface UserTeamRepository extends JpaRepository<UserTeam, UUID> {
     List<UserTeamDTO> findAllUserByTeamAndGetDTO(@Param("teamId") UUID teamId);
     List<UserTeam> findByUser(User user);
 
+
+
     Optional<UserTeam> findById(UUID id);
 }

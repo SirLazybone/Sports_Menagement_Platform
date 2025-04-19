@@ -173,13 +173,13 @@
 
 <div th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">
 
-<form th:action="@{/tournament/create/{orgComId}(orgComId=${orgComId})}" method="post">
+<form th:action="@{/tournament/create/{orgComId}(orgComId=${orgComId})}" method="get">
     <button type="submit">Создать чемпионат</button>
 </form>
 </div>
 
 
-<form th:action="@{/org_com/tournaments/{orgComId}(orgComId=${orgComId})}" method="post">
+<form th:action="@{/org_com/tournaments/{orgComId}(orgComId=${orgComId})}" method="get">
     <button type="submit">Чемпионаты</button>
 </form>
 

@@ -172,9 +172,8 @@ public class OrgComServiceImpl implements OrgComService {
     }
 
     @Override
-    public UserOrgCom getUserOrgComChief(String orgComName, UUID userId) {
-        OrgCom orgCom = orgComRepository.findByName(orgComName).orElseThrow(() -> new RuntimeException("Такой организации не сущетсвует"));
-        UserOrgCom userOrgCom = getUserOrgComByUserAndOrgCom(userId, orgCom.getId());
+    public UserOrgCom getUserOrgComChief(UUID orgComId, UUID userId) {
+        UserOrgCom userOrgCom = getUserOrgComByUserAndOrgCom(userId, orgComId);
         if (userOrgCom.getInvitationStatus() != InvitationStatus.ACCEPTED) {
             throw new RuntimeException("Не активный пользователь не может создать турнир от имени организации");
         }

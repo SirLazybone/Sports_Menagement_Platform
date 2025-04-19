@@ -1,17 +1,15 @@
 package com.course_work.Sports_Menagement_Platform.controller;
 
-import com.course_work.Sports_Menagement_Platform.data.models.Match;
-import com.course_work.Sports_Menagement_Platform.data.models.Stage;
-import com.course_work.Sports_Menagement_Platform.data.models.Tournament;
-import com.course_work.Sports_Menagement_Platform.data.models.User;
+import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.GroupDTO;
 import com.course_work.Sports_Menagement_Platform.dto.GroupsDTO;
 import com.course_work.Sports_Menagement_Platform.dto.StageCreationDTO;
-import com.course_work.Sports_Menagement_Platform.dto.TournamentDTO;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.GroupService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.MatchService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.StageService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
 import jakarta.validation.Valid;
+import org.springframework.data.util.Pair;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -20,9 +18,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Controller
@@ -32,11 +28,14 @@ public class StageController {
     private final TournamentService tournamentService;
     private final MatchService matchService;
 
+    private final GroupService groupService;
+
     public StageController(StageService stageService, TournamentService tournamentService,
-                           MatchService matchService) {
+                           MatchService matchService, GroupService groupService) {
         this.stageService = stageService;
         this.tournamentService = tournamentService;
         this.matchService = matchService;
+        this.groupService = groupService;
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -163,61 +162,51 @@ public class StageController {
         return "redirect:/stage/create_stage/" + tournamentId.toString();
     }
 
-    @PreAuthorize("isAuthenticated()")
-    @GetMapping("/manage_groups/{stageId}")
-    public String manageGroups(@PathVariable UUID stageId, Model model, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
-        try {
-            UUID tournamentId = stageService.getTournamentByStage(stageId).getId();
-            if (!tournamentService.isUserChiefOfTournament(user.getId(), tournamentId)) {
-                redirectAttributes.addFlashAttribute("error", "Only chief of the tournament can manage groups");
-                return "redirect:/tournament/view/" + tournamentId.toString();
-            }
+    @GetMapping("/manage_groups/{tournamentId}")
+    public String manageGroups(@PathVariable UUID tournamentId, Model model, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
+        // TODO: проверка
 
-            Stage stage = stageService.getStageById(stageId);
-            if (!stageService.isGroupStage(stageId)) {
-                redirectAttributes.addFlashAttribute("error", "This stage is not a group stage");
-                return "redirect:/tournament/view/" + tournamentId.toString();
-            }
-
-            model.addAttribute("stageId", stageId);
-            model.addAttribute("stage", stage);
-            model.addAttribute("tournament", stage.getTournament());
-            model.addAttribute("user", user);
-            model.addAttribute("groupsDTO", new GroupsDTO());
-            model.addAttribute("groups", stageService.getGroupsByStage(stageId));
-            model.addAttribute("availableTeams", tournamentService.getAllTeamsByTournamentId(tournamentId));
-            return "stage/manage_groups";
-        } catch (RuntimeException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-            return "redirect:/home";
+        List<Group> groups = groupService.getGroups(tournamentId);
+        List<Team> teams = tournamentService.getAllTeamsByTournamentId(tournamentId);
+        Map<String, List<Pair<UUID, String>>> groupsMap = new HashMap<>();
+        for (Group group : groups) {
+            List<Pair<UUID, String>> teamsPair = group.getTeams().stream().map(i -> Pair.of(i.getId(), i.getName())).collect(Collectors.toList());
+            groupsMap.put(group.getName(), teamsPair);
         }
+        List<Pair<UUID, String>> teamsPairs = teams.stream().map(i -> Pair.of(i.getId(), i.getName())).collect(Collectors.toList());
+        model.addAttribute("teams", teamsPairs);
+        model.addAttribute("groups", groupsMap);
+        model.addAttribute("tournamentId", tournamentId);
+        model.addAttribute("newGroupName", "");
+        model.addAttribute("stageId", stageService.getGroupStage(tournamentId));
+
+        return "stage/manage_groups";
+
     }
 
     @PreAuthorize("isAuthenticated()")
-    @PostMapping("/create_groups/{stageId}")
-    public String createGroups(@PathVariable UUID stageId, @Valid @ModelAttribute("groupsDTO") GroupsDTO groupsDTO,
-                             BindingResult bindingResult, RedirectAttributes redirectAttributes, 
+    @PostMapping("/create_groups/{tournamentId}")
+    public String createGroups(@PathVariable UUID tournamentId, @RequestParam Map<String, String> allParams, RedirectAttributes redirectAttributes,
                              @AuthenticationPrincipal User user) {
-        try {
-            UUID tournamentId = stageService.getTournamentByStage(stageId).getId();
-            if (!tournamentService.isUserChiefOfTournament(user.getId(), tournamentId)) {
-                redirectAttributes.addFlashAttribute("error", "Only chief of the tournament can manage groups");
-                return "redirect:/tournament/view/" + tournamentId.toString();
-            }
 
-            if (bindingResult.hasErrors()) {
-                return "redirect:/stage/manage_groups/" + stageId.toString();
-            }
-
-            // Set stageId for all groups
-            groupsDTO.getGroups().forEach(group -> group.setStageId(stageId));
-            
-            stageService.createGroups(groupsDTO);
-            redirectAttributes.addFlashAttribute("success", "Groups created successfully");
-        } catch (RuntimeException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        Set<String> groupNames = allParams.keySet().stream()
+                .filter(k -> k.startsWith("groupNames["))
+                .map(k -> k.substring("groupNames[".length(), k.length() - 1))
+                .collect(Collectors.toSet());
+        Map<String, List<UUID>> groups = new HashMap<>();
+        for (String groupName : groupNames) {
+            List<UUID> teamIds = allParams.keySet().stream()
+                    .filter(k -> k.startsWith("groupTeams[" + groupName + "]"))
+                    .map(k -> UUID.fromString(allParams.get(k)))
+                    .collect(Collectors.toList());
+            groups.put(groupName, teamIds);
         }
-        return "redirect:/stage/manage_groups/" + stageId.toString();
+        Stage stage = stageService.getGroupStage(tournamentId);
+
+        groupService.updateGroupTeams(stage.getId(), groups);
+
+
+        return "redirect:/stage/manage_groups/" + tournamentId.toString();
     }
 
     @PreAuthorize("isAuthenticated()")

@@ -40,4 +40,10 @@ public class CityServiceImpl implements CityService {
             throw new RuntimeException("Ошибка при чтении JSON", e);
         }
     }
+
+
+    @Override
+    public List<City> getCities(){
+        return cityRepository.findAll();
+    }
 }

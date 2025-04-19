@@ -44,5 +44,5 @@ public class Tournament {
     private List<TeamTournament> teamTournamentList = new ArrayList<>();
 
     @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<Stage> stages = new ArrayList<>();
+    private List<Location> locations = new ArrayList<>();
 }

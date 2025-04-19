@@ -2,34 +2,34 @@ package com.course_work.Sports_Menagement_Platform.controller;
 
 import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.*;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.CityService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.StageService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
 import jakarta.validation.Valid;
-import org.springframework.beans.propertyeditors.CustomDateEditor;
-import org.springframework.data.repository.query.Param;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.chrono.ChronoLocalDate;
 import java.util.List;
 import java.util.UUID;
 
 @Controller
-@RequestMapping("tournament")
+@RequestMapping("/tournament")
 public class TournamentController {
     private final TournamentService tournamentService;
     private final StageService stageService;
 
-    public TournamentController(TournamentService tournamentService, StageService stageService) {
+    private final CityService cityService;
+    public TournamentController(TournamentService tournamentService, StageService stageService, CityService cityService) {
         this.tournamentService = tournamentService;
         this.stageService = stageService;
+        this.cityService = cityService;
     }
 
     @GetMapping("/show_all")
@@ -42,20 +42,24 @@ public class TournamentController {
         return "tournament/show_all";
     }
 
-    @GetMapping("/create")
-    public String createTournament(Model model) {
+    @GetMapping("/create/{orgComId}")
+    public String createTournament(Model model, @PathVariable UUID orgComId) {
         model.addAttribute("tournament", new TournamentDTO());
+        model.addAttribute("cities", cityService.getCities());
+        model.addAttribute("orgComId", orgComId);
         return "tournament/create";
     }
 
-    @PostMapping("/create")
-    public String createTournament(@Valid @ModelAttribute("tournament") TournamentDTO tournamentDTO, BindingResult bindingResult, Model model, @AuthenticationPrincipal User user) {
+    @PostMapping("/create/{orgComId}")
+    public String createTournament(@Valid @ModelAttribute("tournament") TournamentDTO tournamentDTO, @PathVariable UUID orgComId, BindingResult bindingResult, Model model, @AuthenticationPrincipal User user) {
         if (bindingResult.hasErrors()) {
             return "tournament/create";
         }
 
         try {
-            tournamentService.createTournament(tournamentDTO, user);
+            Tournament tournament = tournamentService.createTournament(tournamentDTO, user, orgComId);
+            return "redirect:/tournament/org_com/view/" + tournament.getId();
+
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
             return "tournament/create";
@@ -64,15 +68,15 @@ public class TournamentController {
             return "tournament/create";
         }
 
-        return "redirect:/tournament/show_all";
     }
 
     @GetMapping("/view/{id}")
     public String view(@PathVariable UUID id, Model model) {
         try {
-            TournamentDTO tournamentDTO = tournamentService.getDTOById(id);
-            model.addAttribute("tournament", tournamentDTO);
+            Tournament tournament = tournamentService.getById(id);
+            model.addAttribute("tournament", tournament);
             model.addAttribute("tournamentId", id);
+            model.addAttribute("registrationOpen", tournament.getRegisterDeadline().isAfter(ChronoLocalDate.from(LocalDateTime.now())));
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
             return "tournament/show_all";
@@ -86,77 +90,13 @@ public class TournamentController {
 //
 //    }
 
-    @PreAuthorize("isAuthenticated()")
-    @GetMapping("/create_application/{id}")
-    public String createApplication(@PathVariable UUID id, Model model) {
-        model.addAttribute("tournamentId", id);
-        model.addAttribute("application", new ApplicationDTO());
-        return "tournament/create_application";
-    }
 
-    @PreAuthorize("isAuthenticated()")
-    @PostMapping("/create_application/{id}")
-    public String createApplication(@PathVariable UUID id, @Valid @ModelAttribute("application") ApplicationDTO applicationDTO, BindingResult bindingResult, Model model, @AuthenticationPrincipal User user) {
-        model.addAttribute("tournamentId", id);
-        if (bindingResult.hasErrors()) {
-            return "tournament/create_application";
-        }
 
-        try {
-            tournamentService.createApplication(applicationDTO, id, user.getId());
-        } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
-            return "tournament/create_application";
-        }
 
-        return "redirect:/tournament/show_all";
-    }
 
-    @PreAuthorize("isAuthenticated()")
-    @GetMapping("/applications/{id}")
-    public String showApplications(@PathVariable UUID id, Model model, @AuthenticationPrincipal User user, RedirectAttributes redirectAttributes) {
-        if (!tournamentService.isUserChiefOfTournament(user.getId(), id)) {
-            redirectAttributes.addFlashAttribute("error", "Only chief of the tournament can check applications");
-            return "redirect:/tournament/view/" + id.toString();
-        }
-        List<ApplicationDTO> list = tournamentService.getCurrAppl(id);
-        if (list == null || list.isEmpty()) {
-            model.addAttribute("error", "There are no applications from teams yet");
-        }
-        model.addAttribute("applications", list);
-        model.addAttribute("tournamentId", id);
-        return "tournament/applications";
-    }
 
-    @PreAuthorize("isAuthenticated()")
-    @PostMapping("/applications/approve/{tournamentId}/{teamId}")
-    public String approveApplication(@PathVariable UUID tournamentId, @PathVariable UUID teamId, Model model, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
-        if (!tournamentService.isUserChiefOfTournament(user.getId(), tournamentId)) {
-            redirectAttributes.addFlashAttribute("error", "Only chief of the tournament can check applications");
-            return "redirect:/tournament/view/" + tournamentId.toString();
-        }
-        try {
-            tournamentService.approveApplication(tournamentId, teamId);
-        } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
-        }
-        return "redirect:/tournament/applications/" + tournamentId.toString();
-    }
 
-    @PreAuthorize("isAuthenticated()")
-    @PostMapping("/applications/reject/{tournamentId}/{teamId}")
-    public String rejectApplication(@PathVariable UUID tournamentId, @PathVariable UUID teamId, Model model, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
-        if (!tournamentService.isUserChiefOfTournament(user.getId(), tournamentId)) {
-            redirectAttributes.addFlashAttribute("error", "Only chief of the tournament can check applications");
-            return "redirect:/tournament/view/" + tournamentId.toString();
-        }
-        try {
-            tournamentService.rejectApplication(tournamentId, teamId);
-        } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
-        }
-        return "redirect:/tournament/applications/" + tournamentId.toString();
-    }
+
 
     @GetMapping("/participants/{tournamentId}")
     public String showParticipantsOfTournament(@PathVariable UUID tournamentId, Model model) {

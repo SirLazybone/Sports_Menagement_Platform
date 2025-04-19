@@ -6,7 +6,7 @@
 </head>
 <body>
 <h2>Создание нового турнира</h2>
-<form th:action="@{/tournament/create}" th:object="${tournament}" method="post">
+<form th:action="@{/tournament/create/{orgComId}(orgComId=${orgComId})}" th:object="${tournament}" method="post">
   <div>
     <label for="name">Название:</label>
     <input type="text" id="name" th:field="*{name}" required/>
@@ -22,18 +22,13 @@
     </select>
     <span th:if="${#fields.hasErrors('sport')}" th:errors="*{sport}"></span>
   </div>
-  <br/>
-
-  <div>
-    <label for="orgComName">Оргкомитет:</label>
-    <input type="text" id="orgComName" th:field="*{orgComName}" required/>
-    <span th:if="${#fields.hasErrors('orgComName')}" th:errors="*{orgComName}"></span>
-  </div>
-  <br/>
 
   <div>
     <label for="cityName">Город:</label>
-    <input type="text" id="cityName" th:field="*{cityName}" required/>
+    <select id="cityName" th:field="*{cityName}">
+      <option th:each="city  : ${cities}"
+              th:value="${city.name}" th:text="${city.name}"></option>
+    </select>
     <span th:if="${#fields.hasErrors('cityName')}" th:errors="*{cityName}"></span>
   </div>
   <br/>

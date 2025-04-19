@@ -27,4 +27,5 @@ public interface TeamService {
 
     Team getByName(String name);
 
+    List<Team> findTeamsWhereUserIsCap(User user);
 }

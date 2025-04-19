@@ -7,9 +7,7 @@ import com.course_work.Sports_Menagement_Platform.dto.ApplicationDTO;
 import com.course_work.Sports_Menagement_Platform.dto.TeamTournamentDTO;
 import com.course_work.Sports_Menagement_Platform.dto.TournamentDTO;
 import com.course_work.Sports_Menagement_Platform.mapper.TournamentMapper;
-import com.course_work.Sports_Menagement_Platform.repositories.CityRepository;
-import com.course_work.Sports_Menagement_Platform.repositories.TeamTournamentRepository;
-import com.course_work.Sports_Menagement_Platform.repositories.TournamentRepository;
+import com.course_work.Sports_Menagement_Platform.repositories.*;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.OrgComService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TeamService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
@@ -17,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -29,18 +26,23 @@ public class TournamentServiceImpl implements TournamentService {
     private final CityRepository cityRepository;
     private final OrgComService orgComService;
     private final TeamService teamService;
+    private final TeamRepository teamRepository;
+    private final UserTeamRepository userTeamRepository;
+
     private final TournamentMapper tournamentMapper;
 
 
     public TournamentServiceImpl(TournamentRepository tournamentRepository, OrgComService orgComService,
                                  TournamentMapper tournamentMapper, CityRepository cityRepository,
-                                 TeamService teamService, TeamTournamentRepository teamTournamentRepository) {
+                                 TeamService teamService, TeamTournamentRepository teamTournamentRepository, TeamRepository teamRepository, UserTeamRepository userTeamRepository) {
         this.tournamentRepository = tournamentRepository;
         this.orgComService = orgComService;
         this.tournamentMapper = tournamentMapper;
         this.cityRepository = cityRepository;
         this.teamService = teamService;
         this.teamTournamentRepository = teamTournamentRepository;
+        this.teamRepository = teamRepository;
+        this.userTeamRepository = userTeamRepository;
     }
     @Override
     public List<Tournament> getAllTournaments() {
@@ -48,8 +50,8 @@ public class TournamentServiceImpl implements TournamentService {
     }
 
     @Override
-    public void createTournament(TournamentDTO tournamentDTO, User user) {
-        UserOrgCom userOrgCom = orgComService.getUserOrgComChief(tournamentDTO.getOrgComName(), user.getId());
+    public Tournament createTournament(TournamentDTO tournamentDTO, User user, UUID orgComId) {
+        UserOrgCom userOrgCom = orgComService.getUserOrgComChief(orgComId, user.getId());
         City city = cityRepository.findByName(tournamentDTO.getCityName()).orElseThrow(() -> new RuntimeException("No such city"));
         Tournament tournament = tournamentMapper.DTOToEntity(tournamentDTO); // Add UserOrgCom and City
         tournament.setUserOrgCom(userOrgCom);
@@ -57,9 +59,7 @@ public class TournamentServiceImpl implements TournamentService {
 
         tournamentRepository.save(tournament);
 
-//        if (tournamentDTO.isClassicScheme()) {
-//            stageService.createClassicScheme(tournament);
-//        }
+        return tournament;
     }
 
     @Override
@@ -73,16 +73,32 @@ public class TournamentServiceImpl implements TournamentService {
         return tournamentMapper.EntityToDTO(tournament);
     }
 
+    private void isTeamCorrForTournament(Tournament tournament, Team team) {
+        if (tournament.getSport() != team.getSport()) {
+            throw new RuntimeException("Спорт турнира отличается от вида спорта команды");
+        }
+        if (tournament.getMinMembers() > team.getUserTeamList().stream().filter(i -> i.isPlaying()).collect(Collectors.toList()).size()) {
+            throw new RuntimeException("Количество участников команды меньше, чем допускает регламент турнира");
+        }
+        if (tournament.getRegisterDeadline().isBefore(LocalDate.now())) {
+            throw new RuntimeException("Время подачи заявок прошло");
+        }
+    }
+
     @Override
     public void createApplication(ApplicationDTO applicationDTO, UUID tournamentId, UUID userId) {
-        Team team = teamService.getByName(applicationDTO.getTeamName());
-        if (!teamService.isCap(team.getId(), userId)) {
+
+        Team team = teamRepository.findById(applicationDTO.getTeam()).orElseThrow(() -> new RuntimeException("Команда не надена"));
+        UserTeam userTeam = userTeamRepository.findByUser_IdAndTeam_Id(userId, team.getId()).orElseThrow(() -> new RuntimeException("Пользователь не состоит в команде"));
+
+
+        if (!userTeam.isCap()) {
             throw new RuntimeException("Только капитан может подавать заявки на турнир");
         }
         Tournament tournament = tournamentRepository.findById(tournamentId).get();
         isTeamCorrForTournament(tournament, team);
 
-        Optional<TeamTournament> teamTournamentOptional = teamTournamentRepository.findByTournamentIdAndTeamId(tournamentId, applicationDTO.getTeamId());
+        Optional<TeamTournament> teamTournamentOptional = teamTournamentRepository.findByTournamentIdAndTeamId(tournamentId, applicationDTO.getTeam());
         if (teamTournamentOptional.isPresent()) {
             throw new RuntimeException("Команда уже подавалась на турнир");
         }
@@ -97,22 +113,11 @@ public class TournamentServiceImpl implements TournamentService {
 
         teamTournamentRepository.save(teamTournament);
     }
-    private void isTeamCorrForTournament(Tournament tournament, Team team) {
-        if (tournament.getSport() != team.getSport()) {
-            throw new RuntimeException("Спорт турнира отличается от вида спорта команды");
-        }
-        if (tournament.getMinMembers() > team.getUserTeamList().stream().filter(i -> i.isPlaying()).collect(Collectors.toList()).size()) {
-            throw new RuntimeException("Количество участников команды меньше, чем допускает регламент турнира");
-        }
-        if (tournament.getRegisterDeadline().isBefore(LocalDate.now())) {
-            throw new RuntimeException("Время подачи заявок прошло");
-        }
-    }
 
     @Override
-    public List<ApplicationDTO> getCurrAppl(UUID tournamentId) {
-        List<Team> teams =  teamTournamentRepository.findAllTeamsByTournamentIdAndStatus(tournamentId, ApplicationStatus.PENDING);
-        return teams.stream().map(x -> new ApplicationDTO(x.getName(), x.getId())).toList();
+    public List<TeamTournament> getCurrAppl(UUID tournamentId) {
+        List<TeamTournament> teams =  teamTournamentRepository.findAllTeamTournamentByTournamentId(tournamentId);
+        return teams;
     }
 
     @Override
@@ -132,7 +137,7 @@ public class TournamentServiceImpl implements TournamentService {
     @Override
     public List<ApplicationDTO> getCurrParticipants(UUID tournamentId) {
         List<Team> teams = teamTournamentRepository.findAllTeamsByTournamentIdAndStatus(tournamentId, ApplicationStatus.ACCEPTED);
-        return teams.stream().map(x -> new ApplicationDTO(x.getName(), x.getId())).toList();
+        return teams.stream().map(x -> new ApplicationDTO(x.getId())).toList();
     }
 
     @Override

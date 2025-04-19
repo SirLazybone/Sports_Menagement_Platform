@@ -6,7 +6,6 @@ import com.course_work.Sports_Menagement_Platform.data.models.OrgCom;
 import com.course_work.Sports_Menagement_Platform.data.models.User;
 import com.course_work.Sports_Menagement_Platform.data.models.UserOrgCom;
 import com.course_work.Sports_Menagement_Platform.dto.OrgComDTO;
-import com.course_work.Sports_Menagement_Platform.dto.TournamentDTO;
 import com.course_work.Sports_Menagement_Platform.dto.UserOrgComDTO;
 
 import java.util.List;
@@ -33,7 +32,7 @@ public interface OrgComService {
     void kickUser(UUID orgComId, UUID userId);
     void cancelInvitation(UUID orgComId, UUID userId);
     void editOrgCom(UUID orgComId, OrgComDTO orgComDTO);
-    UserOrgCom getUserOrgComChief(String orgComName, UUID id);
+    UserOrgCom getUserOrgComChief(UUID orgComId, UUID id);
 
     boolean isUserOfOrgComRef(UUID userId, UUID orgComId);
 

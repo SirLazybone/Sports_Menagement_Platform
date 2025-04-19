@@ -1,9 +1,10 @@
 package com.course_work.Sports_Menagement_Platform.service.impl;
 
-import com.course_work.Sports_Menagement_Platform.data.models.City;
 import com.course_work.Sports_Menagement_Platform.data.models.Location;
+import com.course_work.Sports_Menagement_Platform.dto.LocationCreationDTO;
 import com.course_work.Sports_Menagement_Platform.repositories.LocationRepository;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.LocationService;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
@@ -17,9 +18,12 @@ import java.util.UUID;
 public class LocationServiceImpl implements LocationService {
     private final LocationRepository locationRepository;
     private final ObjectMapper objectMapper;
-    public LocationServiceImpl(LocationRepository locationRepository, ObjectMapper objectMapper) {
+
+    private final TournamentService tournamentService;
+    public LocationServiceImpl(LocationRepository locationRepository, ObjectMapper objectMapper, TournamentService tournamentService) {
         this.locationRepository = locationRepository;
         this.objectMapper = objectMapper;
+        this.tournamentService = tournamentService;
     }
     @Override
     public List<Location> getAllLocations() {
@@ -49,5 +53,13 @@ public class LocationServiceImpl implements LocationService {
         } catch (IOException e) {
             throw new RuntimeException("Ошибка при чтении JSON", e);
         }
+    }
+
+
+    @Override
+    public Location createLocation(LocationCreationDTO locationCreationDTO, UUID tournamentId) {
+        Location location = Location.builder().name(locationCreationDTO.getName()).address(locationCreationDTO.getAddress()).tournament(tournamentService.getById(tournamentId)).build();
+        return locationRepository.save(location);
+
     }
 }

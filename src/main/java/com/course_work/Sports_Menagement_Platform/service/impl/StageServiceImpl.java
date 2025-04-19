@@ -131,12 +131,20 @@ public class StageServiceImpl implements StageService {
         for (GroupDTO groupDTO : groupsDTO.getGroups()) {
             Group group = Group.builder()
                     .name(groupDTO.getName())
-                    .maxTeams(groupDTO.getMaxTeams())
                     .stage(stage)
                     .teams(new ArrayList<>())
                     .build();
             groupRepository.save(group);
         }
+    }
+
+
+    @Override
+    public Stage createGroupStageIfNotExists(UUID tournamentId) {
+        Optional<Stage> optional =  stageRepository.findByPlaceAndTournamentId(0, 0, tournamentId);
+        if (optional.isPresent()) return optional.get();
+        Stage newStage = Stage.builder().bestPlace(0).worstPlace(0).isPublished(false).tournament(tournamentService.getById(tournamentId)).build();
+        return stageRepository.save(newStage);
     }
 
     @Override
@@ -160,9 +168,9 @@ public class StageServiceImpl implements StageService {
         Group group = groupRepository.findByStageIdAndName(stage.getId(), groupDTO.getName())
                 .orElseThrow(() -> new RuntimeException("Group not found"));
 
-        if (group.getTeams().size() + groupDTO.getTeamIds().size() > group.getMaxTeams()) {
+        /*if (group.getTeams().size() + groupDTO.getTeamIds().size() > group.getMaxTeams()) {
             throw new RuntimeException("Adding these teams would exceed the group's maximum team limit");
-        }
+        }*/
 
         List<Team> teams = groupDTO.getTeamIds().stream()
                 .map(teamService::getById)
@@ -209,5 +217,10 @@ public class StageServiceImpl implements StageService {
         
         group.getTeams().remove(team);
         groupRepository.save(group);
+    }
+
+    @Override
+    public Stage getGroupStage(UUID id) {
+        return createGroupStageIfNotExists(id);
     }
 }

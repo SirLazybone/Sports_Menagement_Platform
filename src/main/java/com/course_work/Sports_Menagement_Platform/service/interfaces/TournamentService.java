@@ -12,7 +12,7 @@ import java.util.UUID;
 public interface TournamentService {
     List<Tournament> getAllTournaments();
 
-    void createTournament(TournamentDTO tournamentDTO, User user);
+    Tournament createTournament(TournamentDTO tournamentDTO, User user, UUID orgComId);
 
     Tournament getById(UUID id);
 
@@ -20,7 +20,7 @@ public interface TournamentService {
 
     void createApplication(ApplicationDTO applicationDTO, UUID tournamentId, UUID userId);
 
-    List<ApplicationDTO> getCurrAppl(UUID id);
+    List<TeamTournament> getCurrAppl(UUID id);
 
     void approveApplication(UUID tournamentId, UUID teamId);
 

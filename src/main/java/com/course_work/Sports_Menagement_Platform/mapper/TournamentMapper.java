@@ -19,7 +19,6 @@ public class TournamentMapper {
         return TournamentDTO.builder()
                 .name(tournament.getName())
                 .sport(tournament.getSport())
-                .orgComName(tournament.getUserOrgCom().getOrgCom().getName())
                 .cityName(tournament.getCity().getName())
                 .minMembers(tournament.getMinMembers())
                 .registerDeadline(tournament.getRegisterDeadline())
