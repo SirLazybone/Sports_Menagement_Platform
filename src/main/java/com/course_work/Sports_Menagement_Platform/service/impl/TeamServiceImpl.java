@@ -31,17 +31,15 @@ public class TeamServiceImpl implements TeamService {
     }
 
     @Override
-    public void createTeam(TeamDTO teamDTO, User user) {
-        Optional<Team> optionalTeam = teamRepository.findByName(teamDTO.getName());
+    public Team createTeam(TeamDTO teamDTO, User user) {
 
-        if (optionalTeam.isPresent()) {
-            throw new RuntimeException("such name is already in use");
-        }
-        Team team = Team.builder().name(teamDTO.getName()).sport(teamDTO.getSport()).countMembers(1).loses(0).wins(0).build();
+
+        Team team = Team.builder().name(teamDTO.getName()).sport(teamDTO.getSport()).build();
         teamRepository.save(team);
 
-        UserTeam userTeam = UserTeam.builder().user(user).team(team).invitationStatus(InvitationStatus.ACCEPTED).isCap(teamDTO.getIsCap()).build();
+        UserTeam userTeam = UserTeam.builder().user(user).team(team).invitationStatus(InvitationStatus.ACCEPTED).isCap(true).build();
         userTeamRepository.save(userTeam);
+        return team;
     }
 
     @Override

@@ -28,4 +28,5 @@ public class UserTeam {
 
     private boolean isCap;
     private InvitationStatus invitationStatus;
+    private boolean isPlaying;
 }
