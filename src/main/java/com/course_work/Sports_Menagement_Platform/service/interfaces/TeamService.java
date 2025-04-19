@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface TeamService {
-    void createTeam(TeamDTO teamDTO, User user);
+    Team createTeam(TeamDTO teamDTO, User user);
     Team getById(UUID id);
     List<Team> getAllActiveTeamByUser(User user);
     List<User> getAllUserByTeam(UUID teamId);

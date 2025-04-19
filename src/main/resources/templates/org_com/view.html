@@ -78,74 +78,115 @@
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="left-section">
-        <div class="header">
-            <h1 th:text="${orgComName}"></h1>
-        </div>
-        <h3>Пользователи оргкомитета</h3>
-        <table>
-            <thead>
-            <tr>
-                <th>Имя</th>
-                <th>Фамилия</th>
-                <th>Роль</th>
-                <th>Статус</th>
-                <th th:if="${role == orgRoles.chief}">Действие</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="user : ${members}">
-                <td th:text="${user.name}"></td>
-                <td th:text="${user.surname}"></td>
-                <td th:text="${user.orgRole}"></td>
-                <td>
-                    <span th:switch="${user.invitationStatus}">
-                        <span th:case="${invitationStatuses.accepted}">Активный</span>
-                        <span th:case="${invitationStatuses.pending}">Приглашение отправлено</span>
-                        <span th:case="${invitationStatuses.declined}">Отказался</span>
-                        <span th:case="${invitationStatuses.left}">Покинул</span>
-                        <span th:case="${invitationStatuses.canceled}">Приглашение отменено</span>
-                        <span th:case="${invitationStatuses.kicked}">Исключён</span>
-                        <span th:case="*">Неизвестный статус</span>
-                    </span>
-                </td>
-                <td th:if="${role == orgRoles.chief}">
-                    <div th:switch="${user.invitationStatus}">
-                        <div th:case="${invitationStatuses.accepted}">
-                            <form th:action="@{/org_com/kick/{orgComId}/{userTel}(orgComId=${orgComId}, userTel=${user.tel})}" method="post">
-                                <button type="submit">Исключить</button>
-                            </form>
-                        </div>
-                        <div th:case="${invitationStatuses.pending}">
-                            <form th:action="@{/org_com/cancel/{orgComId}/{userTel}(orgComId=${orgComId}, userTel=${user.tel})}" method="post">
-                                <button type="submit">Отменить приглашение</button>
-                            </form>
-                        </div>
-                    </div>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-        <div th:if="${role == orgRoles.chief}">
-            <form th:action="@{/org_com/create_invitation/{orgComId}(orgComId=${orgComId})}" method="get">
-                <button type="submit">Пригласить нового</button>
-            </form>
-        </div>
-    </div>
-    <div class="right-section">
-        <h2>Чемпионаты</h2>
-        <a th:href="@{/tournament/create}">
-            <button th:if="${role == orgRoles.chief}" type="button">Добавить чемпионат</button>
-        </a>
-        <div class="tournaments">
-            <div class="tournament" th:each="tournament : ${tournaments}">
-                <a th:href="@{/tournament/view/{id}(id=${tournament.id})}" th:text="${tournament.name}"></a>
-                <p th:text="${tournament.sport}"></p>
-                <p th:text="${tournament.description}"></p>
+<h1 th:text="${orgComName}"></h1>
+<h3>Пользователи оргкомитета</h3>
+
+<table>
+    <thead>
+    <tr>
+        <th>Имя</th>
+        <th>Фамилия</th>
+        <th>Роль</th>
+        <th>Статус</th>
+        <th th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">Действие</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="user : ${members}">
+        <div th:if="${user.invitationStatus == invitationStatuses.accepted}">
+        <td th:text="${user.name}"></td>
+        <td th:text="${user.surname}"></td>
+        <td th:text="${user.orgRole}"></td>
+        <td>
+            <div th:if="${user.isRef}">
+                Судья.
             </div>
+        </td>
+            <div th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">
+                <td>
+                    <a th:href="@{/user_org_com/edit/{orgComId}/{userId}(orgComId=${orgComId}, userId=${user.id})}" th:text="'Изменить настройки'"></a>
+                </td>
+            </div>
+
         </div>
-    </div>
+
+
+
+    </tr>
+    </tbody>
+</table>
+
+
+<div th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">
+
+<h3>Еще не ответили на приглашение</h3>
+
+<table>
+    <thead>
+    <tr>
+        <th>Имя</th>
+        <th>Фамилия</th>
+        <th>Роль</th>
+        <th>Статус</th>
+        <th th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">Действие</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="user : ${members}">
+        <div th:if="${user.invitationStatus == invitationStatuses.pending}">
+            <td th:text="${user.name}"></td>
+            <td th:text="${user.surname}"></td>
+            <td th:text="${user.orgRole}"></td>
+            <td>
+                <div th:if="${user.isRef}">
+                    Судья.
+                </div>
+            </td>
+            <div th:if="${role == orgRoles.chief}">
+                <td>
+                    <a th:href="@{/user_org_com/edit/{orgComId}/{userId}(orgComId=${orgComId}, userId=${user.id})}" th:text="'Изменить настройки'"></a>
+                </td>
+            </div>
+
+
+        </div>
+    </tr>
+    </tbody>
+</table>
+   </div>
+
+
+
+<div th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">
+    <form th:action="@{/org_com/create_invitation/{orgComId}(orgComId=${orgComId})}" method="get">
+        <button type="submit">Добавить людей</button>
+    </form>
+</div>
+<div th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">
+    <form th:action="@{/org_com/edit/{orgComId}(orgComId=${orgComId})}" method="get">
+        <button type="submit">Редактировать</button>
+    </form>
+</div>
+<form th:action="@{/org_com/left/{orgComId}(orgComId=${orgComId})}" method="post">
+    <button type="submit">Покинуть Оргкомитет</button>
+</form>
+
+<div th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">
+
+<form th:action="@{/tournament/create/{orgComId}(orgComId=${orgComId})}" method="post">
+    <button type="submit">Создать чемпионат</button>
+</form>
+</div>
+
+
+<form th:action="@{/org_com/tournaments/{orgComId}(orgComId=${orgComId})}" method="post">
+    <button type="submit">Чемпионаты</button>
+</form>
+
+
+<div th:if="${error}">
+    <p th:text="${error}"></p>
+
 </div>
 </body>
 </html>

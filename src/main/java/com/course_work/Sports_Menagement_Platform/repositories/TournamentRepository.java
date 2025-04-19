@@ -11,6 +11,12 @@ import java.util.UUID;
 
 @Repository
 public interface TournamentRepository extends JpaRepository<Tournament, UUID> {
+
+
+    @Query("SELECT t FROM Tournament t WHERE t.userOrgCom.id = :userOrgComId")
+
+    List<Tournament> findAllTournamentsByUserOrgComId(@Param("userOrgComId") UUID userOrgComId);
+
     @Query("SELECT t FROM Tournament t JOIN t.userOrgCom uoc WHERE uoc.orgCom.id = :orgcomId")
     List<Tournament> findAllByOrgComId(@Param("orgcomId") UUID orgcomId);
 }

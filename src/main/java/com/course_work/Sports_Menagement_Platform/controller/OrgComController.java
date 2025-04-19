@@ -1,24 +1,25 @@
 package com.course_work.Sports_Menagement_Platform.controller;
 
 import com.course_work.Sports_Menagement_Platform.data.enums.Org;
-import com.course_work.Sports_Menagement_Platform.data.models.*;
+import com.course_work.Sports_Menagement_Platform.data.models.OrgCom;
+import com.course_work.Sports_Menagement_Platform.data.models.Tournament;
+import com.course_work.Sports_Menagement_Platform.data.models.User;
+import com.course_work.Sports_Menagement_Platform.data.models.UserOrgCom;
+
 import com.course_work.Sports_Menagement_Platform.dto.*;
-import com.course_work.Sports_Menagement_Platform.service.impl.OrgComServiceImpl;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.InvitationService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.OrgComService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.UserOrgComService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.UserService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,11 +28,13 @@ import java.util.UUID;
 public class OrgComController {
     private final OrgComService orgComService;
     private final UserService userService;
+    private final UserOrgComService userOrgComService;
     private final TournamentService tournamentService;
-    public OrgComController(OrgComService orgComService, UserService userService,
-                            TournamentService tournamentService) {
+
+    public OrgComController(OrgComService orgComService, UserService userService, UserOrgComService userOrgComService, TournamentService tournamentService) {
         this.orgComService = orgComService;
         this.userService = userService;
+        this.userOrgComService = userOrgComService;
         this.tournamentService = tournamentService;
     }
 
@@ -185,6 +188,19 @@ public class OrgComController {
         model.addAttribute("orgCom", new OrgComDTO());
         model.addAttribute("orgComId", orgComId);
         return "org_com/edit";
+    }
+
+
+    @GetMapping("/tournaments/{orgComId}")
+    public String showTournaments(@PathVariable UUID orgComId, Model model) {
+        List<UserOrgCom> userOrgComs = userOrgComService.getUsersOrgComByOrgComId(orgComId);
+        List<Tournament> tournaments = new ArrayList<>();
+        for (UserOrgCom userOrgCom : userOrgComs) {
+            List<Tournament> userTournaments = tournamentService.getAllTournamentsByUserOrgComId(userOrgCom.getId());
+            tournaments.addAll(userTournaments);
+        }
+        model.addAttribute("tournaments", tournaments);
+        return "org_com/tournaments";
     }
 
     @PostMapping("/edit/{orgComId}")

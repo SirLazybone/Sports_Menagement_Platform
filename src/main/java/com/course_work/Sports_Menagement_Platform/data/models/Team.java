@@ -23,9 +23,6 @@ public class Team {
     private String name;
     @Enumerated(EnumType.STRING)
     private Sport sport;
-    private int countMembers;
-    private int wins;
-    private int loses;
     private String logo;
 
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)

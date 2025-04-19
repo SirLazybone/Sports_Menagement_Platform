@@ -14,7 +14,11 @@ public interface UserService {
     void deleteUser(UUID id);
     List<User> findAll();
     UserDTO getDTOUser(String tel);
+
+    User findById(UUID id);
+
     User findByTel(String tel);
+
     void updateUser(User user, UserDTO userDTO);
 
 
