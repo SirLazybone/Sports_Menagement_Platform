@@ -1,11 +1,10 @@
 package com.course_work.Sports_Menagement_Platform.controller;
 
+import com.course_work.Sports_Menagement_Platform.data.enums.StageStatus;
 import com.course_work.Sports_Menagement_Platform.data.models.*;
-import com.course_work.Sports_Menagement_Platform.dto.AfterMatchPenaltyDTO;
-import com.course_work.Sports_Menagement_Platform.dto.GoalDTO;
-import com.course_work.Sports_Menagement_Platform.dto.MatchDTO;
-import com.course_work.Sports_Menagement_Platform.dto.MatchListDTO;
+import com.course_work.Sports_Menagement_Platform.dto.*;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.*;
+import org.springframework.data.util.Pair;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -45,6 +44,114 @@ public class MatchController {
         this.userService = userService;
         this.afterMatchPenaltyService = afterMatchPenaltyService;
     }
+
+    @GetMapping("/fill_group_stage/{stageId}")
+    public String fillGroupStage(@PathVariable UUID stageId, Model model, @AuthenticationPrincipal User user, RedirectAttributes redirectAttributes) {
+        Stage stage = stageService.getStageById(stageId);
+        if (stage.getBestPlace() != 0) {
+            model.addAttribute("error", "Выбран не групповой этап");
+            return "redirect:/home";
+        }
+        Map<Group, List<Match>> matches = matchService.createGroupMatchIfNotCreated(stageId);
+        StageStatus stageStatus = stageService.getStageStatus(stage);
+        if (stageStatus != StageStatus.TEAMS_KNOWN) {
+            model.addAttribute("error", "Настройка расписания этапа недоступна");
+            return "redirect:/home";
+        }
+        List<Slot> availableSlots = slotService.getAllSlotsForStage(stage);
+        model.addAttribute("matches", matches);
+        model.addAttribute("slot", availableSlots);
+        model.addAttribute("stageId", stageId);
+
+        return "match/fill_group";
+    }
+
+    @PostMapping("/fill_group_stage/{stageId}")
+    public String fillGroupStagePost(@PathVariable UUID stageId, Model model, @AuthenticationPrincipal User user, RedirectAttributes redirectAttributes, @RequestParam Map<String, String> slotAssignments) {
+        Map<UUID, UUID> assignments = slotAssignments.entrySet().stream()
+                .filter(entry -> !entry.getValue().isEmpty())
+                .collect(Collectors.toMap(
+                        entry -> UUID.fromString(entry.getKey().substring(
+                                entry.getKey().indexOf('[') + 1,
+                                entry.getKey().indexOf(']'))),
+                        entry -> UUID.fromString(entry.getValue())
+                ));  // {match : slot}
+
+        matchService.setSlots(stageId, assignments);
+
+        return "redirect:/match/fill_group_stage/" + stageId.toString();
+
+    }
+
+    @GetMapping("/fill_playoff_stage/{stageId}")
+    public String fillPlayOffStage(@PathVariable UUID stageId, Model model, @AuthenticationPrincipal User user, RedirectAttributes redirectAttributes) {
+        Stage stage = stageService.getStageById(stageId);
+        if (stage.getBestPlace() <= 0) {
+            model.addAttribute("error", "Выбран не этап плей-оффа");
+            return "redirect:/home";
+        }
+        StageStatus stageStatus = stageService.getStageStatus(stage);
+        if (stageStatus != StageStatus.TEAMS_KNOWN) {
+            model.addAttribute("error", "Настройка расписания этапа недоступна");
+            return "redirect:/home";
+        }
+        List<Team> teams = stageService.getTeamsForPlatOffStage(stage);
+        List<Match> matches = stage.getMatches();
+        List<Slot> availableSlots = slotService.getAllSlotsForStage(stage);
+        model.addAttribute("matches", matches);
+        model.addAttribute("teams", teams);
+
+        model.addAttribute("slots", availableSlots);
+        model.addAttribute("stageId", stageId);
+        model.addAttribute("notFilledMatches", matches.size());
+        model.addAttribute("matchesCount", (stage.getWorstPlace() - stage.getBestPlace() + 1) / 2 - 1);
+        return "match/fill_playoff_stage";
+    }
+
+
+    @PostMapping("/fill_playoff_stage/{stageId}")
+    public String fillPlayOffStagePost(@PathVariable UUID stageId, Model model, @AuthenticationPrincipal User user, RedirectAttributes redirectAttributes, @RequestParam Map<String, String> formData) {
+        Map<Pair<UUID, UUID>, UUID> assigments = new HashMap<>();
+        List<Pair<UUID, UUID>> assigmentsWithNoSlot = new ArrayList<>();
+        for (int i = 0; i < formData.size() / 3; i++) {
+            String team1Id = formData.get("[" + i + "].team1");
+            String team2Id = formData.get("[" + i + "].team2");
+            String slotId = formData.get("rows[" + i + "].slot");
+                if (slotId != "" && team1Id != "" && team2Id != "") {
+                    try {
+                        assigments.put(
+                                Pair.of(UUID.fromString(team1Id), UUID.fromString(team2Id)),
+                                UUID.fromString(slotId)
+                        );
+                    } catch (IllegalArgumentException e) {
+
+                    }
+                    catch (NullPointerException e) {
+
+                    }
+
+                }
+                else if (team1Id != "" && team2Id != "") {
+                    try {
+                        assigmentsWithNoSlot.add(Pair.of(UUID.fromString(team1Id), UUID.fromString(team2Id)));
+                    } catch (IllegalArgumentException e) {
+
+                    }
+                    catch (NullPointerException e) {
+
+                    }
+                }
+
+        }
+        matchService.setSlotsForPlayOff(stageId, assigments, assigmentsWithNoSlot);
+        return "redirect:/match/fill_playoff_stage/" + stageId.toString();
+
+    }
+
+
+
+
+
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/fill_stage/{stageId}")

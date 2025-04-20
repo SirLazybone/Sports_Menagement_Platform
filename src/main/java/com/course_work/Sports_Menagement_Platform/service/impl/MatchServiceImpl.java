@@ -3,11 +3,8 @@ package com.course_work.Sports_Menagement_Platform.service.impl;
 import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.MatchDTO;
 import com.course_work.Sports_Menagement_Platform.repositories.MatchRepository;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.MatchService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.SlotService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.StageService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.TeamService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.UserService;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.*;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -22,8 +19,8 @@ public class MatchServiceImpl implements MatchService {
     private final SlotService slotService;
 
     public MatchServiceImpl(MatchRepository matchRepository, TeamService teamService,
-                           UserService userService, StageService stageService,
-                           SlotService slotService) {
+                            UserService userService, StageService stageService,
+                            SlotService slotService, GroupService groupService) {
         this.matchRepository = matchRepository;
         this.teamService = teamService;
         this.userService = userService;
@@ -97,4 +94,84 @@ public class MatchServiceImpl implements MatchService {
         match.setSlot(slot);
         matchRepository.save(match);
     }
+
+
+    @Override
+    public Map<Group, List<Match>> createGroupMatchIfNotCreated(UUID stageId) {
+        Stage stage = stageService.getStageById(stageId);
+        List<Stage> stageList = new ArrayList<>();
+        stageList.add(stage);
+        List<Match> matches = getMatchesByStagesMap(stageList).get(stageId);
+        Map<Group, List<Match>> result = new HashMap<>();
+        if (matches.isEmpty()) {
+             List<Group> groups = stageService.getGroupsByStage(stageId);
+             for (Group group : groups) {
+                 result.put(group, new ArrayList<>());
+                 for (Team team1 : group.getTeams()) {
+                     for (Team team2 : group.getTeams()) {
+                        if (!team1.getId().equals(team2.getId())) {
+                            Match match = Match.builder().team1(team1).team2(team2).isResultPublished(false).stage(stage).build();
+                            match = matchRepository.save(match);
+                            result.get(group).add(match);
+                        }
+                     }
+                 }
+             }
+        }
+        else {
+            List<Group> groups = stageService.getGroupsByStage(stageId);
+            for (Group group : groups) {
+                List<String> teamIds = group.getTeams().stream().map(i -> i.getId().toString()).collect(Collectors.toList());
+                List<Match> groupMatches = matches.stream().filter(i -> teamIds.contains(i.getTeam1().getId().toString())).toList();
+                result.put(group, groupMatches);
+
+            }
+
+
+        }
+        return result;
+
+
+    }
+
+    @Override
+    public void setSlots(UUID stageId, Map<UUID, UUID> assignments) {
+        assignments.forEach((matchId, slotId) -> {
+            Match match = matchRepository.findById(matchId).get();
+            match.setSlot(slotService.getById(slotId));
+            matchRepository.save(match);
+            }
+        );
+    }
+
+    @Override
+    public void setSlotsForPlayOff(UUID stageId, Map<Pair<UUID, UUID>, UUID> assignments, List<Pair<UUID, UUID>> assigmentsWithNoSlot) {
+
+        Stage stage = stageService.getStageById(stageId);
+        List<Stage> stageList = new ArrayList<>();
+        stageList.add(stage);
+        List<Match> matches = getMatchesByStagesMap(stageList).get(stageId);
+        matchRepository.deleteAll(matches);
+
+        assignments.forEach((teams, slotId) -> {
+                    Match match = Match.builder().slot(slotService.getById(slotId)).
+                            team1(teamService.getById(teams.getFirst())).team2(teamService.getById(teams.getSecond())).
+                            isResultPublished(false).stage(stage).build();
+                    matchRepository.save(match);
+
+                }
+        );
+
+        assigmentsWithNoSlot.forEach((teams) -> {
+                    Match match = Match.builder().
+                            team1(teamService.getById(teams.getFirst())).team2(teamService.getById(teams.getSecond())).
+                            isResultPublished(false).stage(stage).build();
+                    matchRepository.save(match);
+
+                }
+        );
+
+
+    }
+
 }

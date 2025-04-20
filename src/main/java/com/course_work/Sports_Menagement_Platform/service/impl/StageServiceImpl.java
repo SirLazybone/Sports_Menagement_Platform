@@ -1,9 +1,7 @@
 package com.course_work.Sports_Menagement_Platform.service.impl;
 
-import com.course_work.Sports_Menagement_Platform.data.models.Stage;
-import com.course_work.Sports_Menagement_Platform.data.models.Team;
-import com.course_work.Sports_Menagement_Platform.data.models.Tournament;
-import com.course_work.Sports_Menagement_Platform.data.models.Group;
+import com.course_work.Sports_Menagement_Platform.data.enums.StageStatus;
+import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.StageCreationDTO;
 import com.course_work.Sports_Menagement_Platform.dto.GroupDTO;
 import com.course_work.Sports_Menagement_Platform.dto.GroupsDTO;
@@ -11,6 +9,7 @@ import com.course_work.Sports_Menagement_Platform.repositories.StageRepository;
 import com.course_work.Sports_Menagement_Platform.repositories.GroupRepository;
 import com.course_work.Sports_Menagement_Platform.repositories.TeamRepository;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.StageService;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.StageStatusService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TeamService;
 import org.springframework.stereotype.Service;
@@ -26,13 +25,15 @@ public class StageServiceImpl implements StageService {
     private final TeamService teamService;
     private final GroupRepository groupRepository;
     private final TeamRepository teamRepository;
+    private final StageStatusService stageStatusService;
 
-    public StageServiceImpl(StageRepository stageRepository, TournamentService tournamentService, TeamService teamService, GroupRepository groupRepository, TeamRepository teamRepository) {
+    public StageServiceImpl(StageRepository stageRepository, TournamentService tournamentService, TeamService teamService, GroupRepository groupRepository, TeamRepository teamRepository, StageStatusService stageStatusService) {
         this.stageRepository = stageRepository;
         this.tournamentService = tournamentService;
         this.teamService = teamService;
         this.groupRepository = groupRepository;
         this.teamRepository = teamRepository;
+        this.stageStatusService = stageStatusService;
     }
 
     @Override
@@ -105,6 +106,14 @@ public class StageServiceImpl implements StageService {
         } else {
             return "Дополнительные матчи";
         }
+    }
+
+
+    @Override
+    public int getTeamsCountInPlayOff(Tournament tournament) {
+        // -1 if unknown
+        List<Integer> stagesWorstPlaces = tournament.getStages().stream().filter(i -> i.getBestPlace() == 1).map(i -> i.getWorstPlace()).collect(Collectors.toList());
+        return Collections.max(stagesWorstPlaces);
     }
 
     @Override
@@ -222,5 +231,22 @@ public class StageServiceImpl implements StageService {
     @Override
     public Stage getGroupStage(UUID id) {
         return createGroupStageIfNotExists(id);
+    }
+
+
+    @Override
+    public StageStatus getStageStatus(Stage stage) {
+        return stageStatusService.getStageStatus(stage);
+    }
+
+
+    @Override
+    public List<Team> getTeamsForPlatOffStage(Stage stage) {
+        //TODO: исправить
+        int maxPlayOffPlace = Collections.max(stage.getTournament().getStages().stream().filter(i -> i.getBestPlace() > 0).map(i -> i.getWorstPlace()).collect(Collectors.toList()));
+        if (stage.getWorstPlace() == maxPlayOffPlace) {
+           return stage.getTournament().getTeamTournamentList().stream().filter(i -> i.isGoToPlayOff()).map(i -> i.getTeam()).collect(Collectors.toList());
+        }
+        return new ArrayList<>();
     }
 }

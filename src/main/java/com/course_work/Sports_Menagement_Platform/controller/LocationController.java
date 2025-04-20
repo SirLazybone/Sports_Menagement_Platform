@@ -1,5 +1,6 @@
 package com.course_work.Sports_Menagement_Platform.controller;
 
+import com.course_work.Sports_Menagement_Platform.data.models.Location;
 import com.course_work.Sports_Menagement_Platform.data.models.User;
 import com.course_work.Sports_Menagement_Platform.dto.LocationCreationDTO;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.LocationService;
@@ -11,6 +12,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.List;
 import java.util.UUID;
 
 @Controller
@@ -23,11 +25,14 @@ public class LocationController {
         this.locationService = locationService;
     }
 
-    @GetMapping("/create/{tournament_id}")
+    @GetMapping("/all/{tournament_id}")
     public String newLocation(@AuthenticationPrincipal User user, @PathVariable UUID tournament_id, Model model){
+        List<Location> locationList = locationService.getLocationsByTournamentId(tournament_id);
+        model.addAttribute("locations", locationList);
+
         model.addAttribute("location", new LocationCreationDTO());
         model.addAttribute("tournament_id", tournament_id);
-        return "slot/new_location";
+        return "locations/all_locations";
 
     }
 
@@ -35,7 +40,7 @@ public class LocationController {
     @PostMapping("/create/{tournament_id}")
     public String createNewLocation(@AuthenticationPrincipal User user, @PathVariable UUID tournament_id, @Valid @ModelAttribute("location") LocationCreationDTO locationCreationDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes){
         if (bindingResult.hasErrors()) {
-            return "slot/new_location";
+            return "locations/all_locations";
         }
         try {
             locationService.createLocation(locationCreationDTO, tournament_id);
@@ -44,7 +49,7 @@ public class LocationController {
             redirectAttributes.addAttribute("error", e.getMessage());
         }
 
-        return "slot/all_slots";
+        return "redirect:/location/all/" + tournament_id.toString();
     }
 
 

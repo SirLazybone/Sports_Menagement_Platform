@@ -1,9 +1,11 @@
 package com.course_work.Sports_Menagement_Platform.controller;
 
 import com.course_work.Sports_Menagement_Platform.data.models.TeamTournament;
+import com.course_work.Sports_Menagement_Platform.data.models.Tournament;
 import com.course_work.Sports_Menagement_Platform.data.models.User;
 import com.course_work.Sports_Menagement_Platform.data.models.UserTeam;
 import com.course_work.Sports_Menagement_Platform.dto.ApplicationDTO;
+import com.course_work.Sports_Menagement_Platform.dto.RatingLineDTO;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TeamService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.UserTeamService;
@@ -17,7 +19,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/applications")
@@ -108,5 +112,27 @@ public class TournamentTeamController {
             model.addAttribute("error", e.getMessage());
         }
         return "redirect:/tournament/applications/" + tournamentId.toString();
+    }
+
+
+    @GetMapping("/rating/{tournamentId}")
+    public String rating(@PathVariable UUID tournamentId, @AuthenticationPrincipal User user, Model model) {
+        List<TeamTournament> teamTournamentList = tournamentService.getCurrentParticipants(tournamentId);
+        // TODO: подгрузить результаты матчей
+        // В шаблоне столбцы отображать через if в зависимости от вида спорта
+        List<RatingLineDTO> ratingLineDTOS = teamTournamentList.stream().map(teamTournament ->
+            RatingLineDTO.builder().goesToPlayOff(teamTournament.isGoToPlayOff()).teamName(teamTournament.getTeam().getName()).
+                    teamTournamentId(teamTournament.getId()).build()).collect(Collectors.toList());
+        model.addAttribute("teams", ratingLineDTOS);
+        model.addAttribute("tournamentId", tournamentId);
+        return "tournament/rating";
+    }
+
+    @PostMapping("/rating/{tournamentId}")
+    public String saveRating(@PathVariable UUID tournamentId, @AuthenticationPrincipal User user, @RequestParam Map<String, String> formData) {
+        // ford data имеет формат {"teamtourID" : "on"}, только те, которые выбраны
+
+        tournamentService.updatePlayOffTeams(tournamentId, formData.keySet().stream().map(i -> UUID.fromString(i)).collect(Collectors.toList()));
+        return "redirect:/applications/rating/" + tournamentId.toString();
     }
 }

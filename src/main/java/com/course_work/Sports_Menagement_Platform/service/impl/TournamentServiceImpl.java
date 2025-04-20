@@ -2,15 +2,14 @@ package com.course_work.Sports_Menagement_Platform.service.impl;
 
 import com.course_work.Sports_Menagement_Platform.data.enums.ApplicationStatus;
 import com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus;
+import com.course_work.Sports_Menagement_Platform.data.enums.StageStatus;
 import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.ApplicationDTO;
 import com.course_work.Sports_Menagement_Platform.dto.TeamTournamentDTO;
 import com.course_work.Sports_Menagement_Platform.dto.TournamentDTO;
 import com.course_work.Sports_Menagement_Platform.mapper.TournamentMapper;
 import com.course_work.Sports_Menagement_Platform.repositories.*;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.OrgComService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.TeamService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -28,13 +27,15 @@ public class TournamentServiceImpl implements TournamentService {
     private final TeamService teamService;
     private final TeamRepository teamRepository;
     private final UserTeamRepository userTeamRepository;
+    private final StageStatusService stageStatusService;
 
+    private final StageRepository stageRepository;
     private final TournamentMapper tournamentMapper;
 
 
     public TournamentServiceImpl(TournamentRepository tournamentRepository, OrgComService orgComService,
                                  TournamentMapper tournamentMapper, CityRepository cityRepository,
-                                 TeamService teamService, TeamTournamentRepository teamTournamentRepository, TeamRepository teamRepository, UserTeamRepository userTeamRepository) {
+                                 TeamService teamService, TeamTournamentRepository teamTournamentRepository, TeamRepository teamRepository, UserTeamRepository userTeamRepository, StageStatusService stageStatusService, StageRepository stageRepository) {
         this.tournamentRepository = tournamentRepository;
         this.orgComService = orgComService;
         this.tournamentMapper = tournamentMapper;
@@ -43,6 +44,8 @@ public class TournamentServiceImpl implements TournamentService {
         this.teamTournamentRepository = teamTournamentRepository;
         this.teamRepository = teamRepository;
         this.userTeamRepository = userTeamRepository;
+        this.stageStatusService = stageStatusService;
+        this.stageRepository = stageRepository;
     }
     @Override
     public List<Tournament> getAllTournaments() {
@@ -105,7 +108,7 @@ public class TournamentServiceImpl implements TournamentService {
 
         TeamTournament teamTournament = TeamTournament.builder()
                 .tournament(tournament)
-                .team(team)
+                .team(team).goToPlayOff(false)
                 .applicationStatus(ApplicationStatus.PENDING).build();
 
         tournament.getTeamTournamentList().add(teamTournament);
@@ -138,6 +141,11 @@ public class TournamentServiceImpl implements TournamentService {
     public List<ApplicationDTO> getCurrParticipants(UUID tournamentId) {
         List<Team> teams = teamTournamentRepository.findAllTeamsByTournamentIdAndStatus(tournamentId, ApplicationStatus.ACCEPTED);
         return teams.stream().map(x -> new ApplicationDTO(x.getId())).toList();
+    }
+
+    @Override
+    public List<TeamTournament> getCurrentParticipants(UUID tournamentId) {
+        return tournamentRepository.findById(tournamentId).get().getTeamTournamentList().stream().filter(i -> i.getApplicationStatus() == ApplicationStatus.ACCEPTED).toList();
     }
 
     @Override
@@ -181,4 +189,31 @@ public class TournamentServiceImpl implements TournamentService {
         return tournamentRepository.findAllTournamentsByUserOrgComId(userOrgComId);
     }
 
+
+    @Override
+    public void updatePlayOffTeams(UUID tournamentId, List<UUID> teamTournamentIds) {
+        if ((teamTournamentIds.size() & (teamTournamentIds.size() - 1)) != 0) {
+            throw new RuntimeException("Количество команд в плей-оффе должно быть степенью двойки");
+        }
+        List<Stage> playOffStages = tournamentRepository.getById(tournamentId).getStages().stream().filter(i -> i.getBestPlace() > 0).collect(Collectors.toList());
+        List<StageStatus> playOffStagesStatuses = playOffStages.stream().map(i -> stageStatusService.getStageStatus(i)).collect(Collectors.toList());
+        if (playOffStagesStatuses.contains(StageStatus.FINISHED) || playOffStagesStatuses.contains(StageStatus.SCHEDULE_PUBLISHED)) {
+            throw new RuntimeException("Действие недоступно");
+        }
+        stageRepository.deleteAll(playOffStages);
+        Tournament tournament = getById(tournamentId);
+
+        Stage.builder().worstPlace(teamTournamentIds.size()).bestPlace(1).isPublished(false).tournament(tournament).build();
+        List<String> teamTournamentIdsString = teamTournamentIds.stream().map(i -> i.toString()).collect(Collectors.toList());
+        tournament.getTeamTournamentList().forEach( teamTournament ->{
+
+                if (teamTournament.isGoToPlayOff() != teamTournamentIdsString.contains(teamTournament.getId().toString())) {
+                    teamTournament.setGoToPlayOff(teamTournamentIdsString.contains(teamTournament.getId().toString()));
+                    teamTournamentRepository.save(teamTournament);
+                }
+
+                }
+        );
+
+    }
 }

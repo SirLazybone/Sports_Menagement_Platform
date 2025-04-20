@@ -62,4 +62,9 @@ public class LocationServiceImpl implements LocationService {
         return locationRepository.save(location);
 
     }
+
+    @Override
+    public List<Location> getLocationsByTournamentId(UUID id) {
+        return tournamentService.getById(id).getLocations();
+    }
 }

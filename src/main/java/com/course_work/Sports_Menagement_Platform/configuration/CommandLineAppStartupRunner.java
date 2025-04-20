@@ -5,16 +5,16 @@ import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.repositories.*;
 import com.course_work.Sports_Menagement_Platform.service.impl.TeamServiceImpl;
 import com.course_work.Sports_Menagement_Platform.service.impl.UserServiceImpl;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.CityService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.LocationService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.StageService;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.io.Console;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -25,6 +25,13 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
 
     @Autowired
     TeamRepository teamRepository;
+
+
+    @Autowired
+    SlotRepository slotRepository;
+
+    @Autowired
+    LocationRepository locationRepository;
 
     @Autowired
     StageRepository stageRepository;
@@ -103,19 +110,51 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
         }
         Stage stage = Stage.builder().isPublished(false).bestPlace(0).worstPlace(0).tournament(tournament).build();
         stageRepository.save(stage);
+
         ArrayList<Team> group1 = new ArrayList<>();
         group1.add(teamRepository.findByName("Team1").get());
         group1.add(teamRepository.findByName("Team2").get());
+        group1.add(teamRepository.findByName("Team3").get());
+        group1.add(teamRepository.findByName("Team4").get());
+        group1.add(teamRepository.findByName("Team5").get());
 
         ArrayList<Team> group2 = new ArrayList<>();
+        group2.add(teamRepository.findByName("Team6").get());
+        group2.add(teamRepository.findByName("Team7").get());
         group2.add(teamRepository.findByName("Team8").get());
         group2.add(teamRepository.findByName("Team9").get());
-
+        group2.add(teamRepository.findByName("Team10").get());
 
         Group groupFinal1 = Group.builder().teams(group1).name("A").stage(stage).build();
         Group groupFinal2 = Group.builder().teams(group2).name("B").stage(stage).build();
         groupRepository.save(groupFinal1);
         groupRepository.save(groupFinal2);
+
+       /* Location location = Location.builder().address("Ленина 1").name("Стадион 1").tournament(tournament).build();
+        location = locationRepository.save(location);
+
+        for (int i = 1; i <= 30; i++) {
+            Slot slot = Slot.builder().date(LocalDate.of(2025, 7, i)).time(LocalTime.of(15, 00, 0)).location(location).build();
+            slotRepository.save(slot);
+        }
+
+
+        // TODO: Это очень плохо -- потом исправить
+        for (int i = 1; i <= 8; i++) {
+            TeamTournament teamTournament = teamTournamentRepository.findByTournamentIdAndTeamId(tournament.getId(), teamRepository.findByName("Team" + Integer.toString(i)).get().getId())
+                    .get();
+            teamTournament.setGoToPlayOff(true);
+            teamTournamentRepository.save(teamTournament);
+        }
+        Stage stageFinal = Stage.builder().isPublished(false).bestPlace(1).worstPlace(8).tournament(tournament).build();
+        stageRepository.save(stageFinal);
+        System.out.println(stageFinal.getId());*/
+
+        TeamTournament teamTournament = teamTournamentRepository.findByTournamentIdAndTeamId(tournament.getId(), teamRepository.findByName("Team" + Integer.toString(1)).get().getId())
+                .get();
+        teamTournament.setGoToPlayOff(true);
+        teamTournamentRepository.save(teamTournament);
+
     }
 
 

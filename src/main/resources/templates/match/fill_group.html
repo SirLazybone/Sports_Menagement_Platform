@@ -1,10 +1,97 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
 </head>
 <body>
+<form th:action="@{/match/fill_group_stage/{stageId}(stageId=${stageId})}" method="post">
+    <!-- Iterate through each group and its matches -->
+    <div th:each="groupEntry : ${matches}" class="group-container">
+        <h2 th:text="${groupEntry.key.name}"></h2>
 
+        <table class="match-table">
+            <thead>
+            <tr>
+                <th>Team 1</th>
+                <th>Team 2</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Iterate through each match in the group -->
+            <tr th:each="match : ${groupEntry.value}" class="match-row">
+                <td th:text="${match.team1.name}">Team 1</td>
+                <td th:text="${match.team2.name}">Team 2</td>
+                <td>
+                    <!-- Slot selection dropdown -->
+                    <select th:name="'slotAssignments[' + ${match.id} + ']'">
+                        <option value="">-- Select Slot --</option>
+                        <!-- Iterate through available slots -->
+                        <option th:each="slot : ${slot}"
+                                th:value="${slot.id}"
+                                th:text="${#temporals.format(slot.date, 'yyyy-MM-dd') + ' - ' + #temporals.format(slot.time, 'HH:mm') + ' - ' + slot.location.name}"
+                                th:selected="${match.slot != null && match.slot.id == slot.id}">
+                            Slot time - venue
+                        </option>
+                    </select>
+                    <!-- Display currently assigned slot if any
+                    <span th:if="${match.slot != null}" class="current-slot">
+                            (Current: <span th:text="${#temporals.format(slot.date, 'yyyy-MM-dd') + ' - ' + #temporals.format(slot.time, 'HH:mm') + ' - ' + slot.location.name}"></span>)
+                        </span>-->
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+</form>
+
+<style>
+    .group-container {
+        margin-bottom: 2rem;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+
+    .match-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .match-table th, .match-table td {
+        padding: 0.5rem;
+        border: 1px solid #eee;
+    }
+
+    .match-table th {
+        background-color: #f5f5f5;
+    }
+
+    .current-slot {
+        color: #666;
+        font-size: 0.9em;
+        margin-left: 0.5rem;
+    }
+
+    select {
+        padding: 0.3rem;
+        min-width: 250px;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .btn:hover {
+        background-color: #0069d9;
+    }
+</style>
 </body>
 </html>

@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -27,5 +28,9 @@ public class Slot {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "location")
     private Location location;
+
+    @OneToMany
+    private List<Match> matches;
+
 
 }

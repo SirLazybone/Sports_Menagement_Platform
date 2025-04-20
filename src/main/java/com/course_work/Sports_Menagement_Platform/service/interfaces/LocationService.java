@@ -14,4 +14,6 @@ public interface LocationService {
     void loadLocationsFromJson();
 
     Location createLocation(LocationCreationDTO locationCreationDTO, UUID tournamentId);
+
+    List<Location> getLocationsByTournamentId(UUID id);
 }

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<form th:action="@{/applications/rating/{tournamentId}(tournamentId=${tournamentId})}" method="post">
+
+<table>
+  <thead>
+  <tr>
+    <th>Место</th>
+    <th>
+      Команда
+    </th>
+    <th>Цифры</th>
+    <th>
+      Проходит в плей офф
+    </th>
+  </tr>
+  </thead>
+  <tbody>
+    <tr th:each = "team, place : ${teams}">
+      <td th:text="${place.index + 1}"></td>
+<td th:text="${team.teamName}">
+
+</td>
+      <td th:text="${team.goals}">
+
+      </td>
+      <td>
+       <input type="checkbox" th:name="${team.teamTournamentId}" th:checked="${team.goesToPlayOff}"> </input>
+      </td>
+    </tr>
+
+  </tbody>
+</table>
+  <button type="submit">Submit</button>
+
+</form>
+
+</body>
+</html>

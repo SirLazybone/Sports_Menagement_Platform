@@ -27,4 +27,6 @@ public class TeamTournament {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tournament_id")
     private Tournament tournament;
+
+    private boolean goToPlayOff;
 }

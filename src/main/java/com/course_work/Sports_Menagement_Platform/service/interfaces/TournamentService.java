@@ -28,6 +28,8 @@ public interface TournamentService {
 
     List<ApplicationDTO> getCurrParticipants(UUID tournamentId);
 
+    List<TeamTournament> getCurrentParticipants(UUID tournamentId);
+
     boolean isUserChiefOfTournament(UUID userId, UUID tournamentId);
 
     boolean isUserRefOfTournament(UUID userId, UUID tournamentId);
@@ -41,4 +43,6 @@ public interface TournamentService {
     boolean isUserMemberOfOrgCom(UUID userId, OrgCom orgCom);
 
     List<Tournament> getAllTournamentsOfOrgCom(UUID id);
+
+    void updatePlayOffTeams(UUID tournamentId, List<UUID> teamTournamentIds);
 }

@@ -1,5 +1,6 @@
 package com.course_work.Sports_Menagement_Platform.service.interfaces;
 
+import com.course_work.Sports_Menagement_Platform.data.enums.StageStatus;
 import com.course_work.Sports_Menagement_Platform.data.models.Match;
 import com.course_work.Sports_Menagement_Platform.data.models.Stage;
 import com.course_work.Sports_Menagement_Platform.data.models.Team;
@@ -31,6 +32,8 @@ public interface StageService {
 
     String getStageName(int bestPlace, int worstPlace);
 
+    int getTeamsCountInPlayOff(Tournament tournament);
+
     // Group stage methods
     void createGroups(GroupsDTO groupsDTO);
 
@@ -48,4 +51,7 @@ public interface StageService {
     Stage getGroupStage(UUID tournamentId);
 
 
+    StageStatus getStageStatus(Stage stage);
+
+    List<Team> getTeamsForPlatOffStage(Stage stage);
 }

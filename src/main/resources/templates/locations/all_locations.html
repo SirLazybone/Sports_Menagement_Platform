@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<table>
+  <thead>
+  <tr>
+    <td>
+      Название
+    </td>
+    <td>Адрес</td>
+  </tr>
+  </thead>
+  <tbody>
+  <tr th:each="location: ${locations}">
+    <td th:text="${location.name}"></td>
+    <td th:text="${location.address}"></td>
+  </tr>
+
+
+  </tbody>
+</table>
+<form th:action="@{/location/create/{id}(id=${tournament_id})}" th:object="${location}" method="post">
+  <label for="name">Название:</label>
+  <input type="text" id="name" th:field="*{name}" required/>
+  <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+  <label for="address">Адрес:</label>
+  <input type="text" id="address" th:field="*{address}" required/>
+  <span th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></span>
+  <button type="submit">Добавить локацию</button>
+
+</form>
+
+
+</body>
+</html>
