@@ -67,6 +67,7 @@ public class TournamentServiceImpl implements TournamentService {
 
     @Override
     public Tournament getById(UUID id) {
+
         return tournamentRepository.findById(id).orElseThrow(() -> new RuntimeException("No such tournament"));
     }
 

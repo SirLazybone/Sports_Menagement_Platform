@@ -110,6 +110,8 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
         }
         Stage stage = Stage.builder().isPublished(false).bestPlace(0).worstPlace(0).tournament(tournament).build();
         stageRepository.save(stage);
+        System.out.println(stage.getId());
+
 
         ArrayList<Team> group1 = new ArrayList<>();
         group1.add(teamRepository.findByName("Team1").get());
@@ -130,7 +132,7 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
         groupRepository.save(groupFinal1);
         groupRepository.save(groupFinal2);
 
-       /* Location location = Location.builder().address("Ленина 1").name("Стадион 1").tournament(tournament).build();
+       Location location = Location.builder().address("Ленина 1").name("Стадион 1").tournament(tournament).build();
         location = locationRepository.save(location);
 
         for (int i = 1; i <= 30; i++) {
@@ -148,7 +150,7 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
         }
         Stage stageFinal = Stage.builder().isPublished(false).bestPlace(1).worstPlace(8).tournament(tournament).build();
         stageRepository.save(stageFinal);
-        System.out.println(stageFinal.getId());*/
+        System.out.println(stageFinal.getId());
 
         TeamTournament teamTournament = teamTournamentRepository.findByTournamentIdAndTeamId(tournament.getId(), teamRepository.findByName("Team" + Integer.toString(1)).get().getId())
                 .get();

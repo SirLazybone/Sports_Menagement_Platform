@@ -9,10 +9,8 @@ import com.course_work.Sports_Menagement_Platform.service.interfaces.GroupServic
 import com.course_work.Sports_Menagement_Platform.service.interfaces.StageService;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class GroupServiceImpl implements GroupService {
@@ -33,6 +31,14 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void updateGroupTeams(UUID stageId, Map<String, List<UUID>> groups) {
+        List<UUID> allIds = groups.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
+        if (allIds.size() != new HashSet<>(allIds).size()) {
+            throw new RuntimeException("Одна команда может быть только в одной группе");
+        }
+        if (groups.values().stream().anyMatch(i -> i.size() == 1)) {
+            throw new RuntimeException("Нельзя создать группу с одной командой");
+        }
+
         Stage stage = stageService.getStageById(stageId);
         //TODO: проверки, что все валидно: этап является групповым и команды участвуют в чемпионате
         List<Group> groupsToDelete = getGroups(stage.getTournament().getId());

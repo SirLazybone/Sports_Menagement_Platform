@@ -38,6 +38,22 @@ public class StageController {
         this.groupService = groupService;
     }
 
+    // Разводящий метод для стейжей
+    @GetMapping("/view/{stageId}")
+    public String viewStage(@PathVariable UUID stageId, Model model, @AuthenticationPrincipal User user) {
+        Stage stage = stageService.getStageById(stageId);
+        if (stage.getBestPlace() == 0) {
+            // TODO: доделать, сейчас только для групп
+            return "redirect:/match/fill_group_stage/" + stage.getId().toString();
+        }
+        else if (stage.getBestPlace() > 0) {
+            return "redirect:/match/fill_playoff_stage/" + stage.getId().toString();
+        }
+        else {
+            return "";
+        }
+    }
+
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/create_stage/{tournamentId}")
     public String createStages(@PathVariable UUID tournamentId, Model model, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
@@ -163,9 +179,7 @@ public class StageController {
     }
 
     @GetMapping("/manage_groups/{tournamentId}")
-    public String manageGroups(@PathVariable UUID tournamentId, Model model, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
-        // TODO: проверка
-
+    public String manageGroups(@PathVariable UUID tournamentId, Model model, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user, @RequestParam(defaultValue = "") String savingError) {
         List<Group> groups = groupService.getGroups(tournamentId);
         List<Team> teams = tournamentService.getAllTeamsByTournamentId(tournamentId);
         Map<String, List<Pair<UUID, String>>> groupsMap = new HashMap<>();
@@ -177,17 +191,40 @@ public class StageController {
         model.addAttribute("teams", teamsPairs);
         model.addAttribute("groups", groupsMap);
         model.addAttribute("tournamentId", tournamentId);
+        model.addAttribute("savingError", "");
+        model.addAttribute("registrationNotFinished", false);
+
+        if (stageService.createGroupStageIfNotExists(tournamentId) == null) {
+            model.addAttribute("savingError", "Регистрация еще не завершена, настройка групп недоступна");
+            model.addAttribute("registrationNotFinished", true);
+        }
+        else if (!savingError.equals("")) {
+            if (savingError.equals("1")) {
+                model.addAttribute("savingError", "Одна команда может быть только в одной группе");
+            }
+            if (savingError.equals("2")) {
+                model.addAttribute("savingError", "Нельзя создать группу с одной командой");
+            }
+        }
+
         model.addAttribute("newGroupName", "");
         model.addAttribute("stageId", stageService.getGroupStage(tournamentId));
 
         return "stage/manage_groups";
-
     }
+
+
+
+
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/create_groups/{tournamentId}")
     public String createGroups(@PathVariable UUID tournamentId, @RequestParam Map<String, String> allParams, RedirectAttributes redirectAttributes,
                              @AuthenticationPrincipal User user) {
+
+        if (stageService.createGroupStageIfNotExists(tournamentId) == null) {
+            return "redirect:/stage/manage_groups/" + tournamentId.toString();
+        }
 
         Set<String> groupNames = allParams.keySet().stream()
                 .filter(k -> k.startsWith("groupNames["))
@@ -201,9 +238,22 @@ public class StageController {
                     .collect(Collectors.toList());
             groups.put(groupName, teamIds);
         }
+
         Stage stage = stageService.getGroupStage(tournamentId);
 
-        groupService.updateGroupTeams(stage.getId(), groups);
+        try {
+            groupService.updateGroupTeams(stage.getId(), groups);
+        } catch (RuntimeException e) {
+
+            if (e.getMessage() == "Одна команда может быть только в одной группе") {
+                return "redirect:/stage/manage_groups/" + tournamentId.toString() + "?savingError=" + 1;
+            } else if (e.getMessage() == "Нельзя создать группу с одной командой") {
+                return "redirect:/stage/manage_groups/" + tournamentId.toString() + "?savingError=" + 2;
+            }
+            else {
+                return "redirect:/stage/manage_groups/" + tournamentId.toString();
+            }
+        }
 
 
         return "redirect:/stage/manage_groups/" + tournamentId.toString();

@@ -5,6 +5,19 @@
     <title>Title</title>
 </head>
 <body>
+
+<div th:unless="${isPublished}">
+    <form th:action="@{/stage/manage_groups/{id}(id=${tournamentId})}" method="get">
+        <button type="submit">Настроить группы</button>
+    </form>
+</div>
+
+<div th:if="${!isPublished && isUserChief}">
+    <form th:action="@{/stage/publish_stage/{id}(id=${stageId})}" method="post">
+        <button type="submit">Опубликовать</button>
+    </form>
+</div>
+
 <form th:action="@{/match/fill_group_stage/{stageId}(stageId=${stageId})}" method="post">
     <!-- Iterate through each group and its matches -->
     <div th:each="groupEntry : ${matches}" class="group-container">

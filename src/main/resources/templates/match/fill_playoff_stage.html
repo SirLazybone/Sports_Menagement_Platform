@@ -25,6 +25,13 @@
 <body>
 <h1>Dynamic Table Form</h1>
 
+<div th:if="${!isPublished && isUserChief}">
+  <form th:action="@{/stage/publish_stage/{id}(id=${stageId})}" method="post">
+    <button type="submit">Опубликовать</button>
+  </form>
+</div>
+
+
 <form th:action="@{/match/fill_playoff_stage/{stageId}(stageId=${stageId})}" method="post">
   <table>
     <thead>

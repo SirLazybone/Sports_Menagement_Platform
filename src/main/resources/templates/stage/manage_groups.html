@@ -35,9 +35,10 @@
 </head>
 <body>
 <h1>Edit Tournament Groups</h1>
+<h2 th:text="${savingError}"></h2>
 <h2 th:text="'Tournament ID: ' + ${tournamentId}"></h2>
 
-<form th:action="@{'/stage/create_groups/' + ${tournamentId}}" method="post">
+<form th:action="@{'/stage/create_groups/' + ${tournamentId}}" method="post" th:unless="${registrationNotFinished}">
 
     <!-- Display existing groups -->
     <div th:each="groupEntry : ${groups}" th:with="groupName=${groupEntry.key}, groupTeams=${groupEntry.value}">

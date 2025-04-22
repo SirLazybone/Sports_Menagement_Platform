@@ -1,5 +1,7 @@
 package com.course_work.Sports_Menagement_Platform.controller;
 
+import com.course_work.Sports_Menagement_Platform.data.enums.Org;
+import com.course_work.Sports_Menagement_Platform.data.enums.StageStatus;
 import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.*;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.CityService;
@@ -18,6 +20,7 @@ import java.time.LocalDateTime;
 import java.time.chrono.ChronoLocalDate;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/tournament")
@@ -71,19 +74,47 @@ public class TournamentController {
     }
 
     @GetMapping("/view/{id}")
-    public String view(@PathVariable UUID id, Model model) {
+    public String view(@PathVariable UUID id, Model model, @AuthenticationPrincipal User user) {
         try {
             Tournament tournament = tournamentService.getById(id);
+            stageService.createGroupStageIfNotExists(id);
+            List<Stage> stages = tournament.getStages().stream().filter(stage -> stage.getBestPlace() >= 0).collect(Collectors.toList());
+            List<Stage> stagesTeamsKnown = stages.stream().filter(stage -> stageService.getStageStatus(stage) == StageStatus.TEAMS_KNOWN).collect(Collectors.toList());
+            List<Stage> stagesPublished = stages.stream().filter(stage -> stageService.getStageStatus(stage) == StageStatus.SCHEDULE_PUBLISHED).collect(Collectors.toList());
+            List<Stage> stagesFinished = stages.stream().filter(stage -> stageService.getStageStatus(stage) == StageStatus.FINISHED).collect(Collectors.toList());
+
             model.addAttribute("tournament", tournament);
+            model.addAttribute("stagesTeamsKnown", stagesTeamsKnown);
+            model.addAttribute("stagesPublished", stagesPublished);
+            model.addAttribute("stagesFinished", stagesFinished);
+            boolean isUserOrg = false;
+            boolean isUserChiefOrg = false;
+
+            if (user != null) {
+                List<UserOrgCom> userOrgComList = tournament.getUserOrgCom().getOrgCom().getUserOrgComList().stream().filter(userOrgCom -> userOrgCom.getUser().getId().equals(user.getId())).collect(Collectors.toList());
+                if (userOrgComList.size() != 0) {
+                    isUserOrg = true;
+                    if (userOrgComList.get(0).getOrgRole() == Org.CHIEF) isUserChiefOrg = true;
+                }
+            }
+
+            model.addAttribute("isUserOrg", isUserOrg);
+            model.addAttribute("isUserChiefOrg", isUserChiefOrg);
+
+
+
             model.addAttribute("tournamentId", id);
             model.addAttribute("registrationOpen", tournament.getRegisterDeadline().isAfter(ChronoLocalDate.from(LocalDateTime.now())));
         } catch (RuntimeException e) {
+            // TODO: выбросить 404
             model.addAttribute("error", e.getMessage());
             return "tournament/show_all";
         }
 
         return "tournament/view";
     }
+
+    // TODO: ручка чтобы отменить чемпионат
 
 //    @GetMapping("/view/{orgcomId}/{tournamentId}")
 //    public String viewInOrgCom(@PathVariable UUID orgcomId, @PathVariable UUID tournamentId, @AuthenticationPrincipal User user) {

@@ -53,15 +53,21 @@ public class MatchController {
             return "redirect:/home";
         }
         Map<Group, List<Match>> matches = matchService.createGroupMatchIfNotCreated(stageId);
+        // TODO: проверка, что группы внесены корректно (одна команда в одной группе)
+
         StageStatus stageStatus = stageService.getStageStatus(stage);
         if (stageStatus != StageStatus.TEAMS_KNOWN) {
             model.addAttribute("error", "Настройка расписания этапа недоступна");
             return "redirect:/home";
         }
         List<Slot> availableSlots = slotService.getAllSlotsForStage(stage);
+        model.addAttribute("isPublished", stage.isPublished());
         model.addAttribute("matches", matches);
         model.addAttribute("slot", availableSlots);
         model.addAttribute("stageId", stageId);
+        model.addAttribute("tournamentId", stage.getTournament().getId());
+
+        model.addAttribute("isUserChief", true); // TODO: исправить
 
         return "match/fill_group";
     }
@@ -103,6 +109,9 @@ public class MatchController {
 
         model.addAttribute("slots", availableSlots);
         model.addAttribute("stageId", stageId);
+        model.addAttribute("isPublished", stage.isPublished());
+        model.addAttribute("isUserChief", true);  // TODO: исправить
+
         model.addAttribute("notFilledMatches", matches.size());
         model.addAttribute("matchesCount", (stage.getWorstPlace() - stage.getBestPlace() + 1) / 2 - 1);
         return "match/fill_playoff_stage";

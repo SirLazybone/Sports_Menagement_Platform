@@ -7,6 +7,10 @@
 <body>
 <h1>Детали турнира</h1>
 
+<h2 th:if="${tournament.is_stopped}">
+  Чемпионат отменен
+</h2>
+
 <table>
   <tr>
     <th>Название</th>
@@ -25,7 +29,7 @@
     <td th:text="${tournament.city.name}"></td>
   </tr>
   <tr>
-    <th>Минимальное количество участников</th>
+    <th>Количество игроков в команде</th>
     <td th:text="${tournament.minMembers}"></td>
   </tr>
   <tr>
@@ -33,24 +37,81 @@
     <td th:text="${#temporals.format(tournament.registerDeadline, 'dd.MM.yyyy')}"></td>
   </tr>
   <tr>
-    <th>Описание</th>
+    <th th:if="${tournament.description!=''}">Описание</th>
     <td th:text="${tournament.description}"></td>
   </tr>
 </table>
 
-<div th:if="${registrationOpen}">
-  <form th:action="@{/applications/create_application/{id}(id=${tournament.id})}" method="get">
-    <button type="submit">Подать заявку</button>
-  </form>
-</div>
 <div>
   <form th:action="@{/applications/applications/{id}(id=${tournament.id})}" method="get">
     <button type="submit">Команды</button>
   </form>
 </div>
 
+<div th:if="${registrationOpen}">
+  <form th:action="@{/applications/create_application/{id}(id=${tournament.id})}" method="get">
+    <button type="submit">Подать заявку</button>
+  </form>
+</div>
+
+<div th:if="${isUserOrg}">
+  <form th:action="@{/slot/all/{id}(id=${tournament.id})}" method="get">
+    <button type="submit">Слоты</button>
+  </form>
+</div>
+
+<div th:unless="${registrationOpen}">
+  <form th:action="@{/applications/rating/{id}(id=${tournament.id})}" method="get">
+    <button type="submit">Рейтинг команд</button>
+  </form>
+</div>
 
 
+<div th:if="${isUserOrg}">
+  <h2>Этапы в разработке</h2>
+  <div th:each="stage : ${stagesTeamsKnown}">
+  <form th:action="@{/stage/view/{id}(id=${stage.id})}" method="get">
+    <button th:if="${stage.bestPlace == 0}">Групповой этап</button>
+    <button th:if="${stage.bestPlace == 1}" th:text="${stage.bestPlace} + '/' + ${stage.worstPlace} + ' финала'"></button>
+    <button th:if="${stage.bestPlace > 1}" th:text="$'Матчи за ' {stage.bestPlace} + '-' + ${stage.worstPlace} + ' места'"></button>
+  </form>
+  </div>
+</div>
+
+<div>
+  <h2>Текущие этапы</h2>
+  <div th:each="stage : ${stagesPublished}">
+    <form th:action="@{/stage/view/{id}(id=${stage.id})}" method="get">
+      <button th:if="${stage.bestPlace == 0}">Групповой этап</button>
+      <button th:if="${stage.bestPlace == 1}" th:text="${stage.bestPlace} + '/' + ${stage.worstPlace} + ' финала'"></button>
+      <button th:if="${stage.bestPlace > 1}" th:text="$'Матчи за ' {stage.bestPlace} + '-' + ${stage.worstPlace} + ' места'"></button>
+    </form>
+  </div>
+</div>
+
+
+<div>
+  <h2>Завершенные этапы</h2>
+  <div th:each="stage : ${stagesFinished}">
+    <form th:action="@{/stage/view/{id}(id=${stage.id})}" method="get">
+      <button th:if="${stage.bestPlace == 0}">Групповой этап</button>
+      <button th:if="${stage.bestPlace == 1}" th:text="${stage.bestPlace} + '/' + ${stage.worstPlace} + ' финала'"></button>
+      <button th:if="${stage.bestPlace > 1}" th:text="$'Матчи за ' {stage.bestPlace} + '-' + ${stage.worstPlace} + ' места'"></button>
+    </form>
+  </div>
+</div>
+
+<div th:unless="${registrationOpen}">
+  <form th:action="@{/stage/additional_matches/{id}(id=${tournament.id})}" method="get">
+    <button type="submit">Дополнительные матчи</button>
+  </form>
+</div>
+
+<div th:if="${isUserChiefOrg}">
+  <form th:action="@{/tournament/cancel/{id}(id=${tournament.id})}" method="get">
+    <button type="submit">Отменить чемпионат</button>
+  </form>
+</div>
 
 </body>
 </html>

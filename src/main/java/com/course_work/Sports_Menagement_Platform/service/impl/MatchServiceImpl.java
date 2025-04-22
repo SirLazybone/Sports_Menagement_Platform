@@ -1,5 +1,6 @@
 package com.course_work.Sports_Menagement_Platform.service.impl;
 
+import com.course_work.Sports_Menagement_Platform.data.enums.ApplicationStatus;
 import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.MatchDTO;
 import com.course_work.Sports_Menagement_Platform.repositories.MatchRepository;
@@ -103,6 +104,8 @@ public class MatchServiceImpl implements MatchService {
         stageList.add(stage);
         List<Match> matches = getMatchesByStagesMap(stageList).get(stageId);
         Map<Group, List<Match>> result = new HashMap<>();
+
+
         if (matches.isEmpty()) {
              List<Group> groups = stageService.getGroupsByStage(stageId);
              for (Group group : groups) {
@@ -136,6 +139,7 @@ public class MatchServiceImpl implements MatchService {
 
     @Override
     public void setSlots(UUID stageId, Map<UUID, UUID> assignments) {
+        // TODO: проверки
         assignments.forEach((matchId, slotId) -> {
             Match match = matchRepository.findById(matchId).get();
             match.setSlot(slotService.getById(slotId));

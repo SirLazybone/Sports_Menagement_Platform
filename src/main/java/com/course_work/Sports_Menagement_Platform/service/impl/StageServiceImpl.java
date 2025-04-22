@@ -15,6 +15,7 @@ import com.course_work.Sports_Menagement_Platform.service.interfaces.TeamService
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -150,10 +151,16 @@ public class StageServiceImpl implements StageService {
 
     @Override
     public Stage createGroupStageIfNotExists(UUID tournamentId) {
-        Optional<Stage> optional =  stageRepository.findByPlaceAndTournamentId(0, 0, tournamentId);
-        if (optional.isPresent()) return optional.get();
-        Stage newStage = Stage.builder().bestPlace(0).worstPlace(0).isPublished(false).tournament(tournamentService.getById(tournamentId)).build();
-        return stageRepository.save(newStage);
+        if (tournamentService.getById(tournamentId).getRegisterDeadline().isBefore(LocalDate.now())) {
+            Optional<Stage> optional = stageRepository.findByPlaceAndTournamentId(0, 0, tournamentId);
+            if (optional.isPresent()) return optional.get();
+            Stage newStage = Stage.builder().bestPlace(0).worstPlace(0).isPublished(false).tournament(tournamentService.getById(tournamentId)).build();
+            return stageRepository.save(newStage);
+
+        }
+        else {
+            return null;  // групповой этап не может быть создан
+        }
     }
 
     @Override
