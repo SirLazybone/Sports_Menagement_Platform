@@ -19,6 +19,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
 import java.time.chrono.ChronoLocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -37,6 +38,30 @@ public class TournamentController {
         this.matchService = matchService;
         this.cityService = cityService;
     }
+
+    @GetMapping("/search")
+    public String search(Model model) {
+        List<City> cities = cityService.getCities();
+        model.addAttribute("tournamentSearchDTO", new TournamentSearchDTO());
+        model.addAttribute("cities", cities);
+        model.addAttribute("sportNames", new SportNames().getMap());
+        model.addAttribute("tournaments", new ArrayList<>());
+
+        return "tournament/search";
+    }
+
+    @PostMapping("/search")
+    public String searchPost(Model model, @ModelAttribute("tournamentSearchDTO") TournamentSearchDTO tournamentSearchDTO) {
+        List<Tournament> tournaments = tournamentService.search(tournamentSearchDTO);
+        model.addAttribute("tournamentSearchDTO", tournamentSearchDTO);
+        model.addAttribute("cities", cityService.getCities());
+        model.addAttribute("sportNames", new SportNames().getMap());
+        model.addAttribute("tournaments", tournaments);
+
+        return "tournament/search";
+    }
+
+
 
     @GetMapping("/show_all")
     public String showAll(Model model) {

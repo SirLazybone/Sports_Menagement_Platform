@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Tournament Search</title>
+    <style>
+        .checkbox-group {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .checkbox-item {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+
+<form th:action="@{/tournament/search}" th:object="${tournamentSearchDTO}" method="post">
+    <div>
+        <label for="name">Название:</label>
+        <input type="text" id="name" th:field="*{name}" placeholder=""
+               th:value="${tournamentSearchDTO.name != null} ? ${tournamentSearchDTO.name} : ''"/>
+    </div>
+
+    <!-- Cities checkboxes -->
+    <div>
+        <label>Города:</label>
+        <div class="checkbox-group">
+            <div th:each="city : ${cities}" class="checkbox-item">
+                <input type="checkbox"
+                       th:id="'city_' + ${city.id}"
+                       th:name="cities"
+                       th:value="${city.id}"
+                       th:checked="${tournamentSearchDTO.cities != null && tournamentSearchDTO.cities.contains(city.id)}"/>
+                <label th:for="'city_' + ${city.id}" th:text="${city.name}"></label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sports checkboxes -->
+    <div>
+        <label>Виды спорта:</label>
+        <div class="checkbox-group">
+            <div th:each="sport : ${T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).values()}" class="checkbox-item">
+                <input type="checkbox"
+                       th:id="'sport_' + ${sport}"
+                       th:name="sports"
+                       th:value="${sport}"
+                       th:checked="${tournamentSearchDTO.sports != null && tournamentSearchDTO.sports.contains(sport)}"/>
+                <label th:for="'sport_' + ${sport}" th:text="${sportNames.get(sport)}"></label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Team size range -->
+    <div>
+        <p>Размер команды:</p>
+        <label for="teamSizeFrom">От:</label>
+        <input type="text" id="teamSizeFrom" th:field="*{teamSizeFrom}"
+               th:value="${tournamentSearchDTO.teamSizeFrom != '0' ? tournamentSearchDTO.teamSizeFrom : ''}"/>
+
+        <label for="teamSizeTo">До:</label>
+        <input type="text" id="teamSizeTo" th:field="*{teamSizeTo}"
+               th:value="${tournamentSearchDTO.teamSizeTo != '0' && tournamentSearchDTO.teamSizeTo != '1000000000' ? tournamentSearchDTO.teamSizeTo : ''}"/>
+    </div>
+
+    <!-- Registration status -->
+    <div>
+        <label for="registrationGoing">Показать только доступные для регистрации:</label>
+        <input type="checkbox" id="registrationGoing" th:field="*{registrationGoing}"
+               th:checked="${tournamentSearchDTO.registrationGoing}"/>
+    </div>
+
+    <button type="submit">Искать</button>
+</form>
+
+<div th:each="tournament : ${tournaments}" style="width: 100%;">
+    <form th:action="@{/tournament/view/{id}(id=${tournament.id})}" method="get" style="width: 100%;">
+        <button type="submit" th:text="${tournament.name}"
+                style="width: 100%; padding: 10px;"></button>
+    </form>
+</div>
+
+
+</body>
+</html>

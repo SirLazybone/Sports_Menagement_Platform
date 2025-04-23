@@ -2,6 +2,7 @@ package com.course_work.Sports_Menagement_Platform.service.impl;
 
 import com.course_work.Sports_Menagement_Platform.data.enums.ApplicationStatus;
 import com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus;
+import com.course_work.Sports_Menagement_Platform.data.enums.Sport;
 import com.course_work.Sports_Menagement_Platform.data.enums.StageStatus;
 import com.course_work.Sports_Menagement_Platform.data.enums.Sport;
 import com.course_work.Sports_Menagement_Platform.data.models.*;
@@ -9,6 +10,7 @@ import com.course_work.Sports_Menagement_Platform.dto.ApplicationDTO;
 import com.course_work.Sports_Menagement_Platform.dto.RatingLineDTO;
 import com.course_work.Sports_Menagement_Platform.dto.TeamTournamentDTO;
 import com.course_work.Sports_Menagement_Platform.dto.TournamentDTO;
+import com.course_work.Sports_Menagement_Platform.dto.TournamentSearchDTO;
 import com.course_work.Sports_Menagement_Platform.mapper.TournamentMapper;
 import com.course_work.Sports_Menagement_Platform.repositories.*;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.*;
@@ -372,5 +374,29 @@ public class TournamentServiceImpl implements TournamentService {
                 .thenComparing(RatingLineDTO::getScoredGoals));
 
         return ratingLines;
+    }
+
+    @Override
+    public List<Tournament> search(TournamentSearchDTO tournamentSearchDTO) {
+        LocalDate registrationUntil;
+        if (tournamentSearchDTO.isRegistrationGoing()) registrationUntil = LocalDate.now();
+        else registrationUntil = LocalDate.of(1900, 1, 1);
+        List<String> strings = List.of(Sport.values()).stream().map(i -> i.toString()).collect(Collectors.toList());
+        if (tournamentSearchDTO.getCities() == null) {
+            if (tournamentSearchDTO.getSports() != null)
+            return tournamentRepository.searchWithoutCities(tournamentSearchDTO.getName(), tournamentSearchDTO.getSports().stream().map(i -> i.toString()).collect(Collectors.toList()), tournamentSearchDTO.getTeamSizeFromInt(), tournamentSearchDTO.getTeamSizeToInt(), registrationUntil);
+            else {
+                return tournamentRepository.searchWithoutCities(tournamentSearchDTO.getName(), List.of(Sport.values()).stream().map(i -> i.toString()).collect(Collectors.toList()), tournamentSearchDTO.getTeamSizeFromInt(), tournamentSearchDTO.getTeamSizeToInt(), registrationUntil);
+
+            }
+        }
+        else {
+            if (tournamentSearchDTO.getSports() != null)
+
+                return tournamentRepository.search(tournamentSearchDTO.getName(), tournamentSearchDTO.getCities().stream().map(i -> cityRepository.getById(i)).collect(Collectors.toList()), tournamentSearchDTO.getSports().stream().map(i -> i.toString()).collect(Collectors.toList()), tournamentSearchDTO.getTeamSizeFromInt(), tournamentSearchDTO.getTeamSizeToInt(), registrationUntil);
+            else
+                return tournamentRepository.search(tournamentSearchDTO.getName(), tournamentSearchDTO.getCities().stream().map(i -> cityRepository.getById(i)).collect(Collectors.toList()), List.of(Sport.values()).stream().map(i -> i.toString()).collect(Collectors.toList()), tournamentSearchDTO.getTeamSizeFromInt(), tournamentSearchDTO.getTeamSizeToInt(), registrationUntil);
+
+        }
     }
 }

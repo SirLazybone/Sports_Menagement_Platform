@@ -2,6 +2,7 @@ package com.course_work.Sports_Menagement_Platform.configuration;
 
 import com.course_work.Sports_Menagement_Platform.data.enums.*;
 import com.course_work.Sports_Menagement_Platform.data.models.*;
+import com.course_work.Sports_Menagement_Platform.dto.AdditionalMatchDTO;
 import com.course_work.Sports_Menagement_Platform.repositories.*;
 import com.course_work.Sports_Menagement_Platform.service.impl.TeamServiceImpl;
 import com.course_work.Sports_Menagement_Platform.service.impl.UserServiceImpl;
@@ -47,6 +48,9 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
     UserTeamRepository userTeamRepository;
 
     @Autowired
+    MatchService matchService;
+
+    @Autowired
     TeamTournamentRepository teamTournamentRepository;
     @Autowired
     UserOrgComRepository userOrgComRepository;
@@ -90,9 +94,30 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
         orgComRepository.save(orgCom);
         UserOrgCom userOrgCom = UserOrgCom.builder().orgCom(orgCom).orgRole(Org.CHIEF).user(userService.findByTel("+0")).invitationStatus(InvitationStatus.ACCEPTED).build();
         userOrgComRepository.save(userOrgCom);
+
+
         Tournament tournament = Tournament.builder().sport(Sport.FOOTBALL).userOrgCom(userOrgCom).city(cityService.getCities().get(0)).minMembers(5).
-                name("Tour1").id(UUID.fromString("91e4dfd6-4fc8-4523-9db6-33326263483c")).registerDeadline(LocalDate.of(2025, 01, 01)).is_stopped(false).build();
+                name("Tour2").registerDeadline(LocalDate.of(2025, 8, 01)).is_stopped(false).build();
+        tournamentRepository.save(tournament);
+         tournament = Tournament.builder().sport(Sport.BASKETBALL).userOrgCom(userOrgCom).city(cityService.getCities().get(1)).minMembers(5).
+                name("Tour3").registerDeadline(LocalDate.of(2025, 8, 01)).is_stopped(false).build();
+        tournamentRepository.save(tournament);
+         tournament = Tournament.builder().sport(Sport.FOOTBALL).userOrgCom(userOrgCom).city(cityService.getCities().get(1)).minMembers(11).
+                name("Tour4").registerDeadline(LocalDate.of(2025, 8, 01)).is_stopped(false).build();
+        tournamentRepository.save(tournament);
+         tournament = Tournament.builder().sport(Sport.FOOTBALL).userOrgCom(userOrgCom).city(cityService.getCities().get(0)).minMembers(5).
+                name("Tour5").registerDeadline(LocalDate.of(2025, 01, 01)).is_stopped(false).build();
+        tournamentRepository.save(tournament);
+         tournament = Tournament.builder().sport(Sport.FOOTBALL).userOrgCom(userOrgCom).city(cityService.getCities().get(0)).minMembers(5).
+                name("Tour6").registerDeadline(LocalDate.of(2025, 01, 01)).is_stopped(false).build();
+        tournamentRepository.save(tournament);
+
+
+        tournament = Tournament.builder().sport(Sport.FOOTBALL).userOrgCom(userOrgCom).city(cityService.getCities().get(0)).minMembers(5).
+                name("Tour1").registerDeadline(LocalDate.of(2025, 01, 01)).is_stopped(false).build();
         return tournamentRepository.save(tournament);
+
+
 
     }
 
@@ -137,8 +162,14 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
 
         for (int i = 1; i <= 30; i++) {
             Slot slot = Slot.builder().date(LocalDate.of(2025, 7, i)).time(LocalTime.of(15, 00, 0)).location(location).build();
-            slotRepository.save(slot);
+            slot = slotRepository.save(slot);
+            if (i < 5) {
+                matchService.createAdditionalMatch(tournament.getId(), new AdditionalMatchDTO(teamRepository.findByName("Team1").get().getId(),
+                        teamRepository.findByName("Team2").get().getId(), slot.getId()));
+            }
         }
+
+
 
 
         // TODO: Это очень плохо -- потом исправить

@@ -30,6 +30,7 @@ public class Slot {
     private Location location;
 
     @OneToMany
+    @JoinColumn(name = "slot_id")
     private List<Match> matches;
 
 

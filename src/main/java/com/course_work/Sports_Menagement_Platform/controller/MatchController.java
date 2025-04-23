@@ -1,5 +1,6 @@
 package com.course_work.Sports_Menagement_Platform.controller;
 
+import com.course_work.Sports_Menagement_Platform.data.enums.Org;
 import com.course_work.Sports_Menagement_Platform.data.enums.StageStatus;
 import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.*;
@@ -44,6 +45,52 @@ public class MatchController {
         this.userService = userService;
         this.afterMatchPenaltyService = afterMatchPenaltyService;
     }
+
+
+    @GetMapping("/additional/{tournamentId}")
+    public String additionalMatches(@PathVariable UUID tournamentId, Model model, @AuthenticationPrincipal User user) {
+        List<Match> matchesInWork = matchService.getAdditionalMatchesInWork(tournamentId);
+        List<Match> publishedMatches = matchService.getPublishedAdditionalMatches(tournamentId);
+        List<Match> finishedMatches = matchService.getFinishedAdditionalMatches(tournamentId);
+        List<Slot> freeSlots = slotService.getFreeSlots(tournamentService.getById(tournamentId));
+
+
+        boolean isUserOrg = false;
+        boolean isUserChiefOrg = false;
+
+        if (user != null) {
+            List<UserOrgCom> userOrgComList = tournamentService.getById(tournamentId).getUserOrgCom().getOrgCom().getUserOrgComList().stream().filter(userOrgCom -> userOrgCom.getUser().getId().equals(user.getId())).collect(Collectors.toList());
+            if (userOrgComList.size() != 0) {
+                isUserOrg = true;
+                if (userOrgComList.get(0).getOrgRole() == Org.CHIEF) isUserChiefOrg = true;
+            }
+        }
+
+
+        model.addAttribute("isUserOrg", isUserOrg);
+        model.addAttribute("isUserChiefOrg", isUserChiefOrg);
+
+        model.addAttribute("matchesInWork", matchesInWork);
+        model.addAttribute("publishedMatches", publishedMatches);
+        model.addAttribute("finishedMatches", finishedMatches);
+        model.addAttribute("freeSlots", freeSlots);
+        model.addAttribute("tournamentId", tournamentId);
+        model.addAttribute("additionalMatchDTO", new AdditionalMatchDTO());
+        model.addAttribute("teams", tournamentService.getAllTeamsByTournamentId(tournamentId));
+
+
+
+        return "/match/additional_matches";
+
+    }
+
+    @PostMapping("/new_additional/{tournamentId}")
+    public String additionalMatchesPost(@PathVariable UUID tournamentId, Model model, @AuthenticationPrincipal User user, @ModelAttribute AdditionalMatchDTO additionalMatchDTO) {
+        matchService.createAdditionalMatch(tournamentId, additionalMatchDTO);
+        return "redirect:/match/additional/" + tournamentId.toString();
+    }
+
+
 
     @GetMapping("/fill_group_stage/{stageId}")
     public String fillGroupStage(@PathVariable UUID stageId, Model model, @AuthenticationPrincipal User user, RedirectAttributes redirectAttributes) {

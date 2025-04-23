@@ -102,7 +102,7 @@
 </div>
 
 <div th:unless="${registrationOpen}">
-  <form th:action="@{/stage/additional_matches/{id}(id=${tournament.id})}" method="get">
+  <form th:action="@{/match/additional/{id}(id=${tournament.id})}" method="get">
     <button type="submit">Дополнительные матчи</button>
   </form>
 </div>

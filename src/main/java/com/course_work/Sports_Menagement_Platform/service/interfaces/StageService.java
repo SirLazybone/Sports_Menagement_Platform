@@ -54,4 +54,8 @@ public interface StageService {
     StageStatus getStageStatus(Stage stage);
 
     List<Team> getTeamsForPlatOffStage(Stage stage);
+
+    List<Stage> getAdditionalStages(UUID tournamentId);
+
+    Stage createStageForAdditionalMatch(UUID tournamentId);
 }

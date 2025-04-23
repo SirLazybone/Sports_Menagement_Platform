@@ -1,6 +1,7 @@
 package com.course_work.Sports_Menagement_Platform.service.interfaces;
 
 import com.course_work.Sports_Menagement_Platform.data.models.*;
+import com.course_work.Sports_Menagement_Platform.dto.AdditionalMatchDTO;
 import com.course_work.Sports_Menagement_Platform.dto.MatchDTO;
 import org.springframework.data.util.Pair;
 
@@ -28,4 +29,12 @@ public interface MatchService {
     void setSlotsForPlayOff(UUID stageId, Map<Pair<UUID, UUID>, UUID> assignments, List<Pair<UUID, UUID>> assigmentsWithNoSlot);
 
     List<Match> getAllByStageAndTeam(Stage stage, Team team);
+    List<Match> getFinishedAdditionalMatches(UUID tournamentId);
+
+    List<Match> getPublishedAdditionalMatches(UUID tournamentId);
+
+    List<Match> getAdditionalMatchesInWork(UUID tournamentId);
+
+    Match createAdditionalMatch(UUID tournamentId, AdditionalMatchDTO additionalMatchDTO);
+
 }

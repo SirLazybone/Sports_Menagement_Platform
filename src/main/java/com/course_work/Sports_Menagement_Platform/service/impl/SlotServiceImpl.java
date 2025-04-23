@@ -3,6 +3,7 @@ package com.course_work.Sports_Menagement_Platform.service.impl;
 import com.course_work.Sports_Menagement_Platform.data.models.Location;
 import com.course_work.Sports_Menagement_Platform.data.models.Slot;
 import com.course_work.Sports_Menagement_Platform.data.models.Stage;
+import com.course_work.Sports_Menagement_Platform.data.models.Tournament;
 import com.course_work.Sports_Menagement_Platform.dto.SlotCreationDTO;
 import com.course_work.Sports_Menagement_Platform.repositories.MatchRepository;
 import com.course_work.Sports_Menagement_Platform.repositories.SlotRepository;
@@ -57,6 +58,19 @@ public class SlotServiceImpl implements SlotService {
         List<Slot> freeSlots = new ArrayList<>();
         for (Slot slot : allSlots) {
             if (slot.getMatches().isEmpty() || slot.getMatches().get(0).getStage().equals(stage.getId())) {
+                freeSlots.add(slot);
+            }
+        }
+        return freeSlots;
+    }
+
+
+    @Override  
+    public List<Slot> getFreeSlots(Tournament tournament) {
+        List<Slot> allSlots = getAllByTournament(tournament.getId());
+        List<Slot> freeSlots = new ArrayList<>();
+        for (Slot slot : allSlots) {
+            if (slot.getMatches().isEmpty()) {
                 freeSlots.add(slot);
             }
         }

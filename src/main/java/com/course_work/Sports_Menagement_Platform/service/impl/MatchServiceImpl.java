@@ -2,9 +2,11 @@ package com.course_work.Sports_Menagement_Platform.service.impl;
 
 import com.course_work.Sports_Menagement_Platform.data.enums.ApplicationStatus;
 import com.course_work.Sports_Menagement_Platform.data.models.*;
+import com.course_work.Sports_Menagement_Platform.dto.AdditionalMatchDTO;
 import com.course_work.Sports_Menagement_Platform.dto.MatchDTO;
 import com.course_work.Sports_Menagement_Platform.repositories.MatchRepository;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.*;
+import jakarta.transaction.Transactional;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
@@ -181,6 +183,29 @@ public class MatchServiceImpl implements MatchService {
     @Override
     public List<Match> getAllByStageAndTeam(Stage stage, Team team) {
         return matchRepository.findAllByStageIdAndTeamId(stage.getId(), team.getId());
+    }
+
+    @Override
+    public List<Match> getFinishedAdditionalMatches(UUID tournamentId) {
+        return stageService.getAdditionalStages(tournamentId).stream().map(i -> i.getMatches()).flatMap(List::stream).filter(match -> match.isResultPublished()).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Match> getPublishedAdditionalMatches(UUID tournamentId) {
+        return stageService.getAdditionalStages(tournamentId).stream().filter(stage -> stage.isPublished()).map(i -> i.getMatches()).flatMap(List::stream).filter(match -> !match.isResultPublished()).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Match> getAdditionalMatchesInWork(UUID tournamentId) {
+        return stageService.getAdditionalStages(tournamentId).stream().filter(stage -> !stage.isPublished()).map(i -> i.getMatches()).flatMap(List::stream).collect(Collectors.toList());
+    }
+
+    @Override
+    public Match createAdditionalMatch(UUID tournamentId, AdditionalMatchDTO additionalMatchDTO) {
+        Stage stage = stageService.createStageForAdditionalMatch(tournamentId);
+        Match match = Match.builder().stage(stage).team1(teamService.getById(additionalMatchDTO.getTeam1())).team2(teamService.getById(additionalMatchDTO.getTeam2())).isResultPublished(false).
+                slot(slotService.getById(additionalMatchDTO.getSlot())).build();
+        return matchRepository.save(match);
     }
 
 }
