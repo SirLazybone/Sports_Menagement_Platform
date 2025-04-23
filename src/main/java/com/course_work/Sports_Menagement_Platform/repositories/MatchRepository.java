@@ -16,6 +16,9 @@ public interface MatchRepository extends JpaRepository<Match, UUID> {
     @Query("SELECT COUNT(m) > 0 FROM Match m WHERE m.stage = :stage AND (m.team1 = :team OR m.team2 = :team)")
     boolean existsByStageAndTeam(@Param("stage") Stage stage, @Param("team") Team team);
 
+    @Query("SELECT m FROM Match m WHERE m.stage.id = :stageId AND (m.team1.id = :teamId OR m.team2.id = :teamId)")
+    List<Match> findAllByStageIdAndTeamId(@Param("stageId") UUID stageId, @Param("teamId") UUID teamID);
+
     @Query("SELECT m FROM Match m WHERE m.stage.id = :stageId")
     List<Match> findAllMatchesByStageId(@Param("stageId") UUID stageId);
 

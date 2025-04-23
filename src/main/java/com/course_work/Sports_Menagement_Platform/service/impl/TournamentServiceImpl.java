@@ -4,8 +4,10 @@ import com.course_work.Sports_Menagement_Platform.data.enums.ApplicationStatus;
 import com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus;
 import com.course_work.Sports_Menagement_Platform.data.enums.Sport;
 import com.course_work.Sports_Menagement_Platform.data.enums.StageStatus;
+import com.course_work.Sports_Menagement_Platform.data.enums.Sport;
 import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.ApplicationDTO;
+import com.course_work.Sports_Menagement_Platform.dto.RatingLineDTO;
 import com.course_work.Sports_Menagement_Platform.dto.TeamTournamentDTO;
 import com.course_work.Sports_Menagement_Platform.dto.TournamentDTO;
 import com.course_work.Sports_Menagement_Platform.dto.TournamentSearchDTO;
@@ -15,10 +17,7 @@ import com.course_work.Sports_Menagement_Platform.service.interfaces.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,14 +30,17 @@ public class TournamentServiceImpl implements TournamentService {
     private final TeamRepository teamRepository;
     private final UserTeamRepository userTeamRepository;
     private final StageStatusService stageStatusService;
-
     private final StageRepository stageRepository;
+    private final GoalRepository goalRepository;
+    private final MatchRepository matchRepository;
     private final TournamentMapper tournamentMapper;
 
-
     public TournamentServiceImpl(TournamentRepository tournamentRepository, OrgComService orgComService,
-                                 TournamentMapper tournamentMapper, CityRepository cityRepository,
-                                 TeamService teamService, TeamTournamentRepository teamTournamentRepository, TeamRepository teamRepository, UserTeamRepository userTeamRepository, StageStatusService stageStatusService, StageRepository stageRepository) {
+                               TournamentMapper tournamentMapper, CityRepository cityRepository,
+                               TeamService teamService, TeamTournamentRepository teamTournamentRepository,
+                               TeamRepository teamRepository, UserTeamRepository userTeamRepository,
+                               StageStatusService stageStatusService, StageRepository stageRepository,
+                               GoalRepository goalRepository, MatchRepository matchRepository) {
         this.tournamentRepository = tournamentRepository;
         this.orgComService = orgComService;
         this.tournamentMapper = tournamentMapper;
@@ -49,6 +51,8 @@ public class TournamentServiceImpl implements TournamentService {
         this.userTeamRepository = userTeamRepository;
         this.stageStatusService = stageStatusService;
         this.stageRepository = stageRepository;
+        this.goalRepository = goalRepository;
+        this.matchRepository = matchRepository;
     }
     @Override
     public List<Tournament> getAllTournaments() {
@@ -219,6 +223,157 @@ public class TournamentServiceImpl implements TournamentService {
                 }
         );
 
+    }
+
+    @Override
+    public List<RatingLineDTO> getRating(List<TeamTournament> teamTournaments) {
+        if (teamTournaments == null || teamTournaments.isEmpty()) {
+            throw new RuntimeException("Нет команд в данном турнире");
+        }
+        List<RatingLineDTO> ratingLines = new ArrayList<>();
+        Optional<Stage> optionalStage = stageRepository.findByPlaceAndTournamentId(0, 0, teamTournaments.get(0).getTournament().getId());
+        Stage stage;
+        if (optionalStage.isPresent()) {
+            stage = optionalStage.get();
+        } else {
+            throw new RuntimeException("Группового турнира не существует");
+        }
+        for (TeamTournament teamTournament : teamTournaments) {
+            List<Match> matchesByTeam = matchRepository.findAllByStageIdAndTeamId(stage.getId(), teamTournament.getTeam().getId());
+            // TODO: Добавить в matchesByTeam матчи дополнительного этапа
+            int scoredGoals = 0;
+            int missedGoals = 0;
+            int winCount = 0;
+            int loseCount = 0;
+            int drawCount = 0;
+            int points = 0;
+            
+            // Hockey
+            int wonByBullets = 0;
+            int lostByBullets = 0;
+            
+            // Volleyball
+            int wonSets = 0;
+            int lostSets = 0;
+            
+            for (var match : matchesByTeam) {
+                if (!match.isResultPublished()) {
+                    continue;
+                }
+                List<Goal> goalsByMatch = goalRepository.findAllByMatchId(match.getId());
+                int matchScoredGoals = 0;
+                int matchMissedGoals = 0;
+                int winBulletsCount = 0;
+                int lostBulletsCount = 0;
+                List<Integer> winGoalsBySet = Arrays.asList(0, 0, 0, 0, 0);
+                List<Integer> lostGoalsBySet = Arrays.asList(0, 0, 0, 0, 0);
+                
+                for (var goal : goalsByMatch) {
+                    if (goal.getTeam().getId() == teamTournament.getTeam().getId()) {
+                        if (match.getStage().getTournament().getSport() == Sport.HOCKEY && goal.isPenalty()) {
+                            winBulletsCount++;
+                        } else if (match.getStage().getTournament().getSport() == Sport.VOLLEYBALL) {
+                            winGoalsBySet.set(goal.getSet_number(), winGoalsBySet.get(goal.getSet_number()) + 1);
+                        } else {
+                            matchScoredGoals++;
+                        }
+                    } else if (match.getStage().getTournament().getSport() == Sport.HOCKEY && goal.isPenalty()) {
+                        lostBulletsCount++;
+                    } else if (match.getStage().getTournament().getSport() == Sport.VOLLEYBALL) {
+                        lostGoalsBySet.set(goal.getSet_number(), lostGoalsBySet.get(goal.getSet_number()) + 1);
+                    } else {
+                        matchMissedGoals++;
+                    }
+                }
+                scoredGoals += matchScoredGoals;
+                missedGoals += matchMissedGoals;
+                
+                switch (teamTournament.getTournament().getSport()) {
+                    case HOCKEY -> {
+                        if (winBulletsCount > lostBulletsCount) {
+                            wonByBullets++;
+                            points += 2;
+                        } else if (winBulletsCount < lostBulletsCount){
+                            lostByBullets++;
+                            points += 1;
+                        } else if (matchScoredGoals > matchMissedGoals){
+                            winCount++;
+                            points += 3;
+                        } else if (matchScoredGoals < matchMissedGoals){
+                            loseCount++;
+                        } else {
+                            drawCount++;
+                        }
+                    }
+                    case VOLLEYBALL -> {
+                        int wonSetsByMatch = 0;
+                        int lostSetsByMatch = 0;
+                        for (int i = 0; i < 5; i++) {
+                            if (winGoalsBySet.get(i) > lostGoalsBySet.get(i)) {
+                                wonSets++;
+                                wonSetsByMatch++;
+                            } else if (winGoalsBySet.get(i) < lostGoalsBySet.get(i)) {
+                                lostSets++;
+                                lostSetsByMatch++;
+                            }
+                        }
+                        if (wonSetsByMatch > lostSetsByMatch) {
+                            winCount++;
+                            points += 2;
+                        } else if (wonSetsByMatch < lostSetsByMatch) {
+                            loseCount++;
+                        }
+                    }
+                    case FOOTBALL, BASKETBALL -> {
+                        if (matchScoredGoals > matchMissedGoals) {
+                            winCount++;
+                        } else if (matchScoredGoals < matchMissedGoals) {
+                            loseCount++;
+                        } else {
+                            drawCount++;
+                        }
+                    }
+                }
+            }
+            
+            if (teamTournament.getTournament().getSport() == Sport.FOOTBALL) {
+                points = winCount * 3 + drawCount;
+            } else if (teamTournament.getTournament().getSport() == Sport.BASKETBALL) {
+                points = winCount * 2 + drawCount;
+            }
+            
+            RatingLineDTO.RatingLineDTOBuilder builder = RatingLineDTO.builder()
+                    .points(points)
+                    .goesToPlayOff(teamTournament.isGoToPlayOff())
+                    .loseCount(loseCount)
+                    .drawCount(drawCount)
+                    .winCount(winCount)
+                    .missedGoals(missedGoals)
+                    .scoredGoals(scoredGoals)
+                    .teamTournamentId(teamTournament.getId())
+                    .teamName(teamTournament.getTeam().getName())
+                    .matchesCount(matchesByTeam.size())
+                    .diffGoals(scoredGoals - missedGoals);
+            
+            if (teamTournament.getTournament().getSport() == Sport.HOCKEY) {
+                builder.wonByBullets(wonByBullets)
+                       .lostByBullets(lostByBullets);
+            } else if (teamTournament.getTournament().getSport() == Sport.VOLLEYBALL) {
+                builder.wonSets(wonSets)
+                       .lostSets(lostSets)
+                       .setsRatio(lostSets == 0 ? wonSets : (double) wonSets / lostSets)
+                       .goalsRatio(missedGoals == 0 ? scoredGoals : (double) scoredGoals / missedGoals);
+            }
+            
+            ratingLines.add(builder.build());
+        }
+
+        ratingLines.sort(Comparator
+                .comparing(RatingLineDTO::getPoints).reversed()
+                .thenComparing(RatingLineDTO::getDiffGoals).reversed()
+                .thenComparing(RatingLineDTO::getScoredGoals));
+
+        return ratingLines;
     }
 
     @Override

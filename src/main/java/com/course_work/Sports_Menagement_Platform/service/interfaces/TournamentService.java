@@ -43,6 +43,8 @@ public interface TournamentService {
 
     void updatePlayOffTeams(UUID tournamentId, List<UUID> teamTournamentIds);
 
+    List<RatingLineDTO> getRating(List<TeamTournament> teamTournaments);
 
     List<Tournament> search(TournamentSearchDTO tournamentSearchDTO);
+
 }

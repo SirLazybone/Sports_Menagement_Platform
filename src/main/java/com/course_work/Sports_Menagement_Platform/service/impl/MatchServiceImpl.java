@@ -181,6 +181,11 @@ public class MatchServiceImpl implements MatchService {
     }
 
     @Override
+    public List<Match> getAllByStageAndTeam(Stage stage, Team team) {
+        return matchRepository.findAllByStageIdAndTeamId(stage.getId(), team.getId());
+    }
+
+    @Override
     public List<Match> getFinishedAdditionalMatches(UUID tournamentId) {
         return stageService.getAdditionalStages(tournamentId).stream().map(i -> i.getMatches()).flatMap(List::stream).filter(match -> match.isResultPublished()).collect(Collectors.toList());
     }

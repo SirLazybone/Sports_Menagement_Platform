@@ -42,6 +42,9 @@ public class StageController {
     @GetMapping("/view/{stageId}")
     public String viewStage(@PathVariable UUID stageId, Model model, @AuthenticationPrincipal User user) {
         Stage stage = stageService.getStageById(stageId);
+        if (stage.isPublished()) {
+            return "redirect:/stage/info/" + stage.getId().toString();
+        }
         if (stage.getBestPlace() == 0) {
             // TODO: доделать, сейчас только для групп
             return "redirect:/match/fill_group_stage/" + stage.getId().toString();
@@ -305,4 +308,28 @@ public class StageController {
             return "redirect:/home";
         }
     }
+
+    @GetMapping("/info/{stageId}")
+    public String showInfo(@PathVariable UUID stageId, Model model) {
+        try {
+            Stage stage = stageService.getStageById(stageId);
+            Map<Group, List<Match>> groupMatches = new HashMap<>();
+            Map<UUID, List<Match>> matchesMap = new HashMap<>();
+            if (stage.getBestPlace() == 0) {
+                groupMatches = matchService.createGroupMatchIfNotCreated(stage.getId());
+            } else {
+                matchesMap = matchService.getMatchesByStagesMap(List.of(stage));
+            }
+            model.addAttribute("stage", stage);
+            model.addAttribute("groups", groupMatches);
+            model.addAttribute("matches", matchesMap.get(stage.getId()));
+            model.addAttribute("tournament", stage.getTournament());
+        } catch (RuntimeException e) {
+            model.addAttribute("error", e.getMessage());
+            return "tournament/show_all";
+        }
+        return "stage/view";
+    }
 }
+
+
