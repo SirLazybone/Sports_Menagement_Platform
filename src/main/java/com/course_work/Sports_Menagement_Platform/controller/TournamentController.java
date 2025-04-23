@@ -18,6 +18,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
 import java.time.chrono.ChronoLocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -34,6 +35,30 @@ public class TournamentController {
         this.stageService = stageService;
         this.cityService = cityService;
     }
+
+    @GetMapping("/search")
+    public String search(Model model) {
+        List<City> cities = cityService.getCities();
+        model.addAttribute("tournamentSearchDTO", new TournamentSearchDTO());
+        model.addAttribute("cities", cities);
+        model.addAttribute("sportNames", new SportNames().getMap());
+        model.addAttribute("tournaments", new ArrayList<>());
+
+        return "tournament/search";
+    }
+
+    @PostMapping("/search")
+    public String searchPost(Model model, @ModelAttribute("tournamentSearchDTO") TournamentSearchDTO tournamentSearchDTO) {
+        List<Tournament> tournaments = tournamentService.search(tournamentSearchDTO);
+        model.addAttribute("tournamentSearchDTO", tournamentSearchDTO);
+        model.addAttribute("cities", cityService.getCities());
+        model.addAttribute("sportNames", new SportNames().getMap());
+        model.addAttribute("tournaments", tournaments);
+
+        return "tournament/search";
+    }
+
+
 
     @GetMapping("/show_all")
     public String showAll(Model model) {
@@ -61,7 +86,7 @@ public class TournamentController {
 
         try {
             Tournament tournament = tournamentService.createTournament(tournamentDTO, user, orgComId);
-            return "redirect:/tournament/org_com/view/" + tournament.getId();
+            return "redirect:/tournament/org_com/view/" + tournament.getId();  // TODO исправить
 
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());

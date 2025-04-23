@@ -256,4 +256,24 @@ public class StageServiceImpl implements StageService {
         }
         return new ArrayList<>();
     }
+
+    @Override
+    public List<Stage> getAdditionalStages(UUID tournamentId) {
+        return getStagesByTournament(tournamentId).stream().filter(i -> i.getBestPlace() < 0).collect(Collectors.toList());
+    }
+
+
+    @Override
+    public Stage createStageForAdditionalMatch(UUID tournamentId) {
+        List<Integer> stageIndexes = getStagesByTournament(tournamentId).stream().filter(i -> i.getBestPlace() < 0).map(i -> i.getBestPlace()).collect(Collectors.toList());
+        if (stageIndexes.isEmpty()) {
+            Stage stage = Stage.builder().tournament(tournamentService.getById(tournamentId)).bestPlace(-1).worstPlace(-1).isPublished(false).build();
+            stage = stageRepository.save(stage);
+            return stage;
+        }
+        int index = Collections.min(stageIndexes) - 1;
+        Stage stage = Stage.builder().tournament(tournamentService.getById(tournamentId)).bestPlace(index).worstPlace(index).isPublished(false).build();
+        return stageRepository.save(stage);
+
+    }
 }

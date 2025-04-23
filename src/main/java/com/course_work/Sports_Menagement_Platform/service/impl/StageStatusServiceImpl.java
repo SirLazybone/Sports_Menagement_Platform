@@ -49,7 +49,7 @@ public class StageStatusServiceImpl implements StageStatusService {
             return StageStatus.TEAMS_KNOWN;
         }
         // этапы плей оффа
-        else return StageStatus.TEAMS_KNOWN; // этап создается только после выявления команд
+        else return StageStatus.TEAMS_KNOWN; // TODO: этап создается только после выявления команд
     }
 
 }
