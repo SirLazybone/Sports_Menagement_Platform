@@ -40,28 +40,27 @@ public class UserOrgComController {
         model.addAttribute("userOrgCom", userOrgCom);
         return "org_com/edit_member";
 
-
     }
 
     @GetMapping("/assign_to_chief/{orgComId}/{userId}")
     public String assignToChief(@PathVariable UUID orgComId, @PathVariable UUID userId, @AuthenticationPrincipal User user, Model model) {
         userOrgComService.setRole(userId, orgComId, Org.CHIEF);
-        return "/org_com/view/" + orgComId.toString();
+        return "redirect:/org_com/view/" + orgComId.toString();
     }
     @GetMapping("/assign_to_org/{orgComId}/{userId}")
     public String assignToOrg(@PathVariable UUID orgComId, @PathVariable UUID userId, @AuthenticationPrincipal User user, Model model) {
         userOrgComService.setRole(userId, orgComId, Org.ORG);
-        return "/org_com/view/" + orgComId.toString();
+        return "redirect:/org_com/view/" + orgComId.toString();
     }
     @GetMapping("/assign_to_none/{orgComId}/{userId}")
     public String assignToNone(@PathVariable UUID orgComId, @PathVariable UUID userId, @AuthenticationPrincipal User user, Model model) {
         userOrgComService.setRole(userId, orgComId, Org.NONE);
-        return "/org_com/view/" + orgComId.toString();
+        return "redirect:/org_com/view/" + orgComId.toString();
     }
     @GetMapping("/assign_to_referee/{orgComId}/{userId}")
     public String assignToReferee(@PathVariable UUID orgComId, @PathVariable UUID userId, @AuthenticationPrincipal User user, Model model) {
         userOrgComService.setRefereeStatus(userId, orgComId, true);
-        return "/org_com/view/" + orgComId.toString();
+        return "redirect:/org_com/view/" + orgComId.toString();
     }
 
 
@@ -69,7 +68,7 @@ public class UserOrgComController {
     @GetMapping("/remove_as_referee/{orgComId}/{userId}")
     public String removeAsReferee(@PathVariable UUID orgComId, @PathVariable UUID userId, @AuthenticationPrincipal User user, Model model) {
         userOrgComService.setRefereeStatus(userId, orgComId, false);
-        return "/org_com/view/" + orgComId.toString();
+        return "redirect:/org_com/view/" + orgComId.toString();
     }
 
 

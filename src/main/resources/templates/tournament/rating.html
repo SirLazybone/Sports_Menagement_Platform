@@ -2,43 +2,87 @@
 <html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Рейтинг турнира</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
 </head>
 <body>
 <form th:action="@{/applications/rating/{tournamentId}(tournamentId=${tournamentId})}" method="post">
+    <table>
+        <thead>
+        <tr>
+            <th>Место</th>
+            <th>Команда</th>
+            <th>Матчи</th>
+            <th>Победы</th>
+            <th>Поражения</th>
+            <th>Ничьи</th>
+            <th>Очки</th>
 
-<table>
-  <thead>
-  <tr>
-    <th>Место</th>
-    <th>
-      Команда
-    </th>
-    <th>Цифры</th>
-    <th>
-      Проходит в плей офф
-    </th>
-  </tr>
-  </thead>
-  <tbody>
-    <tr th:each = "team, place : ${teams}">
-      <td th:text="${place.index + 1}"></td>
-<td th:text="${team.teamName}">
+            <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}">Забито</th>
+            <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}">Пропущено</th>
+            <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}">Разница</th>
+            <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}">Победы по буллитам</th>
+            <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}">Поражения по буллитам</th>
 
-</td>
-      <td th:text="${team.goals}">
+            <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}">Выиграно сетов</th>
+            <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}">Проиграно сетов</th>
+            <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}">Соотношение сетов</th>
+            <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}">Забито мячей</th>
+            <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}">Пропущено мячей</th>
+            <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}">Соотношение мячей</th>
 
-      </td>
-      <td>
-       <input type="checkbox" th:name="${team.teamTournamentId}" th:checked="${team.goesToPlayOff}"> </input>
-      </td>
-    </tr>
+            <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).FOOTBALL or sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).BASKETBALL}">Забито</th>
+            <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).FOOTBALL or sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).BASKETBALL}">Пропущено</th>
+            <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).FOOTBALL or sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).BASKETBALL}">Разница</th>
+            <th>Проходит в плей-офф</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="team, place : ${teams}">
+            <td th:text="${place.index + 1}"></td>
+            <td th:text="${team.teamName}"></td>
+            <td th:text="${team.matchesCount}"></td>
+            <td th:text="${team.winCount}"></td>
+            <td th:text="${team.loseCount}"></td>
+            <td th:text="${team.drawCount}"></td>
+            <td th:text="${team.points}"></td>
 
-  </tbody>
-</table>
-  <button type="submit">Submit</button>
+            <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}" th:text="${team.scoredGoals}"></td>
+            <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}" th:text="${team.missedGoals}"></td>
+            <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}" th:text="${team.diffGoals}"></td>
+            <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}" th:text="${team.wonByBullets}"></td>
+            <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}" th:text="${team.lostByBullets}"></td>
 
+            <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${team.wonSets}"></td>
+            <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${team.lostSets}"></td>
+            <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${#numbers.formatDecimal(team.setsRatio, 1, 2)}"></td>
+            <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${team.scoredGoals}"></td>
+            <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${team.missedGoals}"></td>
+            <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${#numbers.formatDecimal(team.goalsRatio, 1, 2)}"></td>
+
+            <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).FOOTBALL or sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).BASKETBALL}" th:text="${team.scoredGoals}"></td>
+            <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).FOOTBALL or sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).BASKETBALL}" th:text="${team.missedGoals}"></td>
+            <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).FOOTBALL or sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).BASKETBALL}" th:text="${team.diffGoals}"></td>
+            <td>
+                <input type="checkbox" th:name="${team.teamTournamentId}" th:checked="${team.goesToPlayOff}">
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <button type="submit">Сохранить</button>
 </form>
-
 </body>
 </html>

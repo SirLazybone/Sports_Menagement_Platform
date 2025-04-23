@@ -25,4 +25,5 @@ public interface StageRepository extends JpaRepository<Stage, UUID> {
 
     @Query("SELECT s.tournament FROM Stage s WHERE s.id = :stageId")
     Optional<Tournament> findByStageId(@Param("stageId") UUID stageId);
+
 }

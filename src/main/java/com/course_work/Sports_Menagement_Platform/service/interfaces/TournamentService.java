@@ -1,10 +1,7 @@
 package com.course_work.Sports_Menagement_Platform.service.interfaces;
 
 import com.course_work.Sports_Menagement_Platform.data.models.*;
-import com.course_work.Sports_Menagement_Platform.dto.ApplicationDTO;
-import com.course_work.Sports_Menagement_Platform.dto.StageCreationDTO;
-import com.course_work.Sports_Menagement_Platform.dto.TeamTournamentDTO;
-import com.course_work.Sports_Menagement_Platform.dto.TournamentDTO;
+import com.course_work.Sports_Menagement_Platform.dto.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -45,4 +42,6 @@ public interface TournamentService {
     List<Tournament> getAllTournamentsOfOrgCom(UUID id);
 
     void updatePlayOffTeams(UUID tournamentId, List<UUID> teamTournamentIds);
+
+    List<RatingLineDTO> getRating(List<TeamTournament> teamTournaments);
 }

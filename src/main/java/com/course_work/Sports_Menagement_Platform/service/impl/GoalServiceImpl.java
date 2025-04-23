@@ -1,9 +1,6 @@
 package com.course_work.Sports_Menagement_Platform.service.impl;
 
-import com.course_work.Sports_Menagement_Platform.data.models.Goal;
-import com.course_work.Sports_Menagement_Platform.data.models.Match;
-import com.course_work.Sports_Menagement_Platform.data.models.Team;
-import com.course_work.Sports_Menagement_Platform.data.models.User;
+import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.GoalDTO;
 import com.course_work.Sports_Menagement_Platform.repositories.GoalRepository;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.GoalService;

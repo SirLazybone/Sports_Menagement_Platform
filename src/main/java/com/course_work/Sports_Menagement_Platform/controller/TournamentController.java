@@ -5,6 +5,7 @@ import com.course_work.Sports_Menagement_Platform.data.enums.StageStatus;
 import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.*;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.CityService;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.MatchService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.StageService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
 import jakarta.validation.Valid;
@@ -19,6 +20,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.time.LocalDateTime;
 import java.time.chrono.ChronoLocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -27,11 +29,12 @@ import java.util.stream.Collectors;
 public class TournamentController {
     private final TournamentService tournamentService;
     private final StageService stageService;
-
+    private final MatchService matchService;
     private final CityService cityService;
-    public TournamentController(TournamentService tournamentService, StageService stageService, CityService cityService) {
+    public TournamentController(TournamentService tournamentService, StageService stageService, MatchService matchService, CityService cityService) {
         this.tournamentService = tournamentService;
         this.stageService = stageService;
+        this.matchService = matchService;
         this.cityService = cityService;
     }
 
@@ -61,7 +64,7 @@ public class TournamentController {
 
         try {
             Tournament tournament = tournamentService.createTournament(tournamentDTO, user, orgComId);
-            return "redirect:/tournament/org_com/view/" + tournament.getId();
+            return "redirect:/org_com/view/" + tournament.getId(); // ?????
 
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
@@ -172,6 +175,7 @@ public class TournamentController {
         return "org_com/tournament_view";
     }
 
+    
 
 //    @PostMapping("/create_group/{tournamentId}")
 //    public String createGroup(@PathVariable UUID tournamentId, @Valid @ModelAttribute GroupDTO group, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {

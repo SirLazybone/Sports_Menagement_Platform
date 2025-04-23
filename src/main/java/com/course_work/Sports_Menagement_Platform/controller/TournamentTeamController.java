@@ -118,11 +118,11 @@ public class TournamentTeamController {
     @GetMapping("/rating/{tournamentId}")
     public String rating(@PathVariable UUID tournamentId, @AuthenticationPrincipal User user, Model model) {
         List<TeamTournament> teamTournamentList = tournamentService.getCurrentParticipants(tournamentId);
-        // TODO: подгрузить результаты матчей
+
+        List<RatingLineDTO> ratingLineDTOS = tournamentService.getRating(teamTournamentList);
+
         // В шаблоне столбцы отображать через if в зависимости от вида спорта
-        List<RatingLineDTO> ratingLineDTOS = teamTournamentList.stream().map(teamTournament ->
-            RatingLineDTO.builder().goesToPlayOff(teamTournament.isGoToPlayOff()).teamName(teamTournament.getTeam().getName()).
-                    teamTournamentId(teamTournament.getId()).build()).collect(Collectors.toList());
+        model.addAttribute("sport", teamTournamentList.get(0).getTournament().getSport());
         model.addAttribute("teams", ratingLineDTOS);
         model.addAttribute("tournamentId", tournamentId);
         return "tournament/rating";

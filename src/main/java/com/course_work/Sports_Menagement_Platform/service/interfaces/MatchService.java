@@ -26,4 +26,6 @@ public interface MatchService {
     void setSlots(UUID stageId, Map<UUID, UUID> assignments);
 
     void setSlotsForPlayOff(UUID stageId, Map<Pair<UUID, UUID>, UUID> assignments, List<Pair<UUID, UUID>> assigmentsWithNoSlot);
+
+    List<Match> getAllByStageAndTeam(Stage stage, Team team);
 }

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Этап турнира</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .group-container {
+            margin-bottom: 2rem;
+        }
+        .group-title {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+        .match-row {
+            border-bottom: 1px solid #dee2e6;
+            padding: 10px 0;
+        }
+        .match-info {
+            color: #6c757d;
+        }
+        .stage-header {
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-4">
+    <div class="stage-header">
+        <h1 th:text="${tournament.name}">Название турнира</h1>
+        <p class="text-muted" th:text="${tournament.description}">Описание турнира</p>
+    </div>
+
+    <!-- Групповой этап -->
+    <div th:if="${stage.bestPlace == 0}">
+        <div th:each="groupEntry : ${groups}" class="group-container">
+            <div class="group-title">
+                <h3 th:text="${groupEntry.key.name}">Группа A</h3>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Команда 1</th>
+                            <th>Команда 2</th>
+                            <th>Информация</th>
+                            <th>Детали матча</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="match : ${groupEntry.value}" class="match-row">
+                            <td th:text="${match.team1.name}">Команда 1</td>
+                            <td th:text="${match.team2.name}">Команда 2</td>
+                            <td class="match-info">
+                                <div th:if="${match.slot != null}">
+                                    <div th:if="${match.slot.date != null && (match.slot.date.isAfter(T(java.time.LocalDate).now()) || match.slot.date.equals(T(java.time.LocalDate).now()))}">
+                                        <div th:text="${match.slot.date} + ' ' + ${match.slot.time}">Дата и время</div>
+                                        <div th:if="${match.slot.location != null}" 
+                                             th:text="${match.slot.location.name} + ' (' + ${match.slot.location.address} + ')'">
+                                            Место проведения
+                                        </div>
+                                    </div>
+                                    <div th:if="${match.slot.date != null && match.slot.date.isBefore(T(java.time.LocalDate).now())}">
+                                        <span th:if="${match.isResultPublished}">
+                                            <span th:text="${match.team1.name} + ' ' + ${match.team1Score} + ' - ' + ${match.team2Score} + ' ' + ${match.team2.name}">
+                                                Результат
+                                            </span>
+                                        </span>
+                                        <span th:unless="${match.isResultPublished}" class="text-muted">
+                                            Результат не опубликован
+                                        </span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div th:if="${match.slot != null}">
+                                    <div th:if="${match.slot.date != null && match.slot.date.isBefore(T(java.time.LocalDate).now())}">
+                                        <a th:href="@{/match/view/{id}(id=${match.id})}" class="btn btn-primary btn-sm">
+                                            Подробности
+                                        </a>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Плей-офф -->
+    <div th:if="${stage.bestPlace > 0}">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Команда 1</th>
+                        <th>Команда 2</th>
+                        <th>Информация</th>
+                        <th>Детали матча</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="match : ${matches}" class="match-row">
+                        <td th:text="${match.team1.name}">Команда 1</td>
+                        <td th:text="${match.team2.name}">Команда 2</td>
+                        <td class="match-info">
+                            <div th:if="${match.slot != null}">
+                                <div th:if="${match.slot.date != null && (match.slot.date.isAfter(T(java.time.LocalDate).now()) || match.slot.date.equals(T(java.time.LocalDate).now()))}">
+                                    <div th:text="${match.slot.date} + ' ' + ${match.slot.time}">Дата и время</div>
+                                    <div th:if="${match.slot.location != null}" 
+                                         th:text="${match.slot.location.name} + ' (' + ${match.slot.location.address} + ')'">
+                                        Место проведения
+                                    </div>
+                                </div>
+                                <div th:if="${match.slot.date != null && match.slot.date.isBefore(T(java.time.LocalDate).now())}">
+                                    <span th:if="${match.isResultPublished}">
+                                        <span th:text="${match.team1.name} + ' ' + ${match.team1Score} + ' - ' + ${match.team2Score} + ' ' + ${match.team2.name}">
+                                            Результат
+                                        </span>
+                                    </span>
+                                    <span th:unless="${match.isResultPublished}" class="text-muted">
+                                        Результат не опубликован
+                                    </span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div th:if="${match.slot != null}">
+                                <div th:if="${match.slot.date != null && match.slot.date.isBefore(T(java.time.LocalDate).now())}">
+                                    <a th:href="@{/match/view/{id}(id=${match.id})}" class="btn btn-primary btn-sm">
+                                        Подробности
+                                    </a>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

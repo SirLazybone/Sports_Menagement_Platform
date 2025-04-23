@@ -178,4 +178,9 @@ public class MatchServiceImpl implements MatchService {
 
     }
 
+    @Override
+    public List<Match> getAllByStageAndTeam(Stage stage, Team team) {
+        return matchRepository.findAllByStageIdAndTeamId(stage.getId(), team.getId());
+    }
+
 }
