@@ -208,4 +208,12 @@ public class MatchServiceImpl implements MatchService {
         return matchRepository.save(match);
     }
 
+    @Override
+    public Match publishResult(UUID matchId) {
+        Match match = matchRepository.findById(matchId).orElseThrow(() -> new RuntimeException("Нет такого матча"));
+        match.setResultPublished(true);
+        return matchRepository.save(match);
+    }
+
+
 }

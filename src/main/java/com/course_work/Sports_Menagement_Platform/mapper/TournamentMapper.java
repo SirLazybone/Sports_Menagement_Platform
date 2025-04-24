@@ -12,7 +12,7 @@ public class TournamentMapper {
                 .sport(tournamentDTO.getSport())
                 .minMembers(tournamentDTO.getMinMembers())
                 .registerDeadline(tournamentDTO.getRegisterDeadline())
-                .description(tournamentDTO.getDescription()).build();
+                .description(tournamentDTO.getDescription()).logo(tournamentDTO.getLogo()).build();
     }
 
     public TournamentDTO EntityToDTO(Tournament tournament) {

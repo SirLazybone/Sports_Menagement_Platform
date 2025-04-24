@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Create New Team</title>
+    <title>Edit Team</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
         .logo-preview {
@@ -26,19 +26,22 @@
 </head>
 <body>
     <div class="container mt-4">
-        <h1>Create New Team</h1>
+        <h1>Edit Team</h1>
         
         <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
 
-        <form th:action="@{/team/create}" th:object="${team}" method="post" enctype="multipart/form-data">
+        <form th:action="@{/team/edit/{id}(id=${teamId})}" th:object="${team}" method="post" enctype="multipart/form-data">
             <div class="row">
                 <div class="col-md-3">
                     <div class="text-center mb-4">
-                        <div class="default-logo mb-2">
+                        <div th:if="${team.logo != null}">
+                            <img th:src="@{'/uploads/' + ${team.logo}}" class="logo-preview mb-2" alt="Team Logo">
+                        </div>
+                        <div th:unless="${team.logo != null}" class="default-logo mb-2">
                             <span>T</span>
                         </div>
                         <div class="form-group">
-                            <label for="logoFile">Team Logo</label>
+                            <label for="logoFile">Change Logo</label>
                             <input type="file" class="form-control-file" id="logoFile" name="logoFile" accept="image/*">
                         </div>
                     </div>
@@ -50,20 +53,13 @@
                         <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <label for="sport">Sport:</label>
-                        <select class="form-control" th:field="*{sport}" id="sport" required>
-                            <option value="" disabled selected>Выберите спорт</option>
-                            <option th:each="sport : ${T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).values()}"
-                                    th:value="${sport}"
-                                    th:text="${sport}">
-                            </option>
-                        </select>
-                        <span th:if="${#fields.hasErrors('sport')}" th:errors="*{sport}" class="text-danger"></span>
+                        <label>Sport:</label>
+                        <input type="text" class="form-control" th:value="${team.sport}" disabled>
                     </div>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary">Create Team</button>
-            <a th:href="@{/team/show_all}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Update Team</button>
+            <a th:href="@{/team/view/{id}(id=${teamId})}" class="btn btn-secondary">Cancel</a>
         </form>
     </div>
 
@@ -71,4 +67,4 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
-</html>
+</html> 

@@ -2,6 +2,7 @@ package com.course_work.Sports_Menagement_Platform.controller;
 
 import com.course_work.Sports_Menagement_Platform.data.models.User;
 import com.course_work.Sports_Menagement_Platform.dto.UserDTO;
+import com.course_work.Sports_Menagement_Platform.service.FileStorageService;
 import com.course_work.Sports_Menagement_Platform.service.impl.UserServiceImpl;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.UserService;
 import jakarta.validation.Valid;
@@ -11,10 +12,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
 
@@ -22,9 +21,11 @@ import java.security.Principal;
 @RequestMapping("/user")
 public class UserController {
     private final UserService userService;
+    private final FileStorageService fileStorageService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, FileStorageService fileStorageService) {
         this.userService = userService;
+        this.fileStorageService = fileStorageService;
     }
 
     @GetMapping("/profile")
@@ -43,14 +44,23 @@ public class UserController {
     public String showEditForm(Principal principal, Model model) {
         User user = userService.findByTel(principal.getName());
 
-        UserDTO userDTO = UserDTO.builder().tel(user.getTel()).name(user.getName()).surname(user.getSurname()).build();
+        UserDTO userDTO = UserDTO.builder()
+                .tel(user.getTel())
+                .name(user.getName())
+                .surname(user.getSurname())
+                .photo(user.getPhoto())
+                .build();
 
         model.addAttribute("user", userDTO);
         return "user/edit_profile";
     }
 
     @PostMapping("/edit")
-    public String editProfile(@Valid UserDTO userDTO, BindingResult bindingResult, Model model, Principal principal) {
+    public String editProfile(@Valid UserDTO userDTO, 
+                            BindingResult bindingResult, 
+                            Model model, 
+                            Principal principal,
+                            @RequestParam(value = "photoFile", required = false) MultipartFile photoFile) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("user", userDTO);
             return "user/edit_profile";
@@ -58,12 +68,21 @@ public class UserController {
         User user = userService.findByTel(principal.getName());
 
         try {
+            if (photoFile != null && !photoFile.isEmpty()) {
+                // Delete old photo if exists
+                if (user.getPhoto() != null) {
+                    fileStorageService.deleteFile(user.getPhoto());
+                }
+                // Store new photo
+                String fileName = fileStorageService.storeFile(photoFile);
+                userDTO.setPhoto(fileName);
+            }
             userService.updateUser(user, userDTO);
         } catch (Exception e) {
             model.addAttribute("user", userDTO);
             model.addAttribute("error", e.getMessage());
+            return "user/edit_profile";
         }
         return "redirect:/user/profile";
     }
-
 }

@@ -2,14 +2,13 @@ package com.course_work.Sports_Menagement_Platform.dto;
 
 import lombok.*;
 
+import java.time.LocalDate;
+
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserDTO {
-    private String name;
-    private String surname;
-    private String tel;
-    private String photo;
+public class ProlongRegDTO {
+    private LocalDate registerDeadline;
 }

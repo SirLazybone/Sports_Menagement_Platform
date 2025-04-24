@@ -2,26 +2,75 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Edit</title>
+    <title>Edit Profile</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .default-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
-<form th:action="@{/user/edit}" th:object="${user}" method="post">
-  <div>
-    <label for="name">Name:</label>
-    <input type="text" th:field="*{name}" id="name" />
-    <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
-  </div>
-  <div>
-    <label for="surname">Surname:</label>
-    <input type="text" th:field="*{surname}" id="surname" />
-    <span th:if="${#fields.hasErrors('surname')}" th:errors="*{surname}"></span>
-  </div>
-  <div>
-    <label for="tel">Phone:</label>
-    <input type="text" th:field="*{tel}" id="tel" />
-    <span th:if="${#fields.hasErrors('tel')}" th:errors="*{tel}"></span>
-  </div>
-  <button type="submit">Update Profile</button>
-</form>
+    <div class="container mt-4">
+        <h1>Edit Profile</h1>
+        
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+        <form th:action="@{/user/edit}" th:object="${user}" method="post" enctype="multipart/form-data">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="text-center mb-4">
+                        <div th:if="${user.photo != null}">
+                            <img th:src="@{'/uploads/' + ${user.photo}}" class="avatar mb-2" alt="User Avatar">
+                        </div>
+                        <div th:unless="${user.photo != null}" class="default-avatar mb-2">
+                            <span th:text="${user.name.substring(0,1) + user.surname.substring(0,1)}"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="photoFile">Change Avatar</label>
+                            <input type="file" class="form-control-file" id="photoFile" name="photoFile" accept="image/*">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div class="form-group">
+                        <label for="name">Name:</label>
+                        <input type="text" class="form-control" th:field="*{name}" id="name" />
+                        <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="surname">Surname:</label>
+                        <input type="text" class="form-control" th:field="*{surname}" id="surname" />
+                        <span th:if="${#fields.hasErrors('surname')}" th:errors="*{surname}" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="tel">Phone:</label>
+                        <input type="text" class="form-control" th:field="*{tel}" id="tel" />
+                        <span th:if="${#fields.hasErrors('tel')}" th:errors="*{tel}" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Update Profile</button>
+            <a th:href="@{/user/profile}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

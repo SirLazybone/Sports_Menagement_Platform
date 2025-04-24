@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Match Details</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .penalty-round {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .team-penalty {
+            margin-bottom: 10px;
+        }
+        .team-penalty span {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .team-penalty select {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .penalty-result {
+            display: flex;
+            gap: 10px;
+        }
+        .penalty-result button {
+            flex: 1;
+        }
+        .penalty-result button.active {
+            opacity: 0.7;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .text-right .penalty-result {
+            justify-content: flex-end;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h2>Match Details</h2>
+        
+        <!-- Error message -->
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+        <!-- Match Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Match Information</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h5><span th:text="${match.team1.name}"></span></h5>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <h5 th:if="${match.isResultPublished}">
+                            <span th:text="${#lists.size(team1Goals)}"></span> - <span th:text="${#lists.size(team2Goals)}"></span>
+                        </h5>
+                        <h5 th:unless="${match.isResultPublished}">VS</h5>
+                    </div>
+                    <div class="col-md-4">
+                        <h5><span th:text="${match.team2.name}"></span></h5>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <p>Stage: 
+                            <span th:if="${stage.bestPlace == 0}">Групповой этап</span>
+                            <span th:if="${stage.bestPlace == 1}" th:text="${stage.bestPlace} + '/' + ${stage.worstPlace} + ' финала'"></span>
+                            <span th:if="${stage.bestPlace > 1}" th:text="'Матчи за ' + ${stage.bestPlace} + '-' + ${stage.worstPlace} + ' места'"></span>
+                            <span th:if="${stage.bestPlace < 0}">Дополнительный матч группового этапа</span>
+                        </p>
+                        <p>Tournament: <span th:text="${tournament.name}"></span></p>
+                        <div th:unless="${match.isResultPublished}">
+                            <p th:if="${match.slot != null}">
+                                Date: <span th:text="${#temporals.format(match.slot.date, 'yyyy-MM-dd')}"></span><br>
+                                Time: <span th:text="${#temporals.format(match.slot.time, 'HH:mm')}"></span><br>
+                                Location: <span th:text="${match.slot.location.name}"></span>
+                            </p>
+                            <p th:unless="${match.slot != null}" class="text-warning">
+                                Match time and location not set yet
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slot Management (for Organizers) -->
+        <div th:if="${isOrg and not match.isResultPublished}" class="card mb-4">
+            <div class="card-header">
+                <h4>Slot Management</h4>
+            </div>
+            <div class="card-body">
+                <form th:action="@{/match/update_slot/{matchId}(matchId=${match.id})}" method="post">
+                    <div class="form-group">
+                        <label for="slot">Select Slot:</label>
+                        <select class="form-control" id="slot" name="slotId">
+                            <option th:each="slot : ${availableSlots}"
+                                    th:value="${slot.id}"
+                                    th:text="${#temporals.format(slot.date, 'yyyy-MM-dd') + ' - ' + #temporals.format(slot.time, 'HH:mm') + ' - ' + slot.location.name}"
+                                    th:selected="${match.slot.id == slot.id}">
+                            </option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Slot</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Match Results -->
+        <div th:if="${isRef and not match.isResultPublished}" class="card mb-4">
+            <div class="card-header">
+                <h4>Match Results</h4>
+            </div>
+            <div class="card-body">
+                <!-- Football/Hockey Results -->
+                <div th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).FOOTBALL or tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}">
+                    <h5>Goals</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 th:text="${match.team1.name} + ' Goals'"></h6>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Player</th>
+                                        <th>Minute</th>
+                                        <th>Type</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="goal : ${team1Goals}">
+                                        <td th:text="${goal.player.name}"></td>
+                                        <td th:text="${goal.time}"></td>
+                                        <td th:text="${goal.isPenalty ? 'Penalty' : 'Regular'}"></td>
+                                        <td>
+                                            <form th:action="@{/match/delete_goal/{goalId}(goalId=${goal.id})}" method="post">
+                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 th:text="${match.team2.name} + ' Goals'"></h6>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Player</th>
+                                        <th>Minute</th>
+                                        <th>Type</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="goal : ${team2Goals}">
+                                        <td th:text="${goal.player.name}"></td>
+                                        <td th:text="${goal.time}"></td>
+                                        <td th:text="${goal.isPenalty ? 'Penalty' : 'Regular'}"></td>
+                                        <td>
+                                            <form th:action="@{/match/delete_goal/{goalId}(goalId=${goal.id})}" method="post">
+                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- After Match Penalties -->
+                    <h5 class="mt-4">After Match Penalties</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 th:text="${match.team1.name} + ' Penalties'"></h6>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Player</th>
+                                        <th>Success</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="penalty : ${team1Penalties}">
+                                        <td th:text="${penalty.player.name}"></td>
+                                        <td th:text="${penalty.scored ? 'Yes' : 'No'}"></td>
+                                        <td>
+                                            <form th:action="@{/match/delete_penalty/{penaltyId}(penaltyId=${penalty.id})}" method="post">
+                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 th:text="${match.team2.name} + ' Penalties'"></h6>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Player</th>
+                                        <th>Success</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="penalty : ${team2Penalties}">
+                                        <td th:text="${penalty.player.name}"></td>
+                                        <td th:text="${penalty.scored ? 'Yes' : 'No'}"></td>
+                                        <td>
+                                            <form th:action="@{/match/delete_penalty/{penaltyId}(penaltyId=${penalty.id})}" method="post">
+                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Basketball Results -->
+                <div th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).BASKETBALL}">
+                    <h5>Shots</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 th:text="${match.team1.name} + ' Shots'"></h6>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Player</th>
+                                        <th>Minute</th>
+                                        <th>Points</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="shot : ${team1Goals}">
+                                        <td th:text="${shot.player.name}"></td>
+                                        <td th:text="${shot.time}"></td>
+                                        <td th:text="${shot.points}"></td>
+                                        <td>
+                                            <form th:action="@{/match/delete_shot/{shotId}(shotId=${shot.id})}" method="post">
+                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 th:text="${match.team2.name} + ' Shots'"></h6>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Player</th>
+                                        <th>Minute</th>
+                                        <th>Points</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="shot : ${team2Goals}">
+                                        <td th:text="${shot.player.name}"></td>
+                                        <td th:text="${shot.time}"></td>
+                                        <td th:text="${shot.points}"></td>
+                                        <td>
+                                            <form th:action="@{/match/delete_shot/{shotId}(shotId=${shot.id})}" method="post">
+                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Volleyball Results -->
+                <div th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}">
+                    <h5>Points</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 th:text="${match.team1.name} + ' Points'"></h6>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Player</th>
+                                        <th>Minute</th>
+                                        <th>Set</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="point : ${team1Goals}">
+                                        <td th:text="${point.player.name}"></td>
+                                        <td th:text="${point.time}"></td>
+                                        <td th:text="${point.setNumber}"></td>
+                                        <td>
+                                            <form th:action="@{/match/delete_point/{pointId}(pointId=${point.id})}" method="post">
+                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 th:text="${match.team2.name} + ' Points'"></h6>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Player</th>
+                                        <th>Minute</th>
+                                        <th>Set</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="point : ${team2Goals}">
+                                        <td th:text="${point.player.name}"></td>
+                                        <td th:text="${point.time}"></td>
+                                        <td th:text="${point.setNumber}"></td>
+                                        <td>
+                                            <form th:action="@{/match/delete_point/{pointId}(pointId=${point.id})}" method="post">
+                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forms for Referees -->
+        <div th:if="${isRef and not match.isResultPublished}" class="card mb-4">
+            <div class="card-header">
+                <h4>Add New Event</h4>
+            </div>
+            <div class="card-body">
+                <!-- Football/Hockey Forms -->
+                <div th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).FOOTBALL or tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}">
+                    <h5>Add Goal</h5>
+                    <form th:action="@{/match/add_goal}" method="post">
+                        <input type="hidden" name="matchId" th:value="${match.id}">
+                        <div class="form-group">
+                            <label for="teamId">Team:</label>
+                            <select class="form-control" id="teamId" name="teamId" required onchange="updatePlayers(this.value)">
+                                <option value="">-- Select Team --</option>
+                                <option th:value="${match.team1.id}" th:text="${match.team1.name}"></option>
+                                <option th:value="${match.team2.id}" th:text="${match.team2.name}"></option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="playerId">Player:</label>
+                            <select class="form-control" id="playerId" name="playerId" required>
+                                <option value="">-- Select Player --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="time">Minute:</label>
+                            <input type="number" class="form-control" id="time" name="time" required>
+                        </div>
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="isPenalty" name="isPenalty">
+                                <label class="form-check-label" for="isPenalty" th:text="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).FOOTBALL ? 'Штрафной' : 'Буллит'}"></label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Goal</button>
+                    </form>
+
+                    <h5 class="mt-4">Add After Match Penalty</h5>
+                    <form th:action="@{/match/add_after_match_penalties}" method="post" class="goal-form" id="penaltiesForm">
+                        <input type="hidden" name="matchId" th:value="${match.id}"/>
+                        
+                        <div class="penalty-shootout" id="penaltyShootout">
+                            <!-- Здесь будут добавляться раунды пенальти -->
+                        </div>
+                        
+                        <button type="button" class="btn btn-secondary" onclick="addPenaltyRound()">Add Penalty Round</button>
+                        
+                        <div class="penalty-summary" id="penaltySummary">
+                            Penalty Score: <span id="team1PenaltyScore">0</span> - <span id="team2PenaltyScore">0</span>
+                        </div>
+                        
+                        <button type="button" class="btn btn-primary" onclick="submitPenalties()" style="margin-top: 20px;">Save Penalty Results</button>
+                    </form>
+                </div>
+
+                <!-- Basketball Form -->
+                <div th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).BASKETBALL}">
+                    <h5>Add Shot</h5>
+                    <form th:action="@{/match/add_shot}" method="post">
+                        <input type="hidden" name="matchId" th:value="${match.id}">
+                        <div class="form-group">
+                            <label for="playerId">Player:</label>
+                            <select class="form-control" id="playerId" name="playerId" required>
+                                <option value="">-- Select Player --</option>
+                                <optgroup th:each="team : ${players.entrySet()}" 
+                                         th:label="${team.key == match.team1.id ? match.team1.name : match.team2.name}">
+                                    <option th:each="player : ${team.value}"
+                                            th:value="${player.id}"
+                                            th:text="${player.name}">
+                                    </option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="time">Minute:</label>
+                            <input type="number" class="form-control" id="time" name="time" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="points">Points:</label>
+                            <select class="form-control" id="points" name="points" required>
+                                <option value="1">1 point</option>
+                                <option value="2">2 points</option>
+                                <option value="3">3 points</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Shot</button>
+                    </form>
+                </div>
+
+                <!-- Volleyball Form -->
+                <div th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}">
+                    <h5>Add Point</h5>
+                    <form th:action="@{/match/add_point}" method="post">
+                        <input type="hidden" name="matchId" th:value="${match.id}">
+                        <div class="form-group">
+                            <label for="player">Player:</label>
+                            <select class="form-control" id="player" name="playerId" required>
+                                <option value="">-- Select Player --</option>
+                                <optgroup th:each="team : ${players.entrySet()}" 
+                                         th:label="${team.key == match.team1.id ? match.team1.name : match.team2.name}">
+                                    <option th:each="player : ${team.value}"
+                                            th:value="${player.id}"
+                                            th:text="${player.name}">
+                                    </option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="time">Minute:</label>
+                            <input type="number" class="form-control" id="time" name="time" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="setNumber">Set Number:</label>
+                            <input type="number" class="form-control" id="setNumber" name="setNumber" required min="1">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Point</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Publish Button -->
+        <div th:if="${isRef and not match.isResultPublished}" class="text-center mb-4">
+            <form th:action="@{/match/publish/{matchId}(matchId=${match.id})}" method="post">
+                <button type="submit" class="btn btn-success btn-lg">Publish Results</button>
+            </form>
+        </div>
+
+        <!-- Match Details Button -->
+        <div th:if="${match.isResultPublished}" class="text-center mb-4">
+            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#matchDetailsModal">
+                Match Details
+            </button>
+        </div>
+
+        <!-- Match Details Modal -->
+        <div class="modal fade" id="matchDetailsModal" tabindex="-1" role="dialog" aria-labelledby="matchDetailsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="matchDetailsModalLabel">Match Details</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Football/Hockey Results -->
+                        <div th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).FOOTBALL or tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}">
+                            <h5>Goals</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 th:text="${match.team1.name} + ' Goals'"></h6>
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Player</th>
+                                                <th>Minute</th>
+                                                <th>Type</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="goal : ${team1Goals}">
+                                                <td th:text="${goal.player.name}"></td>
+                                                <td th:text="${goal.time}"></td>
+                                                <td th:text="${goal.isPenalty ? 'Penalty' : 'Regular'}"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 th:text="${match.team2.name} + ' Goals'"></h6>
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Player</th>
+                                                <th>Minute</th>
+                                                <th>Type</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="goal : ${team2Goals}">
+                                                <td th:text="${goal.player.name}"></td>
+                                                <td th:text="${goal.time}"></td>
+                                                <td th:text="${goal.isPenalty ? 'Penalty' : 'Regular'}"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- After Match Penalties -->
+                            <h5 class="mt-4">After Match Penalties</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 th:text="${match.team1.name} + ' Penalties'"></h6>
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Player</th>
+                                                <th>Success</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="penalty : ${team1Penalties}">
+                                                <td th:text="${penalty.player.name}"></td>
+                                                <td th:text="${penalty.scored ? 'Yes' : 'No'}"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 th:text="${match.team2.name} + ' Penalties'"></h6>
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Player</th>
+                                                <th>Success</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="penalty : ${team2Penalties}">
+                                                <td th:text="${penalty.player.name}"></td>
+                                                <td th:text="${penalty.scored ? 'Yes' : 'No'}"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Basketball Results -->
+                        <div th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).BASKETBALL}">
+                            <h5>Shots</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 th:text="${match.team1.name} + ' Shots'"></h6>
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Player</th>
+                                                <th>Minute</th>
+                                                <th>Points</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="shot : ${team1Goals}">
+                                                <td th:text="${shot.player.name}"></td>
+                                                <td th:text="${shot.time}"></td>
+                                                <td th:text="${shot.points}"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 th:text="${match.team2.name} + ' Shots'"></h6>
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Player</th>
+                                                <th>Minute</th>
+                                                <th>Points</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="shot : ${team2Goals}">
+                                                <td th:text="${shot.player.name}"></td>
+                                                <td th:text="${shot.time}"></td>
+                                                <td th:text="${shot.points}"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Volleyball Results -->
+                        <div th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}">
+                            <h5>Points</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 th:text="${match.team1.name} + ' Points'"></h6>
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Player</th>
+                                                <th>Minute</th>
+                                                <th>Set</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="point : ${team1Goals}">
+                                                <td th:text="${point.player.name}"></td>
+                                                <td th:text="${point.time}"></td>
+                                                <td th:text="${point.setNumber}"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 th:text="${match.team2.name} + ' Points'"></h6>
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Player</th>
+                                                <th>Minute</th>
+                                                <th>Set</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="point : ${team2Goals}">
+                                                <td th:text="${point.player.name}"></td>
+                                                <td th:text="${point.time}"></td>
+                                                <td th:text="${point.setNumber}"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script th:inline="javascript">
+        // Получаем данные о игроках из Thymeleaf
+        const playersData = /*[[${players}]]*/ {};
+        const teams = /*[[${teams}]]*/ [];
+        
+        // Функция для обновления списка игроков при выборе команды
+        function updatePlayers(teamId) {
+            const playerSelect = document.getElementById('playerId');
+            playerSelect.innerHTML = '<option value="">-- Select Player --</option>';
+            
+            if (teamId && playersData[teamId]) {
+                playersData[teamId].forEach(player => {
+                    const option = document.createElement('option');
+                    option.value = player.id;
+                    option.textContent = player.name;
+                    playerSelect.appendChild(option);
+                });
+            }
+        }
+        
+        // Функция для добавления нового раунда пенальти
+        function addPenaltyRound() {
+            const shootout = document.getElementById('penaltyShootout');
+            const roundNumber = document.querySelectorAll('.penalty-round').length + 1;
+            
+            const round = document.createElement('div');
+            round.className = 'penalty-round';
+            round.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="team-penalty">
+                            <span>${teams[0].name}:</span>
+                            <select name="team1PlayerId" required>
+                                <option value="">Select Player</option>
+                            </select>
+                            <div class="penalty-result">
+                                <button type="button" class="btn btn-success" onclick="updatePenaltyResult(this, 1, true)">Scored</button>
+                                <button type="button" class="btn btn-danger" onclick="updatePenaltyResult(this, 1, false)">Missed</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="team-penalty text-right">
+                            <span>${teams[1].name}:</span>
+                            <select name="team2PlayerId" required>
+                                <option value="">Select Player</option>
+                            </select>
+                            <div class="penalty-result">
+                                <button type="button" class="btn btn-success" onclick="updatePenaltyResult(this, 2, true)">Scored</button>
+                                <button type="button" class="btn btn-danger" onclick="updatePenaltyResult(this, 2, false)">Missed</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" name="isTeam1Scored" value="false"/>
+                <input type="hidden" name="isTeam2Scored" value="false"/>
+            `;
+            
+            shootout.appendChild(round);
+            
+            // Заполняем списки игроков
+            const team1Select = round.querySelector('select[name="team1PlayerId"]');
+            const team2Select = round.querySelector('select[name="team2PlayerId"]');
+            
+            if (playersData[teams[0].id]) {
+                playersData[teams[0].id].forEach(player => {
+                    const option = document.createElement('option');
+                    option.value = player.id;
+                    option.textContent = player.name;
+                    team1Select.appendChild(option);
+                });
+            }
+            
+            if (playersData[teams[1].id]) {
+                playersData[teams[1].id].forEach(player => {
+                    const option = document.createElement('option');
+                    option.value = player.id;
+                    option.textContent = player.name;
+                    team2Select.appendChild(option);
+                });
+            }
+        }
+        
+        // Функция для обновления результата пенальти
+        function updatePenaltyResult(button, teamNumber, scored) {
+            // Сбрасываем стили всех кнопок в этом раунде для этой команды
+            const round = button.closest('.penalty-round');
+            const teamButtons = round.querySelectorAll(`.team-penalty:nth-child(${teamNumber}) .penalty-result button`);
+            teamButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Устанавливаем стиль для нажатой кнопки
+            button.classList.add('active');
+            
+            // Обновляем скрытое поле с результатом
+            const hiddenField = round.querySelector(`input[name="isTeam${teamNumber}Scored"]`);
+            hiddenField.value = scored;
+            
+            // Обновляем счет
+            updatePenaltyScore();
+        }
+        
+        // Функция для обновления общего счета по пенальти
+        function updatePenaltyScore() {
+            let team1Score = 0;
+            let team2Score = 0;
+            
+            // Подсчитываем забитые пенальти для каждой команды
+            document.querySelectorAll('.penalty-round').forEach(round => {
+                const team1Result = round.querySelector('input[name="isTeam1Scored"]').value === 'true';
+                const team2Result = round.querySelector('input[name="isTeam2Scored"]').value === 'true';
+                
+                if (team1Result) {
+                    team1Score++;
+                }
+                
+                if (team2Result) {
+                    team2Score++;
+                }
+            });
+            
+            // Обновляем отображение счета
+            document.getElementById('team1PenaltyScore').textContent = team1Score;
+            document.getElementById('team2PenaltyScore').textContent = team2Score;
+        }
+
+        // Функция для отправки формы с пенальти
+        function submitPenalties() {
+            const form = document.getElementById('penaltiesForm');
+            const matchId = form.querySelector('input[name="matchId"]').value;
+            const rounds = document.querySelectorAll('.penalty-round');
+            const penalties = [];
+
+            rounds.forEach((round, index) => {
+                const team1PlayerId = round.querySelector('select[name="team1PlayerId"]').value;
+                const team2PlayerId = round.querySelector('select[name="team2PlayerId"]').value;
+                const isTeam1Scored = round.querySelector('input[name="isTeam1Scored"]').value === 'true';
+                const isTeam2Scored = round.querySelector('input[name="isTeam2Scored"]').value === 'true';
+
+                if (team1PlayerId && team2PlayerId) {
+                    penalties.push({
+                        matchId: matchId,
+                        team1PlayerId: team1PlayerId,
+                        team2PlayerId: team2PlayerId,
+                        isTeam1Scored: isTeam1Scored,
+                        isTeam2Scored: isTeam2Scored
+                    });
+                }
+            });
+
+            // Создаем скрытые input'ы для отправки данных
+            const penaltiesInput = document.createElement('input');
+            penaltiesInput.type = 'hidden';
+            penaltiesInput.name = 'penalties';
+            penaltiesInput.value = JSON.stringify(penalties);
+            form.appendChild(penaltiesInput);
+
+            const matchIdInput = document.createElement('input');
+            matchIdInput.type = 'hidden';
+            matchIdInput.name = 'matchId';
+            matchIdInput.value = matchId;
+            form.appendChild(matchIdInput);
+
+            form.submit();
+        }
+    </script>
+</body>
+</html> 

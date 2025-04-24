@@ -1,110 +1,101 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Пользователи в оргкомитете</title>
+    <title>Team View</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .logo-preview {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .default-logo {
+            width: 150px;
+            height: 150px;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
-<h1 th:text="${team.name}"></h1>
-<h2 th:text="${team.sport}"></h2>
-<h3>Активные члены команды</h3>
-
-<table>
-    <thead>
-    <tr>
-        <th>Имя</th>
-        <th>Фамилия</th>
-        <th>Статус</th>
-        <th th:if="${isCap}"></th>
-    </tr>
-    </thead>
-    <tbody>
-
-    <tr th:each="user : ${members}">
-        <div th:if="${user.invitationStatus == T(com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus).ACCEPTED}">
-        <td th:text="${user.name}"></td>
-        <td th:text="${user.surname}"></td>
-        <td>
-            <p th:if="${user.isCap}">
-                Капитан
-            </p>
-            <p th:unless="${user.isPlaying}">
-                Не играет
-            </p>
-        </td>
-        <td th:if="${isCap}">
-           <a th:href="@{/edit_user_team/{userTeamId}(userTeamId=${user.userTeamId})}" th:text="'Изменить права'"></a>
-
-        </td>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div th:if="${team.logo != null}">
+                        <img th:src="@{'/uploads/' + ${team.logo}}" class="logo-preview" alt="Team Logo">
+                    </div>
+                    <div th:unless="${team.logo != null}" class="default-logo">
+                        <span>T</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <h1 th:text="${team.name}">Team Name</h1>
+                <h3 th:text="${team.sport}">Sport</h3>
+                
+                <div th:if="${isCap != null}">
+                    <a th:href="@{/team/edit/{id}(id=${teamId})}" class="btn btn-primary">Edit Team</a>
+                    <a th:href="@{/team/create_invitation/{id}(id=${teamId})}" class="btn btn-success">Invite Member</a>
+                </div>
+            </div>
         </div>
-    </tr>
-    </tbody>
-</table>
 
-
-<table th:if="${isCap}">
-    <thead>
-    <tr>
-        <th>Имя</th>
-        <th>Фамилия</th>
-        <th>Статус</th>
-        <th></th>
-        <th></th>
-    </tr>
-    </thead>
-    <tbody>
-
-    <tr th:each="user : ${members}">
-        <div th:unless="${user.invitationStatus == T(com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus).ACCEPTED}">
-        <td th:text="${user.name}"></td>
-        <td th:text="${user.surname}"></td>
-        <td>
-            <p th:if="${user.isCap}">1
-                Капитан
-            </p>
-            <p th:unless="${user.isPlaying}">
-                Не играет
-            </p>
-        </td>
-        <td>
-            <a th:href="@{/edit_user_team/{userTeamId}(userTeamId=${user.userTeamId})}" th:text="'Изменить права'"></a>
-        </td>
-        <td>
-            <span th:switch="${user.invitationStatus}">
-                        <span th:case="${invitationStatuses.accepted}">Активный</span>
-                        <span th:case="${invitationStatuses.pending}">Приглашение отправлено</span>
-                        <span th:case="${invitationStatuses.declined}">Отказался</span>
-                        <span th:case="${invitationStatuses.left}">Покинул</span>
-                        <span th:case="${invitationStatuses.canceled}">Приглашение отменено</span>
-                        <span th:case="${invitationStatuses.kicked}">Исключён</span>
-                        <span th:case="*">Неизвестный статус</span>
-                    </span>
-        </td>
+        <div class="mt-4">
+            <h2>Team Members</h2>
+            <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+            
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="member : ${members}">
+                        <td th:text="${member.name + ' ' + member.surname}">Member Name</td>
+                        <td th:text="${member.isCap ? 'Captain' : 'Member'}">Role</td>
+                        <td th:text="${member.invitationStatus}">Status</td>
+                        <td>
+                            <div th:if="${isCap && member.invitationStatus == T(com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus).ACCEPTED}">
+                                <div th:unless="${member.isCap}">
+                                    <form th:action="@{/team/kick/{teamId}/{userTel}(teamId=${teamId}, userTel=${member.tel})}"
+                                          method="post"
+                                          style="display: inline;">
+                                        <button type="submit" class="btn btn-danger btn-sm">Kick</button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div th:if="${isCap && member.invitationStatus == T(com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus).PENDING}">
+                                <form th:action="@{/team/cancel/{teamId}/{userTel}(teamId=${teamId}, userTel=${member.tel})}"
+                                      method="post" 
+                                      style="display: inline;">
+                                    <button type="submit" class="btn btn-warning btn-sm">Cancel Invitation</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-    </tr>
-    </tbody>
-</table>
 
-<form th:action="@{/tournament/teams/{teamId}(teamId=${teamId})}" method="get">
-    <button type="submit">Чемпионаты команды</button>
-</form>
-<div th:if="${isCap}">
-    <form th:action="@{/team/create_invitation/{teamId}(teamId=${teamId})}" method="get">
-        <button type="submit">Пригласить игроков</button>
-    </form>
-</div>
-<div th:if="${isCap}">
-    <form th:action="@{/team/edit/{teamId}(teamId=${teamId})}" method="get">
-        <button type="submit">Редкитировать команду</button>
-    </form>
-</div>
-<form th:action="@{/team/left/{teamId}(teamId=${teamId})}" method="post">
-    <button type="submit">Покинуть команду</button>
-</form>
+        <div class="mt-4">
+            <a th:href="@{/team/show_all}" class="btn btn-secondary">Back to Teams</a>
+        </div>
+    </div>
 
-
-<div th:if="${error}">
-    <p th:text="${error}"></p>
-</div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

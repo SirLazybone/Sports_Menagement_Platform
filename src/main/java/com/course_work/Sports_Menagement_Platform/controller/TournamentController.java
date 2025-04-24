@@ -4,6 +4,7 @@ import com.course_work.Sports_Menagement_Platform.data.enums.Org;
 import com.course_work.Sports_Menagement_Platform.data.enums.StageStatus;
 import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.*;
+import com.course_work.Sports_Menagement_Platform.service.FileStorageService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.CityService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.MatchService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.StageService;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
@@ -32,11 +34,14 @@ public class TournamentController {
     private final StageService stageService;
     private final MatchService matchService;
     private final CityService cityService;
-    public TournamentController(TournamentService tournamentService, StageService stageService, MatchService matchService, CityService cityService) {
+    private final FileStorageService fileStorageService;
+
+    public TournamentController(TournamentService tournamentService, StageService stageService, MatchService matchService, CityService cityService, FileStorageService fileStorageService) {
         this.tournamentService = tournamentService;
         this.stageService = stageService;
         this.matchService = matchService;
         this.cityService = cityService;
+        this.fileStorageService = fileStorageService;
     }
 
     @GetMapping("/search")
@@ -82,14 +87,23 @@ public class TournamentController {
     }
 
     @PostMapping("/create/{orgComId}")
-    public String createTournament(@Valid @ModelAttribute("tournament") TournamentDTO tournamentDTO, @PathVariable UUID orgComId, BindingResult bindingResult, Model model, @AuthenticationPrincipal User user) {
+    public String createTournament(@Valid @ModelAttribute("tournament") TournamentDTO tournamentDTO, 
+                                 @PathVariable UUID orgComId, 
+                                 BindingResult bindingResult, 
+                                 Model model, 
+                                 @AuthenticationPrincipal User user,
+                                 @RequestParam(value = "logoFile", required = false) MultipartFile logoFile) {
         if (bindingResult.hasErrors()) {
             return "tournament/create";
         }
 
         try {
+            if (logoFile != null && !logoFile.isEmpty()) {
+                String fileName = fileStorageService.storeFile(logoFile);
+                tournamentDTO.setLogo(fileName);
+            }
             Tournament tournament = tournamentService.createTournament(tournamentDTO, user, orgComId);
-            return "redirect:/org_com/view/" + tournament.getId(); // ?????
+            return "redirect:/org_com/view/" + orgComId.toString();
 
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
@@ -98,7 +112,6 @@ public class TournamentController {
             model.addAttribute("error", e.getMessage());
             return "tournament/create";
         }
-
     }
 
     @GetMapping("/view/{id}")
@@ -200,6 +213,22 @@ public class TournamentController {
         return "org_com/tournament_view";
     }
 
+    @GetMapping("/prolong_reg/{tournamentId}")
+    public String prolongReg(@PathVariable("tournamentId") UUID tournamentId, Model model) {
+        model.addAttribute("prolongReg", new ProlongRegDTO());
+        return "/tournament/prolong_reg";
+    }
+
+    @PostMapping("/prolong_reg/{tournamentId}")
+    public String prolongRegPost(@PathVariable("tournamentId") UUID tournamentId, @ModelAttribute("prolongReg") ProlongRegDTO prolongRegDTO, Model model) {
+        try {
+            tournamentService.prolongRegister(tournamentId, prolongRegDTO);
+        } catch (RuntimeException e) {
+            model.addAttribute("error", "Ошибка продления регистрации: " + e.getMessage());
+        }
+        return "redirect:/tournament/view/" + tournamentId.toString();
+    }
+
     
 
 //    @PostMapping("/create_group/{tournamentId}")
@@ -219,5 +248,59 @@ public class TournamentController {
 //        }
 //        return null;
 //    }
+
+    @GetMapping("/edit/{tournamentId}")
+    public String editTournament(@PathVariable UUID tournamentId, Model model) {
+        Tournament tournament = tournamentService.getById(tournamentId);
+        model.addAttribute("tournament", TournamentDTO.builder()
+                .name(tournament.getName())
+                .sport(tournament.getSport())
+                .cityName(tournament.getCity().getName())
+                .minMembers(tournament.getMinMembers())
+                .registerDeadline(tournament.getRegisterDeadline())
+                .description(tournament.getDescription())
+                .logo(tournament.getLogo())
+                .build());
+        model.addAttribute("cities", cityService.getCities());
+        return "tournament/edit";
+    }
+
+    @PostMapping("/edit/{tournamentId}")
+    public String editTournament(@PathVariable UUID tournamentId,
+                               @Valid @ModelAttribute("tournament") TournamentDTO tournamentDTO,
+                               BindingResult bindingResult,
+                               Model model,
+                               @RequestParam(value = "logoFile", required = false) MultipartFile logoFile) {
+
+        try {
+            Tournament existingTournament = tournamentService.getById(tournamentId);
+            if (logoFile != null && !logoFile.isEmpty()) {
+                // Delete old logo if exists
+                if (existingTournament.getLogo() != null) {
+                    fileStorageService.deleteFile(existingTournament.getLogo());
+                }
+                // Store new logo
+                String fileName = fileStorageService.storeFile(logoFile);
+                tournamentDTO.setLogo(fileName);
+            } else {
+                // Keep existing logo
+                tournamentDTO.setLogo(existingTournament.getLogo());
+            }
+            
+            // Only update name and logo, keep other fields from existing tournament
+            tournamentDTO.setSport(existingTournament.getSport());
+            tournamentDTO.setCityName(existingTournament.getCity().getName());
+            tournamentDTO.setMinMembers(existingTournament.getMinMembers());
+            tournamentDTO.setRegisterDeadline(existingTournament.getRegisterDeadline());
+            tournamentDTO.setDescription(existingTournament.getDescription());
+            
+            tournamentService.updateTournament(tournamentId, tournamentDTO);
+
+        } catch (RuntimeException e) {
+            model.addAttribute("error", e.getMessage());
+            return "tournament/edit";
+        }
+        return "redirect:/tournament/view/" + tournamentId.toString();
+    }
 }
 

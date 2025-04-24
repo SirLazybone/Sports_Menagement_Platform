@@ -433,36 +433,19 @@ public class MatchController {
         }
 
         try {
+            System.out.println("Match ID : " + goalDTO.getMatchId());
+            System.out.println("Time : " + goalDTO.getTime());
+            System.out.println("Team ID : " + goalDTO.getTeamId());
+            System.out.println("Match ID : " + goalDTO.getTime());
+
+
             goalService.addGoal(goalDTO);
             redirectAttributes.addFlashAttribute("success", "Гол успешно добавлен");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Ошибка при добавлении гола: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Ошибка при добавлении гола: " + e.getMessage() + " " + Arrays.toString(e.getStackTrace()));
         }
 
-        return "redirect:/match/referee/" + goalDTO.getMatchId().toString();
-    }
-
-    @PreAuthorize("isAuthenticated()")
-    @PostMapping("/add_penalty")
-    public String addPenalty(@ModelAttribute GoalDTO goalDTO, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
-        Match match = matchService.getById(goalDTO.getMatchId());
-        UUID tournamentId = match.getStage().getTournament().getId();
-
-        if (!tournamentService.isUserRefOfTournament(user.getId(), tournamentId)) {
-            redirectAttributes.addFlashAttribute("error", "Только судья турнира может добавлять штрафные голы");
-            return "redirect:/tournament/view/" + tournamentId.toString();
-        }
-
-        try {
-            // Set isPenalty to true for penalty goals
-            goalDTO.setPenalty(true);
-            goalService.addGoal(goalDTO);
-            redirectAttributes.addFlashAttribute("success", "Штрафной гол успешно добавлен");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Ошибка при добавлении штрафного гола: " + e.getMessage());
-        }
-
-        return "redirect:/match/referee/" + goalDTO.getMatchId().toString();
+        return "redirect:/match/view/" + goalDTO.getMatchId().toString();
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -476,7 +459,7 @@ public class MatchController {
             
             if (penaltyDTOs.isEmpty()) {
                 redirectAttributes.addFlashAttribute("error", "Нет данных для сохранения");
-                return "redirect:/match/referee/" + matchId.toString();
+                return "redirect:/match/view/" + matchId.toString();
             }
             
             // Проверяем авторизацию для первого пенальти (все они для одного матча)
@@ -493,10 +476,107 @@ public class MatchController {
             }
             
             redirectAttributes.addFlashAttribute("success", "Послематчевые пенальти успешно добавлены");
-            return "redirect:/match/referee/" + penaltyDTOs.get(0).getMatchId().toString();
+            return "redirect:/match/view/" + penaltyDTOs.get(0).getMatchId().toString();
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Ошибка при добавлении послематчевых пенальти: " + e.getMessage());
-            return "redirect:/match/referee/" + matchId.toString();
+            return "redirect:/match/view/" + matchId.toString();
+        }
+    }
+
+    @PostMapping("/publish/{matchId}")
+    public String publishResults(@PathVariable("matchId") UUID matchId, Model model) {
+        try {
+            Match match = matchService.publishResult(matchId);
+        } catch (RuntimeException e) {
+            model.addAttribute("error", "Ошибка при опубликовывании результатов матча: " + e.getMessage());
+        }
+        return "redirect:/match/view/" + matchId.toString();
+    }
+
+    @GetMapping("/view/{matchId}")
+    public String showMatch(@PathVariable("matchId") UUID matchId, Model model, @AuthenticationPrincipal User user) {
+        Match match = matchService.getById(matchId);
+        Stage stage = match.getStage();
+        Tournament tournament = match.getStage().getTournament();
+        boolean isRef;
+        boolean isOrg;
+        try {
+            isRef = tournamentService.isUserRefOfTournament(user.getId(), tournament.getId());
+            isOrg = tournamentService.isUserChiefOfTournament(user.getId(), tournament.getId());
+        } catch (RuntimeException e) {
+            isRef = false;
+            isOrg = false;
+        }
+
+        
+        try {
+            List<Goal> goals = goalService.getGoalsByMatch(matchId);
+            List<Goal> team1Goals = goals.stream()
+                .filter(x -> x.getTeam().getId().equals(match.getTeam1().getId()))
+                .collect(Collectors.toList());
+            List<Goal> team2Goals = goals.stream()
+                .filter(x -> x.getTeam().getId().equals(match.getTeam2().getId()))
+                .collect(Collectors.toList());
+
+            // Get after-match penalties
+            List<AfterMatchPenalty> afterMatchPenalties = afterMatchPenaltyService.getPenaltiesByMatch(matchId);
+            List<AfterMatchPenalty> team1Penalties = afterMatchPenalties.stream()
+                .filter(x -> x.getTeam().getId().equals(match.getTeam1().getId()))
+                .collect(Collectors.toList());
+            List<AfterMatchPenalty> team2Penalties = afterMatchPenalties.stream()
+                .filter(x -> x.getTeam().getId().equals(match.getTeam2().getId()))
+                .collect(Collectors.toList());
+
+            // Get team members for goal forms
+            Map<UUID, List<User>> players = matchService.getTeamMembersMap(match.getTeam1(), match.getTeam2());
+
+            // Get available slots for organization
+            List<Slot> availableSlots = slotService.getAllNotInUse();
+
+            // Create simplified data structures for JavaScript
+            Map<String, List<Map<String, String>>> simplifiedPlayersMap = new HashMap<>();
+            for (Map.Entry<UUID, List<User>> entry : players.entrySet()) {
+                List<Map<String, String>> simplifiedUsers = new ArrayList<>();
+                for (User player : entry.getValue()) {
+                    Map<String, String> simplifiedUser = new HashMap<>();
+                    simplifiedUser.put("id", player.getId().toString());
+                    simplifiedUser.put("name", player.getName());
+                    simplifiedUsers.add(simplifiedUser);
+                }
+                simplifiedPlayersMap.put(entry.getKey().toString(), simplifiedUsers);
+            }
+
+            List<Map<String, String>> simplifiedTeams = new ArrayList<>();
+            Map<String, String> team1Map = new HashMap<>();
+            team1Map.put("id", match.getTeam1().getId().toString());
+            team1Map.put("name", match.getTeam1().getName());
+            simplifiedTeams.add(team1Map);
+            
+            Map<String, String> team2Map = new HashMap<>();
+            team2Map.put("id", match.getTeam2().getId().toString());
+            team2Map.put("name", match.getTeam2().getName());
+            simplifiedTeams.add(team2Map);
+
+            // Add all necessary attributes to the model
+            model.addAttribute("match", match);
+            model.addAttribute("stage", stage);
+            model.addAttribute("tournament", tournament);
+            model.addAttribute("isRef", isRef);
+            model.addAttribute("isOrg", isOrg);
+            model.addAttribute("team1Goals", team1Goals);
+            model.addAttribute("team2Goals", team2Goals);
+            model.addAttribute("team1Penalties", team1Penalties);
+            model.addAttribute("team2Penalties", team2Penalties);
+            model.addAttribute("players", simplifiedPlayersMap);
+            model.addAttribute("teams", simplifiedTeams);
+            model.addAttribute("availableSlots", availableSlots);
+            model.addAttribute("goalDTO", new GoalDTO());
+            model.addAttribute("afterMatchPenaltyDTO", new AfterMatchPenaltyDTO());
+
+            return "match/view";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error loading match data: " + e.getMessage());
+            return "redirect:/home";
         }
     }
 }

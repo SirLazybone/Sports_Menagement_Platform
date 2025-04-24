@@ -92,7 +92,7 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
     private Tournament createOrgComAndChamp() {
         OrgCom orgCom = OrgCom.builder().name("OrgCom").build();
         orgComRepository.save(orgCom);
-        UserOrgCom userOrgCom = UserOrgCom.builder().orgCom(orgCom).orgRole(Org.CHIEF).user(userService.findByTel("+0")).invitationStatus(InvitationStatus.ACCEPTED).build();
+        UserOrgCom userOrgCom = UserOrgCom.builder().orgCom(orgCom).orgRole(Org.CHIEF).user(userService.findByTel("+0")).isRef(true).invitationStatus(InvitationStatus.ACCEPTED).build();
         userOrgComRepository.save(userOrgCom);
 
 
@@ -135,8 +135,6 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
         }
         Stage stage = Stage.builder().isPublished(false).bestPlace(0).worstPlace(0).tournament(tournament).build();
         stageRepository.save(stage);
-        System.out.println(stage.getId());
-
 
         ArrayList<Team> group1 = new ArrayList<>();
         group1.add(teamRepository.findByName("Team1").get());
@@ -181,7 +179,6 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
         }
         Stage stageFinal = Stage.builder().isPublished(false).bestPlace(1).worstPlace(8).tournament(tournament).build();
         stageRepository.save(stageFinal);
-        System.out.println(stageFinal.getId());
 
         TeamTournament teamTournament = teamTournamentRepository.findByTournamentIdAndTeamId(tournament.getId(), teamRepository.findByName("Team" + Integer.toString(1)).get().getId())
                 .get();
@@ -189,6 +186,8 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
         teamTournamentRepository.save(teamTournament);
 
     }
+
+
 
 
 

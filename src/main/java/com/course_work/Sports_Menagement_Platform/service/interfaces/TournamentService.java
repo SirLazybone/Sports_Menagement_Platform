@@ -33,7 +33,6 @@ public interface TournamentService {
 
     List<TeamTournamentDTO> getTournamentsByTeam(UUID teamId);
 
-
     List<Team> getAllTeamsByTournamentId(UUID tournamentId);
 
     List<Tournament> getAllTournamentsByUserOrgComId(UUID userOrgComId);
@@ -47,4 +46,7 @@ public interface TournamentService {
 
     List<Tournament> search(TournamentSearchDTO tournamentSearchDTO);
 
+    void prolongRegister(UUID tournamentId, ProlongRegDTO prolongRegDTO);
+
+    void updateTournament(UUID tournamentId, TournamentDTO tournamentDTO);
 }

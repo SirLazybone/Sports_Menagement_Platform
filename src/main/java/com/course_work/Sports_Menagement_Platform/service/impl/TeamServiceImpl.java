@@ -36,7 +36,7 @@ public class TeamServiceImpl implements TeamService {
     public Team createTeam(TeamDTO teamDTO, User user) {
 
 
-        Team team = Team.builder().name(teamDTO.getName()).sport(teamDTO.getSport()).build();
+        Team team = Team.builder().name(teamDTO.getName()).sport(teamDTO.getSport()).logo(teamDTO.getLogo()).build();
         teamRepository.save(team);
 
         UserTeam userTeam = UserTeam.builder().user(user).team(team).invitationStatus(InvitationStatus.ACCEPTED).isCap(true).build();

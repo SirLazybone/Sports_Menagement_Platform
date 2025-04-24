@@ -29,6 +29,7 @@ public class WebSecurityConfig {
                                 .requestMatchers("/team/**").authenticated()
                                 .requestMatchers("/home").permitAll()
                                 .requestMatchers("/registration").permitAll()
+                                .requestMatchers("/uploads/**").permitAll()
                                 .anyRequest().permitAll()
                 )
                 .formLogin(form -> form

@@ -21,6 +21,7 @@ public class UserMapper {
         userDTO.setName(user.getName());
         userDTO.setSurname(user.getSurname());
         userDTO.setTel(user.getTel());
+        userDTO.setPhoto(user.getPhoto());
         return userDTO;
     }
 }

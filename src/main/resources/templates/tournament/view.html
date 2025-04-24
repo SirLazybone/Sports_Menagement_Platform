@@ -7,6 +7,13 @@
 <body>
 <h1>Детали турнира</h1>
 
+<div th:if="${tournament.logo != null}">
+  <img th:src="@{'/uploads/' + ${tournament.logo}}" alt="Tournament Logo">
+</div>
+<div th:unless="${tournament.logo != null}">
+  <span>T</span>
+</div>
+
 <h2 th:if="${tournament.is_stopped}">
   Чемпионат отменен
 </h2>
@@ -104,6 +111,18 @@
 <div th:unless="${registrationOpen}">
   <form th:action="@{/match/additional/{id}(id=${tournament.id})}" method="get">
     <button type="submit">Дополнительные матчи</button>
+  </form>
+</div>
+
+<div th:if="${isUserChiefOrg}">
+  <form th:action="@{/tournament/prolong_reg/{id}(id=${tournament.id})}" method="get">
+    <button type="submit">Изменить дату окончания регистрации</button>
+  </form>
+</div>
+
+<div th:if="${isUserChiefOrg}">
+  <form th:action="@{/tournament/edit/{id}(id=${tournament.id})}" method="get">
+    <button type="submit">Редкитировать чемпионат</button>
   </form>
 </div>
 

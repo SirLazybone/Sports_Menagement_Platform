@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Продление регистрации на турнир</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <h2>Продление регистрации на турнир</h2>
+        
+        <!-- Error message -->
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+        <form th:action="@{/tournament/prolong_reg/{tournamentId}(tournamentId=${tournamentId})}" th:object="${prolongReg}" method="post">
+            <div class="form-group">
+                <label for="registerDeadline">Новая дата окончания регистрации:</label>
+                <input type="date" class="form-control" id="registerDeadline" th:field="*{registerDeadline}" required>
+                <small class="form-text text-muted">Выберите новую дату окончания регистрации на турнир</small>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Продлить регистрацию</button>
+            <a th:href="@{/tournament/view/{id}(id=${tournamentId})}" class="btn btn-secondary">Отмена</a>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html> 

@@ -8,7 +8,7 @@
 <div>
     <h3>Завершенные матчи</h3>
     <div th:each="match : ${finishedMatches}">
-        <a th:href="@{/match/referee/{matchId}(matchId=${match.id})}"
+        <a th:href="@{/match/view/{matchId}(matchId=${match.id})}"
            th:text="${match.team1.name} + ' x ' + ${match.team2.name}"></a>
     </div>
 </div>
@@ -17,7 +17,7 @@
 <div>
     <h3>Опубликованные матчи</h3>
     <div th:each="match : ${publishedMatches}">
-    <a th:href="@{/match/referee/{matchId}(matchId=${match.id})}"
+    <a th:href="@{/match/view/{matchId}(matchId=${match.id})}"
        th:text="${match.team1.name} + ' x ' + ${match.team2.name} + ' | ' + ${#temporals.format(match.slot.date, 'yyyy-MM-dd') + ' - ' + #temporals.format(match.slot.time, 'HH:mm') + ' - ' + match.slot.location.name}"></a>
     </div>
 
@@ -32,7 +32,7 @@
 <div th:if="${isUserOrg}">
     <h3>Непубликованные матчи</h3>
     <div th:each="match : ${matchesInWork}">
-        <a th:href="@{/match/referee/{matchId}(matchId=${match.id})}"
+        <a th:href="@{/match/view/{matchId}(matchId=${match.id})}"
            th:text="${match.team1.name} + ' x ' + ${match.team2.name} + ' | ' + ${#temporals.format(match.slot.date, 'yyyy-MM-dd') + ' - ' + #temporals.format(match.slot.time, 'HH:mm') + ' - ' + match.slot.location.name}"></a>
         <div>
             <form th:action="@{/stage/publish_stage/{id}(id=${match.stage.id})}" method="post">

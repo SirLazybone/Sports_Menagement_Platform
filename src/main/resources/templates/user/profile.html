@@ -3,36 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <title>User Profile</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .default-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
+    <div class="container mt-4">
+        <h1>User Profile</h1>
 
-<h1>User Profile</h1>
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div th:if="${user.photo != null}">
+                        <img th:src="@{'/uploads/' + ${user.photo}}" class="avatar" alt="User Avatar">
+                    </div>
+                    <div th:unless="${user.photo != null}" class="default-avatar">
+                        <span th:text="${user.name.substring(0,1) + user.surname.substring(0,1)}"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <h2>Personal Information</h2>
+                <table class="table">
+                    <tr>
+                        <th>Name</th>
+                        <td th:text="${user.name}">John Doe</td>
+                    </tr>
+                    <tr>
+                        <th>Surname</th>
+                        <td th:text="${user.surname}">john.doe@example.com</td>
+                    </tr>
+                    <tr>
+                        <th>Phone</th>
+                        <td th:text="${user.tel}">+1234567890</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
 
-<div>
-    <h2>Personal Information</h2>
-    <table>
-        <tr>
-            <th>Name</th>
-            <td th:text="${user.name}">John Doe</td>
-        </tr>
-        <tr>
-            <th>Surname</th>
-            <td th:text="${user.surname}">john.doe@example.com</td>
-        </tr>
-        <tr>
-            <th>Phone</th>
-            <td th:text="${user.tel}">+1234567890</td>
-        </tr>
-    </table>
-</div>
+        <div class="mt-4">
+            <a th:href="@{/user/edit}" class="btn btn-primary">Edit Profile</a>
+            <a th:href="@{/home}" class="btn btn-secondary">Home</a>
+        </div>
+    </div>
 
-<div>
-    <a th:href="@{/user/edit}">Edit Profile</a>
-</div>
-
-<form th:action="@{/home}" method="get">
-    <button type="submit">Home</button>
-</form>
-
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

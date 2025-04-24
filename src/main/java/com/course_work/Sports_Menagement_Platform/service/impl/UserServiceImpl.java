@@ -87,10 +87,13 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             user.setName(userDTO.getName());
         }
         if (!userDTO.getSurname().isEmpty()) {
-            user.setSurname(user.getSurname());
+            user.setSurname(userDTO.getSurname());
         }
         if (!userDTO.getTel().isEmpty()) {
             user.setTel(userDTO.getTel());
+        }
+        if (userDTO.getPhoto() != null) {
+            user.setPhoto(userDTO.getPhoto());
         }
 
         userRepository.save(user);

@@ -6,11 +6,7 @@ import com.course_work.Sports_Menagement_Platform.data.enums.Sport;
 import com.course_work.Sports_Menagement_Platform.data.enums.StageStatus;
 import com.course_work.Sports_Menagement_Platform.data.enums.Sport;
 import com.course_work.Sports_Menagement_Platform.data.models.*;
-import com.course_work.Sports_Menagement_Platform.dto.ApplicationDTO;
-import com.course_work.Sports_Menagement_Platform.dto.RatingLineDTO;
-import com.course_work.Sports_Menagement_Platform.dto.TeamTournamentDTO;
-import com.course_work.Sports_Menagement_Platform.dto.TournamentDTO;
-import com.course_work.Sports_Menagement_Platform.dto.TournamentSearchDTO;
+import com.course_work.Sports_Menagement_Platform.dto.*;
 import com.course_work.Sports_Menagement_Platform.mapper.TournamentMapper;
 import com.course_work.Sports_Menagement_Platform.repositories.*;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.*;
@@ -398,5 +394,20 @@ public class TournamentServiceImpl implements TournamentService {
                 return tournamentRepository.search(tournamentSearchDTO.getName(), tournamentSearchDTO.getCities().stream().map(i -> cityRepository.getById(i)).collect(Collectors.toList()), List.of(Sport.values()).stream().map(i -> i.toString()).collect(Collectors.toList()), tournamentSearchDTO.getTeamSizeFromInt(), tournamentSearchDTO.getTeamSizeToInt(), registrationUntil);
 
         }
+    }
+
+    @Override
+    public void prolongRegister(UUID tournamentId, ProlongRegDTO prolongRegDTO) {
+        Tournament tournament = getById(tournamentId);
+        tournament.setRegisterDeadline(prolongRegDTO.getRegisterDeadline());
+        tournamentRepository.save(tournament);
+    }
+
+    @Override
+    public void updateTournament(UUID tournamentId, TournamentDTO tournamentDTO) {
+        Tournament tournament = getById(tournamentId);
+        tournament.setName(tournamentDTO.getName());
+        tournament.setLogo(tournamentDTO.getLogo());
+        tournamentRepository.save(tournament);
     }
 }

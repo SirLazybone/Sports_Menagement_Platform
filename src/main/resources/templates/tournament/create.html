@@ -3,73 +3,98 @@
 <head>
   <meta charset="UTF-8">
   <title>Создание турнира</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    .logo-preview {
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    .default-logo {
+      width: 150px;
+      height: 150px;
+      background-color: #f0f0f0;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 50px;
+      color: #666;
+    }
+  </style>
 </head>
 <body>
-<h2>Создание нового турнира</h2>
-<form th:action="@{/tournament/create/{orgComId}(orgComId=${orgComId})}" th:object="${tournament}" method="post">
-  <div>
-    <label for="name">Название:</label>
-    <input type="text" id="name" th:field="*{name}" required/>
-    <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+  <div class="container mt-4">
+    <h1>Создание нового турнира</h1>
+    
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <form th:action="@{/tournament/create/{orgComId}(orgComId=${orgComId})}" th:object="${tournament}" method="post" enctype="multipart/form-data">
+      <div class="row">
+        <div class="col-md-3">
+          <div class="text-center mb-4">
+            <div class="default-logo mb-2">
+              <span>T</span>
+            </div>
+            <div class="form-group">
+              <label for="logoFile">Логотип турнира</label>
+              <input type="file" class="form-control-file" id="logoFile" name="logoFile" accept="image/*">
+            </div>
+          </div>
+        </div>
+        <div class="col-md-9">
+          <div class="form-group">
+            <label for="name">Название:</label>
+            <input type="text" class="form-control" th:field="*{name}" id="name" required>
+            <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="text-danger"></span>
+          </div>
+          <div class="form-group">
+            <label for="sport">Вид спорта:</label>
+            <select class="form-control" th:field="*{sport}" id="sport" required>
+              <option value="">Выберите вид спорта</option>
+              <option th:each="sport : ${T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).values()}"
+                      th:value="${sport}"
+                      th:text="${sport}">
+              </option>
+            </select>
+            <span th:if="${#fields.hasErrors('sport')}" th:errors="*{sport}" class="text-danger"></span>
+          </div>
+          <div class="form-group">
+            <label for="cityName">Город:</label>
+            <select class="form-control" th:field="*{cityName}" id="cityName" required>
+              <option value="">Выберите город</option>
+              <option th:each="city : ${cities}"
+                      th:value="${city.name}"
+                      th:text="${city.name}">
+              </option>
+            </select>
+            <span th:if="${#fields.hasErrors('cityName')}" th:errors="*{cityName}" class="text-danger"></span>
+          </div>
+          <div class="form-group">
+            <label for="minMembers">Минимальное количество участников:</label>
+            <input type="number" class="form-control" th:field="*{minMembers}" id="minMembers" required>
+            <span th:if="${#fields.hasErrors('minMembers')}" th:errors="*{minMembers}" class="text-danger"></span>
+          </div>
+          <div class="form-group">
+            <label for="registerDeadline">Дата окончания регистрации:</label>
+            <input type="date" class="form-control" th:field="*{registerDeadline}" id="registerDeadline" required>
+            <span th:if="${#fields.hasErrors('registerDeadline')}" th:errors="*{registerDeadline}" class="text-danger"></span>
+          </div>
+          <div class="form-group">
+            <label for="description">Описание:</label>
+            <textarea class="form-control" th:field="*{description}" id="description" rows="3"></textarea>
+            <span th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="text-danger"></span>
+          </div>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary">Создать турнир</button>
+      <a th:href="@{/tournament/show_all}" class="btn btn-secondary">Отмена</a>
+    </form>
   </div>
-  <br/>
 
-  <div>
-    <label for="sport">Вид спорта:</label>
-    <select id="sport" th:field="*{sport}">
-      <option th:each="sport : ${T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).values()}"
-              th:value="${sport}" th:text="${sport}"></option>
-    </select>
-    <span th:if="${#fields.hasErrors('sport')}" th:errors="*{sport}"></span>
-  </div>
-
-  <div>
-    <label for="cityName">Город:</label>
-    <select id="cityName" th:field="*{cityName}">
-      <option th:each="city  : ${cities}"
-              th:value="${city.name}" th:text="${city.name}"></option>
-    </select>
-    <span th:if="${#fields.hasErrors('cityName')}" th:errors="*{cityName}"></span>
-  </div>
-  <br/>
-
-  <div>
-    <label for="minMembers">Минимальное количество участников:</label>
-    <input type="number" id="minMembers" th:field="*{minMembers}" required/>
-    <span th:if="${#fields.hasErrors('minMembers')}" th:errors="*{minMembers}"></span>
-  </div>
-  <br/>
-
-  <div>
-    <label for="registerDeadline">Дата окончания регистрации:</label>
-    <input type="date" id="registerDeadline" th:field="*{registerDeadline}" required/>
-    <span th:if="${#fields.hasErrors('registerDeadline')}" th:errors="*{registerDeadline}"></span>
-  </div>
-  <br/>
-
-  <label for="description">Описание:</label>
-  <textarea id="description" th:field="*{description}"></textarea>
-  <br/>
-
-<!--  <div>-->
-<!--    <label for="isClassicScheme">-->
-<!--      <input type="checkbox" th:field="*{isClassicScheme}" id="isClassicScheme" /> Использовать классическую схему на 16 команд-->
-<!--    </label>-->
-<!--  </div>-->
-
-<!--  <label>-->
-<!--    <input type="checkbox" th:field="*{isStopped}" /> Турнир остановлен-->
-<!--  </label>-->
-<!--  <br/>-->
-
-<!--  <label for="logo">Ссылка на логотип:</label>-->
-<!--  <input type="text" id="logo" th:field="*{logo}"/>-->
-<!--  <br/>-->
-  <div th:if="${error}">
-    <p style="color: red;" th:text="${error}"></p>
-  </div>
-
-  <button type="submit">Создать турнир</button>
-</form>
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

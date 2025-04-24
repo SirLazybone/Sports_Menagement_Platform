@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Tournament</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .logo-preview {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .default-logo {
+            width: 150px;
+            height: 150px;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Edit Tournament</h1>
+        
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+        <form th:action="@{/tournament/edit/{id}(id=${tournamentId})}" th:object="${tournament}" method="post" enctype="multipart/form-data">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="text-center mb-4">
+                        <div th:if="${tournament.logo != null}">
+                            <img th:src="@{'/uploads/' + ${tournament.logo}}" class="logo-preview mb-2" alt="Tournament Logo">
+                        </div>
+                        <div th:unless="${tournament.logo != null}" class="default-logo mb-2">
+                            <span>T</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="logoFile">Change Logo</label>
+                            <input type="file" class="form-control-file" id="logoFile" name="logoFile" accept="image/*">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div class="form-group">
+                        <label for="name">Tournament Name:</label>
+                        <input type="text" class="form-control" th:field="*{name}" id="name" required>
+                        <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label>Sport:</label>
+                        <input type="text" class="form-control" th:value="${tournament.sport}" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>City:</label>
+                        <input type="text" class="form-control" th:value="${tournament.cityName}" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Minimum Members:</label>
+                        <input type="number" class="form-control" th:value="${tournament.minMembers}" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Registration Deadline:</label>
+                        <input type="date" class="form-control" th:value="${#temporals.format(tournament.registerDeadline, 'yyyy-MM-dd')}" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Description:</label>
+                        <textarea class="form-control" th:text="${tournament.description}" disabled></textarea>
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Update Tournament</button>
+            <a th:href="@{/tournament/view/{id}(id=${tournamentId})}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+
+    <div th:if="${error}">
+        <p th:text="${error}"></p>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html> 
