@@ -105,7 +105,7 @@ public class MatchController {
 
         StageStatus stageStatus = stageService.getStageStatus(stage);
         if (stageStatus != StageStatus.TEAMS_KNOWN) {
-            model.addAttribute("error", "Настройка расписания этапа недоступна");
+            model.addAttribute("error", "Распределение команд по группам некорректно, настройка расписания этапа недоступна");
             return "redirect:/home";
         }
         List<Slot> availableSlots = slotService.getAllSlotsForStage(stage);
