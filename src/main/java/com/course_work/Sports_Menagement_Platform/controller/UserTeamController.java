@@ -29,6 +29,7 @@ public class UserTeamController {
         UserTeam userTeam = userTeamService.findById(userTeamId);
         model.addAttribute("user_team", userTeam);
         model.addAttribute("userId", user.getId());
+        model.addAttribute("isOnlyCap", userTeamService.isOnlyCap(userTeam));
         return "team/edit_member";
 
     }

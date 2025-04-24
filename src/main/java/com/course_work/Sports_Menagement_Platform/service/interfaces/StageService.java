@@ -53,7 +53,8 @@ public interface StageService {
 
     StageStatus getStageStatus(Stage stage);
 
-    List<Team> getTeamsForPlatOffStage(Stage stage);
+    Stage getPrevious(Stage stage);
+
 
     List<Stage> getAdditionalStages(UUID tournamentId);
 

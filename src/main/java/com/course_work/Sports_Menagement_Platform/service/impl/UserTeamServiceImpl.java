@@ -74,8 +74,14 @@ public class UserTeamServiceImpl implements UserTeamService {
         return userTeamRepository.findByUser(userRepository.findById(id).orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден")));
     }
 
-
-
+    @Override
+    public boolean isOnlyCap(UserTeam userTeam) {
+        List<UserTeam> caps = userTeam.getTeam().getUserTeamList().stream().filter(i -> i.isCap()).collect(Collectors.toList());
+        if (caps.size() == 1 && caps.get(0).getId().equals(userTeam.getId())) {
+            return true;
+        }
+        return false;
+    }
 
 
 }

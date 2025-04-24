@@ -1,5 +1,6 @@
 package com.course_work.Sports_Menagement_Platform.service.interfaces;
 
+import com.course_work.Sports_Menagement_Platform.data.models.Stage;
 import com.course_work.Sports_Menagement_Platform.data.models.Team;
 import com.course_work.Sports_Menagement_Platform.data.models.User;
 import com.course_work.Sports_Menagement_Platform.data.models.UserTeam;
@@ -28,4 +29,5 @@ public interface TeamService {
     Team getByName(String name);
 
     List<Team> findTeamsWhereUserIsCap(User user);
+
 }

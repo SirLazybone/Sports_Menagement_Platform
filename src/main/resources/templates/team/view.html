@@ -67,20 +67,9 @@
                         <td th:text="${member.isCap ? 'Captain' : 'Member'}">Role</td>
                         <td th:text="${member.invitationStatus}">Status</td>
                         <td>
-                            <div th:if="${isCap && member.invitationStatus == T(com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus).ACCEPTED}">
-                                <div th:unless="${member.isCap}">
-                                    <form th:action="@{/team/kick/{teamId}/{userTel}(teamId=${teamId}, userTel=${member.tel})}"
-                                          method="post"
-                                          style="display: inline;">
-                                        <button type="submit" class="btn btn-danger btn-sm">Kick</button>
-                                    </form>
-                                </div>
-                            </div>
-                            <div th:if="${isCap && member.invitationStatus == T(com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus).PENDING}">
-                                <form th:action="@{/team/cancel/{teamId}/{userTel}(teamId=${teamId}, userTel=${member.tel})}"
-                                      method="post" 
-                                      style="display: inline;">
-                                    <button type="submit" class="btn btn-warning btn-sm">Cancel Invitation</button>
+                            <div th:if="${(isCap && member.invitationStatus == T(com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus).ACCEPTED) || member.userId == userId}">
+                                <form th:action="@{/edit_user_team/{id}(id = ${member.userTeamId})}" method="get">
+                                    <button type="submit">Редактировать</button>
                                 </form>
                             </div>
                         </td>
@@ -90,7 +79,7 @@
         </div>
 
         <div class="mt-4">
-            <a th:href="@{/team/show_all}" class="btn btn-secondary">Back to Teams</a>
+            <a th:href="@{/team/show_all}" class="btn btn-secondary">К командам</a>
         </div>
     </div>
 

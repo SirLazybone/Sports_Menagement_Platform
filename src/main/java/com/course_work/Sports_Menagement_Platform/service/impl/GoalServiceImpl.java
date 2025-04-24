@@ -3,28 +3,28 @@ package com.course_work.Sports_Menagement_Platform.service.impl;
 import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.GoalDTO;
 import com.course_work.Sports_Menagement_Platform.repositories.GoalRepository;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.GoalService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.MatchService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.TeamService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.UserService;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.*;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class GoalServiceImpl implements GoalService {
     private final GoalRepository goalRepository;
-    private final MatchService matchService;
     private final TeamService teamService;
     private final UserService userService;
+    private final AfterMatchPenaltyService afterMatchPenaltyService;
+
+    private final MatchService matchService;
+
 
     public GoalServiceImpl(GoalRepository goalRepository, MatchService matchService,
-                           TeamService teamService, UserService userService) {
+                           TeamService teamService, UserService userService, AfterMatchPenaltyService afterMatchPenaltyService, MatchService matchService1) {
         this.goalRepository = goalRepository;
-        this.matchService = matchService;
         this.teamService = teamService;
         this.userService = userService;
+        this.afterMatchPenaltyService = afterMatchPenaltyService;
+        this.matchService = matchService1;
     }
 
     @Override
@@ -48,4 +48,7 @@ public class GoalServiceImpl implements GoalService {
     public List<Goal> getGoalsByMatch(UUID matchId) {
         return goalRepository.findAllByMatchId(matchId);
     }
+
+
+
 }

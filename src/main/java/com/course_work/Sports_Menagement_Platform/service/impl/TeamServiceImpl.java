@@ -1,15 +1,12 @@
 package com.course_work.Sports_Menagement_Platform.service.impl;
 
 import com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus;
-import com.course_work.Sports_Menagement_Platform.data.models.Team;
-import com.course_work.Sports_Menagement_Platform.data.models.User;
-import com.course_work.Sports_Menagement_Platform.data.models.UserTeam;
+import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.TeamDTO;
 import com.course_work.Sports_Menagement_Platform.dto.UserTeamDTO;
 import com.course_work.Sports_Menagement_Platform.repositories.TeamRepository;
 import com.course_work.Sports_Menagement_Platform.repositories.UserTeamRepository;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.TeamService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.UserTeamService;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.*;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -21,10 +18,13 @@ public class TeamServiceImpl implements TeamService {
     private final UserTeamRepository userTeamRepository;
     private final UserTeamService userTeamService;
 
+
+
     public TeamServiceImpl(TeamRepository teamRepository, UserTeamRepository userTeamRepository, UserTeamService userTeamService) {
         this.teamRepository = teamRepository;
         this.userTeamRepository = userTeamRepository;
         this.userTeamService = userTeamService;
+
     }
 
     @Override
@@ -173,5 +173,8 @@ public class TeamServiceImpl implements TeamService {
         return teams;
 
     }
+
+
+
 
 }

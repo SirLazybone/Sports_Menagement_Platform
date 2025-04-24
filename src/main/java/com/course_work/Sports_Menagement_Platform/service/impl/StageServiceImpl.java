@@ -1,5 +1,6 @@
 package com.course_work.Sports_Menagement_Platform.service.impl;
 
+import com.course_work.Sports_Menagement_Platform.data.enums.ApplicationStatus;
 import com.course_work.Sports_Menagement_Platform.data.enums.StageStatus;
 import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.StageCreationDTO;
@@ -8,10 +9,7 @@ import com.course_work.Sports_Menagement_Platform.dto.GroupsDTO;
 import com.course_work.Sports_Menagement_Platform.repositories.StageRepository;
 import com.course_work.Sports_Menagement_Platform.repositories.GroupRepository;
 import com.course_work.Sports_Menagement_Platform.repositories.TeamRepository;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.StageService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.StageStatusService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.TeamService;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +25,7 @@ public class StageServiceImpl implements StageService {
     private final GroupRepository groupRepository;
     private final TeamRepository teamRepository;
     private final StageStatusService stageStatusService;
+
 
     public StageServiceImpl(StageRepository stageRepository, TournamentService tournamentService, TeamService teamService, GroupRepository groupRepository, TeamRepository teamRepository, StageStatusService stageStatusService) {
         this.stageRepository = stageRepository;
@@ -152,6 +151,9 @@ public class StageServiceImpl implements StageService {
     @Override
     public Stage createGroupStageIfNotExists(UUID tournamentId) {
         if (tournamentService.getById(tournamentId).getRegisterDeadline().isBefore(LocalDate.now())) {
+            List<TeamTournament> pendingTeams = tournamentService.getById(tournamentId).getTeamTournamentList().stream().filter(i -> i.getApplicationStatus() == ApplicationStatus.PENDING).collect(Collectors.toList());
+            if (!pendingTeams.isEmpty()) return null;
+
             Optional<Stage> optional = stageRepository.findByPlaceAndTournamentId(0, 0, tournamentId);
             if (optional.isPresent()) return optional.get();
             Stage newStage = Stage.builder().bestPlace(0).worstPlace(0).isPublished(false).tournament(tournamentService.getById(tournamentId)).build();
@@ -248,14 +250,20 @@ public class StageServiceImpl implements StageService {
 
 
     @Override
-    public List<Team> getTeamsForPlatOffStage(Stage stage) {
-        //TODO: исправить
-        int maxPlayOffPlace = Collections.max(stage.getTournament().getStages().stream().filter(i -> i.getBestPlace() > 0).map(i -> i.getWorstPlace()).collect(Collectors.toList()));
-        if (stage.getWorstPlace() == maxPlayOffPlace) {
-           return stage.getTournament().getTeamTournamentList().stream().filter(i -> i.isGoToPlayOff()).map(i -> i.getTeam()).collect(Collectors.toList());
+    public Stage getPrevious(Stage stage) {
+        if (stage.getBestPlace() == 1) {
+            Stage result = stage.getTournament().getStages().stream().filter(stage1 -> stage1.getBestPlace() == 1 && stage1.getWorstPlace() == stage.getWorstPlace() * 2).collect(Collectors.toList()).get(0);
+            return result;
         }
-        return new ArrayList<>();
+        else {
+            Stage result = stage.getTournament().getStages().stream().filter(stage1 -> stage1.getBestPlace() <= stage.getBestPlace() && stage1.getWorstPlace() >= stage.getWorstPlace()
+                    && stage1.getWorstPlace() - stage1.getBestPlace() == 2 * (stage.getWorstPlace() - stage.getBestPlace())).collect(Collectors.toList()).get(0);
+            return result;
+        }
     }
+
+
+
 
     @Override
     public List<Stage> getAdditionalStages(UUID tournamentId) {

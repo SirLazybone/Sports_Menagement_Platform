@@ -46,7 +46,6 @@ public class StageController {
             return "redirect:/stage/info/" + stage.getId().toString();
         }
         if (stage.getBestPlace() == 0) {
-            // TODO: доделать, сейчас только для групп
             return "redirect:/match/fill_group_stage/" + stage.getId().toString();
         }
         else if (stage.getBestPlace() > 0) {

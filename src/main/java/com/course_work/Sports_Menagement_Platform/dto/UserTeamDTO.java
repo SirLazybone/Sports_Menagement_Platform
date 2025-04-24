@@ -18,4 +18,5 @@ public class UserTeamDTO {
     String surname;
     String tel;
     InvitationStatus invitationStatus;
+    UUID userId;
 }

@@ -38,4 +38,5 @@ public interface MatchService {
     Match createAdditionalMatch(UUID tournamentId, AdditionalMatchDTO additionalMatchDTO);
 
     Match publishResult(UUID matchId);
+
 }

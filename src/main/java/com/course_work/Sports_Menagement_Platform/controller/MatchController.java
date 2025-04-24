@@ -31,11 +31,12 @@ public class MatchController {
     private final TeamService teamService;
     private final UserService userService;
     private final AfterMatchPenaltyService afterMatchPenaltyService;
+    private final GettingTeamsForPlayOffService gettingTeamsForPlayOffService;
 
     public MatchController(MatchService matchService, StageService stageService,
                            TournamentService tournamentService, GoalService goalService,
                            SlotService slotService, TeamService teamService, UserService userService,
-                           AfterMatchPenaltyService afterMatchPenaltyService) {
+                           AfterMatchPenaltyService afterMatchPenaltyService, GettingTeamsForPlayOffService gettingTeamsForPlayOffService) {
         this.matchService = matchService;
         this.stageService = stageService;
         this.tournamentService = tournamentService;
@@ -44,6 +45,7 @@ public class MatchController {
         this.teamService = teamService;
         this.userService = userService;
         this.afterMatchPenaltyService = afterMatchPenaltyService;
+        this.gettingTeamsForPlayOffService = gettingTeamsForPlayOffService;
     }
 
 
@@ -100,7 +102,6 @@ public class MatchController {
             return "redirect:/home";
         }
         Map<Group, List<Match>> matches = matchService.createGroupMatchIfNotCreated(stageId);
-        // TODO: проверка, что группы внесены корректно (одна команда в одной группе)
 
         StageStatus stageStatus = stageService.getStageStatus(stage);
         if (stageStatus != StageStatus.TEAMS_KNOWN) {
@@ -121,6 +122,7 @@ public class MatchController {
 
     @PostMapping("/fill_group_stage/{stageId}")
     public String fillGroupStagePost(@PathVariable UUID stageId, Model model, @AuthenticationPrincipal User user, RedirectAttributes redirectAttributes, @RequestParam Map<String, String> slotAssignments) {
+        // TODO: проверка, что группы внесены корректно (одна команда в одной группе)
         Map<UUID, UUID> assignments = slotAssignments.entrySet().stream()
                 .filter(entry -> !entry.getValue().isEmpty())
                 .collect(Collectors.toMap(
@@ -148,7 +150,7 @@ public class MatchController {
             model.addAttribute("error", "Настройка расписания этапа недоступна");
             return "redirect:/home";
         }
-        List<Team> teams = stageService.getTeamsForPlatOffStage(stage);
+        List<Team> teams = gettingTeamsForPlayOffService.getTeamsForPlayOffStage(stage);
         List<Match> matches = stage.getMatches();
         List<Slot> availableSlots = slotService.getAllSlotsForStage(stage);
         model.addAttribute("matches", matches);

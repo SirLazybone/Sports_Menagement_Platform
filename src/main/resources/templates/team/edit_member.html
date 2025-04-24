@@ -7,7 +7,7 @@
 <body>
 <h3 th:text="${user_team.user.name + ' ' + user_team.user.surname}"></h3>
 
-<div th:if="${user_team.isCap}"></div>
+<div th:if="${user_team.isCap && user_team.user.id != userId}"></div>
 
 <a th:href="@{/edit_user_team/remove_as_cap/{userTeamId}(userTeamId=${user_team.id})}" th:text="'Забрать права капитана'"></a>
 
@@ -38,7 +38,7 @@
 
     </div>
 
-<div th:if = "${userId == user_team.user.id}">
+<div th:if = "${userId == user_team.user.id && !isOnlyCap}">
     <a th:href="@{/edit_user_team/leave/{userTeamId}(userTeamId=${user_team.id})}" th:text="'Покинуть команду'"></a>
 
 </div>

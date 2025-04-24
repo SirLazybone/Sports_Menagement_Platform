@@ -1,12 +1,11 @@
 package com.course_work.Sports_Menagement_Platform.service.impl;
 
-import com.course_work.Sports_Menagement_Platform.data.enums.ApplicationStatus;
 import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.AdditionalMatchDTO;
 import com.course_work.Sports_Menagement_Platform.dto.MatchDTO;
 import com.course_work.Sports_Menagement_Platform.repositories.MatchRepository;
+import com.course_work.Sports_Menagement_Platform.repositories.StageRepository;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.*;
-import jakarta.transaction.Transactional;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
@@ -20,15 +19,18 @@ public class MatchServiceImpl implements MatchService {
     private final UserService userService;
     private final StageService stageService;
     private final SlotService slotService;
+    private final StageRepository stageRepository;
+
 
     public MatchServiceImpl(MatchRepository matchRepository, TeamService teamService,
                             UserService userService, StageService stageService,
-                            SlotService slotService, GroupService groupService) {
+                            SlotService slotService, GroupService groupService, StageRepository stageRepository, AfterMatchPenaltyService afterMatchPenaltyService) {
         this.matchRepository = matchRepository;
         this.teamService = teamService;
         this.userService = userService;
         this.stageService = stageService;
         this.slotService = slotService;
+        this.stageRepository = stageRepository;
     }
 
     @Override
@@ -212,6 +214,19 @@ public class MatchServiceImpl implements MatchService {
     public Match publishResult(UUID matchId) {
         Match match = matchRepository.findById(matchId).orElseThrow(() -> new RuntimeException("Нет такого матча"));
         match.setResultPublished(true);
+        if (match.getStage().getBestPlace() > 0 && match.getStage().getMatches().stream().allMatch(match1 -> match1.isResultPublished())) {
+            int bestPlace = match.getStage().getBestPlace();
+            int worstPlace = match.getStage().getWorstPlace();
+            int worstNew = (bestPlace + worstPlace) / 2;
+            int bestNew = worstNew + 1;
+            if (worstNew == bestPlace) {
+                Stage stage1 = Stage.builder().isPublished(false).bestPlace(bestPlace).worstPlace(worstNew).tournament(match.getStage().getTournament()).build();
+                Stage stage2 = Stage.builder().isPublished(false).bestPlace(bestNew).worstPlace(worstPlace).tournament(match.getStage().getTournament()).build();
+                stageRepository.save(stage1);
+                stageRepository.save(stage2);
+            }
+        }
+
         return matchRepository.save(match);
     }
 

@@ -83,6 +83,8 @@ public class TeamController {
         }
         Team team = teamService.getById(id);
         model.addAttribute("teamId", team.getId());
+        model.addAttribute("userId",  user != null ? user.getId() : "");
+
         model.addAttribute("team", TeamDTO.builder()
                 .name(team.getName())
                 .sport(team.getSport())

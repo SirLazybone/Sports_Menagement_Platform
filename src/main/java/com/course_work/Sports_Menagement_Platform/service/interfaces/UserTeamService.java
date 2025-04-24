@@ -22,4 +22,6 @@ public interface UserTeamService {
 
     List<UserTeam> findByUserId(UUID id);
 
+    public boolean isOnlyCap(UserTeam userTeam);
+
 }
