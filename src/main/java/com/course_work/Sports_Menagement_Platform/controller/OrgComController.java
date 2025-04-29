@@ -7,6 +7,8 @@ import com.course_work.Sports_Menagement_Platform.data.models.User;
 import com.course_work.Sports_Menagement_Platform.data.models.UserOrgCom;
 
 import com.course_work.Sports_Menagement_Platform.dto.*;
+import com.course_work.Sports_Menagement_Platform.exception.AccessDeniedException;
+import com.course_work.Sports_Menagement_Platform.service.impl.AccessService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.OrgComService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.UserOrgComService;
@@ -31,11 +33,15 @@ public class OrgComController {
     private final UserOrgComService userOrgComService;
     private final TournamentService tournamentService;
 
-    public OrgComController(OrgComService orgComService, UserService userService, UserOrgComService userOrgComService, TournamentService tournamentService) {
+    private final AccessService accessService;
+
+    public OrgComController(OrgComService orgComService, UserService userService, UserOrgComService userOrgComService,
+                            TournamentService tournamentService, AccessService accessService) {
         this.orgComService = orgComService;
         this.userService = userService;
         this.userOrgComService = userOrgComService;
         this.tournamentService = tournamentService;
+        this.accessService = accessService;
     }
 
     @GetMapping("/new")
@@ -70,7 +76,14 @@ public class OrgComController {
     }
 
     @GetMapping("/create_invitation/{orgComId}")
-    public String createInvitation(@PathVariable UUID orgComId, Model model) {
+    public String createInvitation(@PathVariable UUID orgComId, Model model, @AuthenticationPrincipal User user) {
+        try {
+            if (!accessService.isUserChiefOfOrgCom(user.getId(), orgComId)) {
+                throw new AccessDeniedException("У вас нет доступа");
+            }
+        } catch (RuntimeException e) {
+            throw new AccessDeniedException("У вас нет доступа");
+        }
         model.addAttribute("invitation", new InvitationOrgComDTO());
         model.addAttribute("orgComId", orgComId);
         return "org_com/new_invitation";
@@ -131,6 +144,13 @@ public class OrgComController {
 
     @GetMapping("/view/{id}")
     public String viewOrgCom(@PathVariable UUID id, Model model, @AuthenticationPrincipal User user) {
+        try {
+            if (!accessService.isUserMemberOfOrgCom(user.getId(), id)) {
+                throw new AccessDeniedException("У вас нет доступа");
+            }
+        } catch (RuntimeException e) {
+            throw new AccessDeniedException("У вас нет доступа");
+        }
         List<UserOrgComDTO> list = orgComService.getAllUsersByOrgComId(id);
         List<Tournament> tournaments = tournamentService.getAllTournamentsOfOrgCom(id);
         if (list == null || list.isEmpty()) {
@@ -138,7 +158,12 @@ public class OrgComController {
             model.addAttribute("members", list);
             return "org_com/view";
         }
-        Org orgRole = orgComService.getOrgRoleByUserAndOrgCom(user.getId(), id);
+        Org orgRole = Org.NONE;
+        try {
+            orgRole = orgComService.getOrgRoleByUserAndOrgCom(user.getId(), id);
+        } catch (RuntimeException e) {
+            throw new AccessDeniedException("У вас нет доступа");
+        }
         model.addAttribute("members", list);
         model.addAttribute("role", orgRole);
         model.addAttribute("orgComId", id);
@@ -184,7 +209,14 @@ public class OrgComController {
     }
 
     @GetMapping("/edit/{orgComId}")
-    public String editOrgCom(@PathVariable UUID orgComId, Model model) {
+    public String editOrgCom(@PathVariable UUID orgComId, Model model, @AuthenticationPrincipal User user) {
+        try {
+            if (!accessService.isUserChiefOfOrgCom(user.getId(), orgComId)) {
+                throw new AccessDeniedException("У вас нет доступа");
+            }
+        } catch (RuntimeException e) {
+            throw new AccessDeniedException("У вас нет доступа");
+        }
         model.addAttribute("orgCom", new OrgComDTO());
         model.addAttribute("orgComId", orgComId);
         return "org_com/edit";
@@ -192,7 +224,14 @@ public class OrgComController {
 
 
     @GetMapping("/tournaments/{orgComId}")
-    public String showTournaments(@PathVariable UUID orgComId, Model model) {
+    public String showTournaments(@PathVariable UUID orgComId, Model model, @AuthenticationPrincipal User user) {
+        try {
+            if (!accessService.isUserMemberOfOrgCom(user.getId(), orgComId)) {
+                throw new AccessDeniedException("У вас нет доступа");
+            }
+        } catch (RuntimeException e) {
+            throw new AccessDeniedException("У вас нет доступа");
+        }
         List<UserOrgCom> userOrgComs = userOrgComService.getUsersOrgComByOrgComId(orgComId);
         List<Tournament> tournaments = new ArrayList<>();
         for (UserOrgCom userOrgCom : userOrgComs) {

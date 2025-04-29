@@ -3,6 +3,8 @@ package com.course_work.Sports_Menagement_Platform.controller;
 import com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus;
 import com.course_work.Sports_Menagement_Platform.data.models.User;
 import com.course_work.Sports_Menagement_Platform.data.models.UserTeam;
+import com.course_work.Sports_Menagement_Platform.exception.AccessDeniedException;
+import com.course_work.Sports_Menagement_Platform.service.impl.AccessService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.UserTeamService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -19,13 +21,22 @@ import java.util.UUID;
 @RequestMapping("/edit_user_team")
 public class UserTeamController {
     private final UserTeamService userTeamService;
+    private final AccessService accessService;
 
-    public UserTeamController(UserTeamService userTeamService) {
+    public UserTeamController(UserTeamService userTeamService, AccessService accessService) {
         this.userTeamService = userTeamService;
+        this.accessService = accessService;
     }
 
     @GetMapping("/{userTeamId}")
     public String getForm(@PathVariable UUID userTeamId, Model model, @AuthenticationPrincipal User user) {
+        try {
+            if (!accessService.isUserCap(userTeamId)) {
+                throw new AccessDeniedException("У вас нет доступа");
+            }
+        } catch (RuntimeException e) {
+            throw new AccessDeniedException("У вас нет доступа");
+        }
         UserTeam userTeam = userTeamService.findById(userTeamId);
         model.addAttribute("user_team", userTeam);
         model.addAttribute("userId", user.getId());

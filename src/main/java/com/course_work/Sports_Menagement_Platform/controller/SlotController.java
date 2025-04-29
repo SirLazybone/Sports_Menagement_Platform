@@ -5,6 +5,9 @@ import com.course_work.Sports_Menagement_Platform.data.models.Slot;
 import com.course_work.Sports_Menagement_Platform.data.models.User;
 import com.course_work.Sports_Menagement_Platform.dto.SlotCreationDTO;
 import com.course_work.Sports_Menagement_Platform.dto.SlotDTO;
+import com.course_work.Sports_Menagement_Platform.exception.AccessDeniedException;
+import com.course_work.Sports_Menagement_Platform.exception.ResourceNotFoundException;
+import com.course_work.Sports_Menagement_Platform.service.impl.AccessService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.LocationService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.SlotService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
@@ -25,14 +28,31 @@ import java.util.stream.Collectors;
 public class SlotController {
     private final SlotService slotService;
     private final LocationService locationService;
+    private final TournamentService tournamentService;
+    private final AccessService accessService;
 
-    public SlotController(SlotService slotService, LocationService locationService, TournamentService tournamentService) {
+    public SlotController(SlotService slotService, LocationService locationService,
+                          TournamentService tournamentService, AccessService accessService) {
         this.slotService = slotService;
         this.locationService = locationService;
+        this.tournamentService = tournamentService;
+        this.accessService = accessService;
     }
 
     @GetMapping("/all/{tournamentId}")
     public String allSlots(Model model, @PathVariable UUID tournamentId, @AuthenticationPrincipal User user) {
+        try {
+            tournamentService.getById(tournamentId);
+        } catch (RuntimeException e) {
+            throw new ResourceNotFoundException("Нет такого турнира");
+        }
+        try {
+            if (!accessService.isUserOrgOfTournament(user.getId(), tournamentId)) {
+                throw new AccessDeniedException("У вас нет доступа");
+            }
+        } catch (RuntimeException e) {
+            throw new AccessDeniedException("У вас нет доступа");
+        }
         List<Slot> slots = slotService.getAllByTournament(tournamentId);
         List<SlotDTO> slotDTOS = slots.stream().map(i -> SlotDTO.builder().id(i.getId()).
                 time(i.getTime()).date(i.getDate()).hasMatches(!i.getMatches().isEmpty()).

@@ -59,7 +59,8 @@
                     </div>
                     <div class="col-md-4 text-center">
                         <h5 th:if="${match.isResultPublished}">
-                            <span th:text="${#lists.size(team1Goals)}"></span> - <span th:text="${#lists.size(team2Goals)}"></span>
+                            <span th:unless="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${#lists.size(team1Goals)}"></span> - <span th:unless="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${#lists.size(team2Goals)}"></span>
+                            <span th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${team1sets}"></span> - <span th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL" th:text="${team2sets}"></span>
                         </h5>
                         <h5 th:unless="${match.isResultPublished}">VS</h5>
                     </div>

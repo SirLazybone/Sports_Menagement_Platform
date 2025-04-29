@@ -4,7 +4,6 @@ import com.course_work.Sports_Menagement_Platform.data.enums.ApplicationStatus;
 import com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus;
 import com.course_work.Sports_Menagement_Platform.data.enums.Sport;
 import com.course_work.Sports_Menagement_Platform.data.enums.StageStatus;
-import com.course_work.Sports_Menagement_Platform.data.enums.Sport;
 import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.*;
 import com.course_work.Sports_Menagement_Platform.mapper.TournamentMapper;
@@ -164,6 +163,13 @@ public class TournamentServiceImpl implements TournamentService {
         Tournament tournament = getById(tournamentId);
         OrgCom orgCom = tournament.getUserOrgCom().getOrgCom();
         return orgComService.isUserOfOrgComRef(userId, orgCom.getId());
+    }
+
+    @Override
+    public boolean isUserOrgOfTournament(UUID userId, UUID tournamentId) {
+        Tournament tournament = getById(tournamentId);
+        OrgCom orgCom = tournament.getUserOrgCom().getOrgCom();
+        return orgComService.isUserOfOrgComOrg(userId, orgCom.getId());
     }
 
     @Override

@@ -6,6 +6,7 @@ import com.course_work.Sports_Menagement_Platform.data.models.User;
 import com.course_work.Sports_Menagement_Platform.data.models.UserTeam;
 import com.course_work.Sports_Menagement_Platform.dto.ApplicationDTO;
 import com.course_work.Sports_Menagement_Platform.dto.RatingLineDTO;
+import com.course_work.Sports_Menagement_Platform.exception.ResourceNotFoundException;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TeamService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.UserTeamService;
@@ -117,6 +118,11 @@ public class TournamentTeamController {
 
     @GetMapping("/rating/{tournamentId}")
     public String rating(@PathVariable UUID tournamentId, @AuthenticationPrincipal User user, Model model) {
+        try {
+            tournamentService.getById(tournamentId);
+        } catch (RuntimeException e) {
+            throw new ResourceNotFoundException("Нет такого турнира");
+        }
         List<TeamTournament> teamTournamentList = tournamentService.getCurrentParticipants(tournamentId);
 
         List<RatingLineDTO> ratingLineDTOS = tournamentService.getRating(teamTournamentList);

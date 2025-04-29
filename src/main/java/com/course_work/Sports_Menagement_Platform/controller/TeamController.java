@@ -4,7 +4,10 @@ import com.course_work.Sports_Menagement_Platform.data.models.Team;
 import com.course_work.Sports_Menagement_Platform.data.models.User;
 import com.course_work.Sports_Menagement_Platform.data.models.UserTeam;
 import com.course_work.Sports_Menagement_Platform.dto.*;
+import com.course_work.Sports_Menagement_Platform.exception.AccessDeniedException;
+import com.course_work.Sports_Menagement_Platform.exception.ResourceNotFoundException;
 import com.course_work.Sports_Menagement_Platform.service.FileStorageService;
+import com.course_work.Sports_Menagement_Platform.service.impl.AccessService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TeamService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.UserService;
 import jakarta.validation.Valid;
@@ -24,11 +27,14 @@ public class TeamController {
     private final UserService userService;
     private final TeamService teamService;
     private final FileStorageService fileStorageService;
+    private final AccessService accessService;
 
-    public TeamController(UserService userService, TeamService teamService, FileStorageService fileStorageService) {
+    public TeamController(UserService userService, TeamService teamService,
+                          FileStorageService fileStorageService, AccessService accessService) {
         this.userService = userService;
         this.teamService = teamService;
         this.fileStorageService = fileStorageService;
+        this.accessService = accessService;
     }
 
     @GetMapping("/new")
@@ -76,6 +82,11 @@ public class TeamController {
     @GetMapping("/view/{id}")
     public String viewTeam(@PathVariable UUID id, Model model, @AuthenticationPrincipal User user) {
         try {
+            teamService.getById(id);
+        } catch (RuntimeException e) {
+            throw new ResourceNotFoundException("Такой команды нет");
+        }
+        try {
             List<UserTeamDTO> list = teamService.getAllUserByTeamDTO(id);
             model.addAttribute("members", list);
         } catch (RuntimeException e) {
@@ -102,7 +113,14 @@ public class TeamController {
     }
 
     @GetMapping("/create_invitation/{teamId}")
-    public String createInvitation(@PathVariable UUID teamId, Model model) {
+    public String createInvitation(@PathVariable UUID teamId, Model model, @AuthenticationPrincipal User user) {
+        try {
+            if (!accessService.isUserCapOfTeam(user.getId(), teamId)) {
+                throw new AccessDeniedException("У вас нет доступа");
+            }
+        } catch (RuntimeException e) {
+            throw new AccessDeniedException("У вас нет доступа");
+        }
         model.addAttribute("invitation", new InvitationTeamDTO());
         model.addAttribute("teamId", teamId);
         return "team/new_invitation";
@@ -193,13 +211,24 @@ public class TeamController {
     }
 
     @GetMapping("/edit/{teamId}")
-    public String editTeam(@PathVariable UUID teamId, Model model) {
-        Team team = teamService.getById(teamId);
-        model.addAttribute("team", TeamDTO.builder()
-                .name(team.getName())
-                .sport(team.getSport())
-                .logo(team.getLogo())
-                .build());
+    public String editTeam(@PathVariable UUID teamId, Model model, @AuthenticationPrincipal User user) {
+        try {
+            if (!accessService.isUserCapOfTeam(user.getId(), teamId)) {
+                throw new AccessDeniedException("У вас нет доступа");
+            }
+        } catch (RuntimeException e) {
+            throw new AccessDeniedException("У вас нет доступа");
+        }
+        try {
+            Team team = teamService.getById(teamId);
+            model.addAttribute("team", TeamDTO.builder()
+                    .name(team.getName())
+                    .sport(team.getSport())
+                    .logo(team.getLogo())
+                    .build());
+        } catch (RuntimeException e) {
+            throw new ResourceNotFoundException("Команда не найдена");
+        }
         return "team/edit_team";
     }
 

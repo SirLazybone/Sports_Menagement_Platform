@@ -1,9 +1,13 @@
 package com.course_work.Sports_Menagement_Platform.controller;
 
 import com.course_work.Sports_Menagement_Platform.data.enums.Org;
+import com.course_work.Sports_Menagement_Platform.data.enums.Sport;
 import com.course_work.Sports_Menagement_Platform.data.enums.StageStatus;
 import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.*;
+import com.course_work.Sports_Menagement_Platform.exception.AccessDeniedException;
+import com.course_work.Sports_Menagement_Platform.exception.ResourceNotFoundException;
+import com.course_work.Sports_Menagement_Platform.service.impl.AccessService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.*;
 import org.springframework.data.util.Pair;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,11 +36,13 @@ public class MatchController {
     private final UserService userService;
     private final AfterMatchPenaltyService afterMatchPenaltyService;
     private final GettingTeamsForPlayOffService gettingTeamsForPlayOffService;
+    private final AccessService accessService;
 
     public MatchController(MatchService matchService, StageService stageService,
                            TournamentService tournamentService, GoalService goalService,
                            SlotService slotService, TeamService teamService, UserService userService,
-                           AfterMatchPenaltyService afterMatchPenaltyService, GettingTeamsForPlayOffService gettingTeamsForPlayOffService) {
+                           AfterMatchPenaltyService afterMatchPenaltyService, GettingTeamsForPlayOffService gettingTeamsForPlayOffService,
+                           AccessService accessService) {
         this.matchService = matchService;
         this.stageService = stageService;
         this.tournamentService = tournamentService;
@@ -46,6 +52,7 @@ public class MatchController {
         this.userService = userService;
         this.afterMatchPenaltyService = afterMatchPenaltyService;
         this.gettingTeamsForPlayOffService = gettingTeamsForPlayOffService;
+        this.accessService = accessService;
     }
 
 
@@ -88,7 +95,12 @@ public class MatchController {
 
     @PostMapping("/new_additional/{tournamentId}")
     public String additionalMatchesPost(@PathVariable UUID tournamentId, Model model, @AuthenticationPrincipal User user, @ModelAttribute AdditionalMatchDTO additionalMatchDTO) {
-        matchService.createAdditionalMatch(tournamentId, additionalMatchDTO);
+        try {
+            tournamentService.getById(tournamentId);
+            matchService.createAdditionalMatch(tournamentId, additionalMatchDTO);
+        } catch (RuntimeException e) {
+            throw new ResourceNotFoundException("Чемпионат не найден");
+        }
         return "redirect:/match/additional/" + tournamentId.toString();
     }
 
@@ -100,6 +112,20 @@ public class MatchController {
         if (stage.getBestPlace() != 0) {
             model.addAttribute("error", "Выбран не групповой этап");
             return "redirect:/home";
+        }
+        try {
+            stageService.getStageById(stageId);
+        } catch (RuntimeException e) {
+            throw new ResourceNotFoundException("Этап не найден");
+        }
+        boolean isUserOrg = false;
+        try {
+            isUserOrg = accessService.isUserOrgOfTournament(user.getId(), stage.getTournament().getId());
+             if (!isUserOrg) {
+                 throw new AccessDeniedException("У вас нет доступа");
+             }
+        } catch (RuntimeException e) {
+            throw new AccessDeniedException("У вас нет доступа");
         }
         Map<Group, List<Match>> matches = matchService.createGroupMatchIfNotCreated(stageId);
 
@@ -115,14 +141,27 @@ public class MatchController {
         model.addAttribute("stageId", stageId);
         model.addAttribute("tournamentId", stage.getTournament().getId());
 
-        model.addAttribute("isUserChief", true); // TODO: исправить
+        model.addAttribute("isUserOrg", isUserOrg);
 
         return "match/fill_group";
     }
 
     @PostMapping("/fill_group_stage/{stageId}")
     public String fillGroupStagePost(@PathVariable UUID stageId, Model model, @AuthenticationPrincipal User user, RedirectAttributes redirectAttributes, @RequestParam Map<String, String> slotAssignments) {
-        // TODO: проверка, что группы внесены корректно (одна команда в одной группе)
+        Set<UUID> assignedTeams = new HashSet<>();
+        for (Map.Entry<String, String> entry : slotAssignments.entrySet()) {
+            if (!entry.getValue().isEmpty()) {
+                UUID matchId = UUID.fromString(entry.getKey().substring(
+                        entry.getKey().indexOf('[') + 1,
+                        entry.getKey().indexOf(']')));
+                Match match = matchService.getById(matchId);
+                if (!assignedTeams.add(match.getTeam1().getId()) || !assignedTeams.add(match.getTeam2().getId())) {
+                    redirectAttributes.addFlashAttribute("error", "Одна команда не может играть в нескольких матчах одновременно");
+                    return "redirect:/match/fill_group_stage/" + stageId.toString();
+                }
+            }
+        }
+
         Map<UUID, UUID> assignments = slotAssignments.entrySet().stream()
                 .filter(entry -> !entry.getValue().isEmpty())
                 .collect(Collectors.toMap(
@@ -135,12 +174,25 @@ public class MatchController {
         matchService.setSlots(stageId, assignments);
 
         return "redirect:/match/fill_group_stage/" + stageId.toString();
-
     }
 
     @GetMapping("/fill_playoff_stage/{stageId}")
     public String fillPlayOffStage(@PathVariable UUID stageId, Model model, @AuthenticationPrincipal User user, RedirectAttributes redirectAttributes) {
-        Stage stage = stageService.getStageById(stageId);
+        Stage stage;
+        try {
+            stage = stageService.getStageById(stageId);
+        } catch (RuntimeException e) {
+            throw new ResourceNotFoundException("Этап не найден");
+        }
+        boolean isUserOrg = false;
+        try {
+            isUserOrg = accessService.isUserOrgOfTournament(user.getId(), stage.getTournament().getId());
+            if (!isUserOrg) {
+                throw new AccessDeniedException("У вас нет доступа");
+            }
+        } catch (RuntimeException e) {
+            throw new AccessDeniedException("У вас нет доступа");
+        }
         if (stage.getBestPlace() <= 0) {
             model.addAttribute("error", "Выбран не этап плей-оффа");
             return "redirect:/home";
@@ -159,7 +211,7 @@ public class MatchController {
         model.addAttribute("slots", availableSlots);
         model.addAttribute("stageId", stageId);
         model.addAttribute("isPublished", stage.isPublished());
-        model.addAttribute("isUserChief", true);  // TODO: исправить
+        model.addAttribute("isUserChief", isUserOrg);
 
         model.addAttribute("notFilledMatches", matches.size());
         model.addAttribute("matchesCount", (stage.getWorstPlace() - stage.getBestPlace() + 1) / 2 - 1);
@@ -488,30 +540,31 @@ public class MatchController {
     @PostMapping("/publish/{matchId}")
     public String publishResults(@PathVariable("matchId") UUID matchId, Model model) {
         try {
-            Match match = matchService.publishResult(matchId);
+            Match match = matchService.getById(matchId);
+            matchService.publishResult(matchId);
         } catch (RuntimeException e) {
             model.addAttribute("error", "Ошибка при опубликовывании результатов матча: " + e.getMessage());
+            throw new ResourceNotFoundException("Матч не найден");
         }
         return "redirect:/match/view/" + matchId.toString();
     }
 
     @GetMapping("/view/{matchId}")
     public String showMatch(@PathVariable("matchId") UUID matchId, Model model, @AuthenticationPrincipal User user) {
-        Match match = matchService.getById(matchId);
-        Stage stage = match.getStage();
-        Tournament tournament = match.getStage().getTournament();
-        boolean isRef;
-        boolean isOrg;
         try {
-            isRef = tournamentService.isUserRefOfTournament(user.getId(), tournament.getId());
-            isOrg = tournamentService.isUserChiefOfTournament(user.getId(), tournament.getId());
-        } catch (RuntimeException e) {
-            isRef = false;
-            isOrg = false;
-        }
+            Match match = matchService.getById(matchId);
+            Stage stage = match.getStage();
+            Tournament tournament = match.getStage().getTournament();
+            boolean isRef;
+            boolean isOrg;
+            try {
+                isRef = tournamentService.isUserRefOfTournament(user.getId(), tournament.getId());
+                isOrg = tournamentService.isUserChiefOfTournament(user.getId(), tournament.getId());
+            } catch (RuntimeException e) {
+                isRef = false;
+                isOrg = false;
+            }
 
-        
-        try {
             List<Goal> goals = goalService.getGoalsByMatch(matchId);
             List<Goal> team1Goals = goals.stream()
                 .filter(x -> x.getTeam().getId().equals(match.getTeam1().getId()))
@@ -520,7 +573,6 @@ public class MatchController {
                 .filter(x -> x.getTeam().getId().equals(match.getTeam2().getId()))
                 .collect(Collectors.toList());
 
-            // Get after-match penalties
             List<AfterMatchPenalty> afterMatchPenalties = afterMatchPenaltyService.getPenaltiesByMatch(matchId);
             List<AfterMatchPenalty> team1Penalties = afterMatchPenalties.stream()
                 .filter(x -> x.getTeam().getId().equals(match.getTeam1().getId()))
@@ -529,13 +581,9 @@ public class MatchController {
                 .filter(x -> x.getTeam().getId().equals(match.getTeam2().getId()))
                 .collect(Collectors.toList());
 
-            // Get team members for goal forms
             Map<UUID, List<User>> players = matchService.getTeamMembersMap(match.getTeam1(), match.getTeam2());
-
-            // Get available slots for organization
             List<Slot> availableSlots = slotService.getAllNotInUse();
 
-            // Create simplified data structures for JavaScript
             Map<String, List<Map<String, String>>> simplifiedPlayersMap = new HashMap<>();
             for (Map.Entry<UUID, List<User>> entry : players.entrySet()) {
                 List<Map<String, String>> simplifiedUsers = new ArrayList<>();
@@ -559,7 +607,24 @@ public class MatchController {
             team2Map.put("name", match.getTeam2().getName());
             simplifiedTeams.add(team2Map);
 
-            // Add all necessary attributes to the model
+            if (stage.getTournament().getSport().equals(Sport.VOLLEYBALL)) {
+                int team1sets = 0;
+                int team2sets = 0;
+
+                for (int i = 0; i < 5; i++) {
+                    int setNum = i;
+                    int count1 = goals.stream().filter(x -> x.getSet_number() == setNum + 1 && x.getTeam().getId().equals(match.getTeam1().getId())).toList().size();
+                    int count2 = goals.stream().filter(x -> x.getSet_number() == setNum + 1 && x.getTeam().getId().equals(match.getTeam2().getId())).toList().size();
+                    if (count1 > count2) {
+                        team1sets++;
+                    } else {
+                        team2sets++;
+                    }
+                }
+                model.addAttribute("team1sets", team1sets);
+                model.addAttribute("team2sets", team2sets);
+            }
+
             model.addAttribute("match", match);
             model.addAttribute("stage", stage);
             model.addAttribute("tournament", tournament);
@@ -576,9 +641,8 @@ public class MatchController {
             model.addAttribute("afterMatchPenaltyDTO", new AfterMatchPenaltyDTO());
 
             return "match/view";
-        } catch (Exception e) {
-            model.addAttribute("error", "Error loading match data: " + e.getMessage());
-            return "redirect:/home";
+        } catch (RuntimeException e) {
+            throw new ResourceNotFoundException("Матч не найден");
         }
     }
 }

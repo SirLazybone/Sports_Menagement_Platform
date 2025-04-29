@@ -36,6 +36,9 @@ public interface TournamentService {
     List<Team> getAllTeamsByTournamentId(UUID tournamentId);
 
     List<Tournament> getAllTournamentsByUserOrgComId(UUID userOrgComId);
+
+    boolean isUserOrgOfTournament(UUID userId, UUID tournamentId);
+
     boolean isUserMemberOfOrgCom(UUID userId, OrgCom orgCom);
 
     List<Tournament> getAllTournamentsOfOrgCom(UUID id);

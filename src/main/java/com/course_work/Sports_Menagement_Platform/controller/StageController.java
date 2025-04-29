@@ -4,6 +4,9 @@ import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.GroupDTO;
 import com.course_work.Sports_Menagement_Platform.dto.GroupsDTO;
 import com.course_work.Sports_Menagement_Platform.dto.StageCreationDTO;
+import com.course_work.Sports_Menagement_Platform.exception.AccessDeniedException;
+import com.course_work.Sports_Menagement_Platform.exception.ResourceNotFoundException;
+import com.course_work.Sports_Menagement_Platform.service.impl.AccessService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.GroupService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.MatchService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.StageService;
@@ -29,21 +32,37 @@ public class StageController {
     private final MatchService matchService;
 
     private final GroupService groupService;
+    private final AccessService accessService;
 
     public StageController(StageService stageService, TournamentService tournamentService,
-                           MatchService matchService, GroupService groupService) {
+                           MatchService matchService, GroupService groupService,
+                           AccessService accessService) {
         this.stageService = stageService;
         this.tournamentService = tournamentService;
         this.matchService = matchService;
         this.groupService = groupService;
+        this.accessService = accessService;
     }
 
     // Разводящий метод для стейжей
     @GetMapping("/view/{stageId}")
     public String viewStage(@PathVariable UUID stageId, Model model, @AuthenticationPrincipal User user) {
-        Stage stage = stageService.getStageById(stageId);
+        Stage stage;
+        try {
+            stage = stageService.getStageById(stageId);
+        } catch (RuntimeException e) {
+            throw new ResourceNotFoundException("Этап не найден");
+        }
         if (stage.isPublished()) {
             return "redirect:/stage/info/" + stage.getId().toString();
+        } else {
+            try {
+                if (!accessService.isUserOrgOfTournament(user.getId(), stage.getTournament().getId())) {
+                    throw new AccessDeniedException("Пока этап не опубликован, у вас нет доступа к просмотру");
+                }
+            } catch (RuntimeException e) {
+                throw new AccessDeniedException("Пока этап не опубликован, у вас нет доступа к просмотру");
+            }
         }
         if (stage.getBestPlace() == 0) {
             return "redirect:/match/fill_group_stage/" + stage.getId().toString();
@@ -93,22 +112,22 @@ public class StageController {
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/create_stage/{tournamentId}")
     public String createStage(@PathVariable UUID tournamentId, @Valid @ModelAttribute("stage") StageCreationDTO stageDTO, BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
-        if (!tournamentService.isUserChiefOfTournament(user.getId(), tournamentId)) {
-            redirectAttributes.addFlashAttribute("error", "Only chief of the tournament can create stage");
-            return "redirect:/tournament/view/" + tournamentId.toString();
-        }
-
-        model.addAttribute("tournamentId", tournamentId);
-        if (bindingResult.hasErrors()) {
-            return "stage/create_stage";
-        }
-
         try {
+            tournamentService.getById(tournamentId);
+            if (!tournamentService.isUserChiefOfTournament(user.getId(), tournamentId)) {
+                redirectAttributes.addFlashAttribute("error", "Only chief of the tournament can create stage");
+                return "redirect:/tournament/view/" + tournamentId.toString();
+            }
+
+            model.addAttribute("tournamentId", tournamentId);
+            if (bindingResult.hasErrors()) {
+                return "stage/create_stage";
+            }
+
             stageService.createStage(stageDTO, tournamentId);
         } catch (RuntimeException e) {
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            throw new ResourceNotFoundException("Чемпионат не найден");
         }
-
         return "redirect:/stage/create_stage/" + tournamentId.toString();
     }
 
@@ -182,6 +201,18 @@ public class StageController {
 
     @GetMapping("/manage_groups/{tournamentId}")
     public String manageGroups(@PathVariable UUID tournamentId, Model model, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user, @RequestParam(defaultValue = "") String savingError) {
+        try {
+            tournamentService.getById(tournamentId);
+        } catch (RuntimeException e) {
+            throw new ResourceNotFoundException("Чемпионат не найден");
+        }
+        try {
+            if (!accessService.isUserOrgOfTournament(user.getId(), tournamentId)) {
+                throw new AccessDeniedException("У вас нет доступа");
+            }
+        } catch (RuntimeException e) {
+            throw new AccessDeniedException("У вас нет доступа");
+        }
         List<Group> groups = groupService.getGroups(tournamentId);
         List<Team> teams = tournamentService.getAllTeamsByTournamentId(tournamentId);
         Map<String, List<Pair<UUID, String>>> groupsMap = new HashMap<>();
@@ -324,8 +355,7 @@ public class StageController {
             model.addAttribute("matches", matchesMap.get(stage.getId()));
             model.addAttribute("tournament", stage.getTournament());
         } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
-            return "tournament/show_all";
+            throw new ResourceNotFoundException("Этап не найден");
         }
         return "stage/view";
     }

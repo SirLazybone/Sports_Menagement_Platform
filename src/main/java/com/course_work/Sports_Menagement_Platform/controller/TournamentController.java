@@ -4,11 +4,11 @@ import com.course_work.Sports_Menagement_Platform.data.enums.Org;
 import com.course_work.Sports_Menagement_Platform.data.enums.StageStatus;
 import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.*;
+import com.course_work.Sports_Menagement_Platform.exception.AccessDeniedException;
+import com.course_work.Sports_Menagement_Platform.exception.ResourceNotFoundException;
 import com.course_work.Sports_Menagement_Platform.service.FileStorageService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.CityService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.MatchService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.StageService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
+import com.course_work.Sports_Menagement_Platform.service.impl.AccessService;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.*;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -36,12 +36,17 @@ public class TournamentController {
     private final CityService cityService;
     private final FileStorageService fileStorageService;
 
-    public TournamentController(TournamentService tournamentService, StageService stageService, MatchService matchService, CityService cityService, FileStorageService fileStorageService) {
+    private final AccessService accessService;
+
+    public TournamentController(TournamentService tournamentService, StageService stageService,
+                                MatchService matchService, CityService cityService,
+                                FileStorageService fileStorageService, AccessService accessService) {
         this.tournamentService = tournamentService;
         this.stageService = stageService;
         this.matchService = matchService;
         this.cityService = cityService;
         this.fileStorageService = fileStorageService;
+        this.accessService = accessService;
     }
 
     @GetMapping("/search")
@@ -79,7 +84,15 @@ public class TournamentController {
     }
 
     @GetMapping("/create/{orgComId}")
-    public String createTournament(Model model, @PathVariable UUID orgComId) {
+    public String createTournament(Model model, @PathVariable UUID orgComId, @AuthenticationPrincipal User user) {
+
+        try {
+            if (!accessService.isUserChiefOfOrgCom(user.getId(), orgComId)) {
+                throw new AccessDeniedException("У вас нет доступа");
+            }
+        } catch (RuntimeException e) {
+            throw new AccessDeniedException("У вас нет доступа");
+        }
         model.addAttribute("tournament", new TournamentDTO());
         model.addAttribute("cities", cityService.getCities());
         model.addAttribute("orgComId", orgComId);
@@ -141,17 +154,11 @@ public class TournamentController {
 
             model.addAttribute("isUserOrg", isUserOrg);
             model.addAttribute("isUserChiefOrg", isUserChiefOrg);
-
-
-
             model.addAttribute("tournamentId", id);
             model.addAttribute("registrationOpen", tournament.getRegisterDeadline().isAfter(ChronoLocalDate.from(LocalDateTime.now())));
         } catch (RuntimeException e) {
-            // TODO: выбросить 404
-            model.addAttribute("error", e.getMessage());
-            return "tournament/show_all";
+            throw new ResourceNotFoundException("Чемпионат не найден");
         }
-
         return "tournament/view";
     }
 
@@ -214,7 +221,14 @@ public class TournamentController {
     }
 
     @GetMapping("/prolong_reg/{tournamentId}")
-    public String prolongReg(@PathVariable("tournamentId") UUID tournamentId, Model model) {
+    public String prolongReg(@PathVariable("tournamentId") UUID tournamentId, Model model, @AuthenticationPrincipal User user) {
+        try {
+            if (!accessService.isUserChiefOfTournament(user.getId(), tournamentId)) {
+                throw new AccessDeniedException("У вас нет доступа");
+            }
+        } catch (RuntimeException e) {
+            throw new AccessDeniedException("У вас нет доступа");
+        }
         model.addAttribute("prolongReg", new ProlongRegDTO());
         return "/tournament/prolong_reg";
     }
@@ -251,17 +265,21 @@ public class TournamentController {
 
     @GetMapping("/edit/{tournamentId}")
     public String editTournament(@PathVariable UUID tournamentId, Model model) {
-        Tournament tournament = tournamentService.getById(tournamentId);
-        model.addAttribute("tournament", TournamentDTO.builder()
-                .name(tournament.getName())
-                .sport(tournament.getSport())
-                .cityName(tournament.getCity().getName())
-                .minMembers(tournament.getMinMembers())
-                .registerDeadline(tournament.getRegisterDeadline())
-                .description(tournament.getDescription())
-                .logo(tournament.getLogo())
-                .build());
-        model.addAttribute("cities", cityService.getCities());
+        try {
+            Tournament tournament = tournamentService.getById(tournamentId);
+            model.addAttribute("tournament", TournamentDTO.builder()
+                    .name(tournament.getName())
+                    .sport(tournament.getSport())
+                    .cityName(tournament.getCity().getName())
+                    .minMembers(tournament.getMinMembers())
+                    .registerDeadline(tournament.getRegisterDeadline())
+                    .description(tournament.getDescription())
+                    .logo(tournament.getLogo())
+                    .build());
+            model.addAttribute("cities", cityService.getCities());
+        } catch (RuntimeException e) {
+            throw new ResourceNotFoundException("Чемпионат не найден");
+        }
         return "tournament/edit";
     }
 

@@ -193,5 +193,11 @@ public class OrgComServiceImpl implements OrgComService {
         return getUserOrgComByUserAndOrgCom(userId, orgComId).getOrgRole().equals(Org.CHIEF);
     }
 
+    @Override
+    public boolean isUserOfOrgComOrg(UUID userId, UUID orgComId) {
+        Org role = getUserOrgComByUserAndOrgCom(userId, orgComId).getOrgRole();
+        return role.equals(Org.CHIEF) || role.equals(Org.ORG);
+    }
+
 
 }

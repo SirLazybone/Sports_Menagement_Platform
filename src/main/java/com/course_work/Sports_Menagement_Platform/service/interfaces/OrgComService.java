@@ -38,4 +38,5 @@ public interface OrgComService {
 
     boolean isUserOfOrgComChief(UUID userId, UUID id);
 
+    boolean isUserOfOrgComOrg(UUID userId, UUID id);
 }

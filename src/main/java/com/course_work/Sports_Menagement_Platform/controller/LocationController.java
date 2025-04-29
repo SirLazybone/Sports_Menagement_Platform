@@ -3,7 +3,11 @@ package com.course_work.Sports_Menagement_Platform.controller;
 import com.course_work.Sports_Menagement_Platform.data.models.Location;
 import com.course_work.Sports_Menagement_Platform.data.models.User;
 import com.course_work.Sports_Menagement_Platform.dto.LocationCreationDTO;
+import com.course_work.Sports_Menagement_Platform.exception.AccessDeniedException;
+import com.course_work.Sports_Menagement_Platform.exception.ResourceNotFoundException;
+import com.course_work.Sports_Menagement_Platform.service.impl.AccessService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.LocationService;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -20,18 +24,35 @@ import java.util.UUID;
 public class LocationController {
 
     private final LocationService locationService;
+    private final AccessService accessService;
+    private final TournamentService tournamentService;
 
-    public LocationController(LocationService locationService) {
+    public LocationController(LocationService locationService, AccessService accessService,
+                              TournamentService tournamentService) {
         this.locationService = locationService;
+        this.accessService = accessService;
+        this.tournamentService = tournamentService;
     }
 
-    @GetMapping("/all/{tournament_id}")
-    public String newLocation(@AuthenticationPrincipal User user, @PathVariable UUID tournament_id, Model model){
-        List<Location> locationList = locationService.getLocationsByTournamentId(tournament_id);
+    @GetMapping("/all/{tournamentId}")
+    public String newLocation(@AuthenticationPrincipal User user, @PathVariable UUID tournamentId, Model model){
+        try {
+            tournamentService.getById(tournamentId);
+        } catch (RuntimeException e) {
+            throw new ResourceNotFoundException("Нет такого турнира");
+        }
+        try {
+            if (!accessService.isUserOrgOfTournament(user.getId(), tournamentId)) {
+                throw new AccessDeniedException("У вас нет доступа");
+            }
+        } catch (RuntimeException e) {
+            throw new AccessDeniedException("У вас нет доступа");
+        }
+        List<Location> locationList = locationService.getLocationsByTournamentId(tournamentId);
         model.addAttribute("locations", locationList);
 
         model.addAttribute("location", new LocationCreationDTO());
-        model.addAttribute("tournament_id", tournament_id);
+        model.addAttribute("tournament_id", tournamentId);
         return "locations/all_locations";
 
     }

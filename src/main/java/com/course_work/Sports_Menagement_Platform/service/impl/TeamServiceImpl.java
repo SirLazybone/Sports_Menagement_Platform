@@ -81,6 +81,12 @@ public class TeamServiceImpl implements TeamService {
     }
 
     @Override
+    public boolean isCapOfUserTeam(UUID userTeamId) {
+        UserTeam userTeam = userTeamRepository.findById(userTeamId).orElseThrow(() -> new RuntimeException("Пользователь не является членом данной команды"));
+        return  userTeam.isCap();
+    }
+
+    @Override
     public List<UserTeam> getActiveInvitations(User user) {
         List<UserTeam> list = userTeamRepository.findByUser(user);
         return list.stream().filter(x -> x.getInvitationStatus() == InvitationStatus.PENDING).toList();
