@@ -67,7 +67,7 @@
                         <td th:text="${member.isCap ? 'Captain' : 'Member'}">Role</td>
                         <td th:text="${member.invitationStatus}">Status</td>
                         <td>
-                            <div th:if="${(isCap && member.invitationStatus == T(com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus).ACCEPTED) || member.userId == userId}">
+                            <div th:if="${(isCap and member.invitationStatus == T(com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus).ACCEPTED) || member.userId == userId}">
                                 <form th:action="@{/edit_user_team/{id}(id = ${member.userTeamId})}" method="get">
                                     <button type="submit">Редактировать</button>
                                 </form>
@@ -76,6 +76,65 @@
                     </tr>
                 </tbody>
             </table>
+        </div>
+
+        <!-- Accepted Tournaments Section -->
+        <div class="mt-4">
+            <h2>Active Tournaments</h2>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Tournament Name</th>
+                            <th>Sport</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="tournament : ${acceptedTeamTournaments}">
+                            <td>
+                                <a th:href="@{/tournament/view/{tournamentId}(tournamentId=${tournament.tournament.id})}" th:text="${tournament.tournament.name}">Tournament Name</a>
+                            </td>
+                            <td th:text="${tournament.tournament.sport}">Sport</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Other Tournaments Section (Visible only to team members) -->
+        <div class="mt-4" th:if="${isUserMember}">
+            <h2>Tournament Applications</h2>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Tournament Name</th>
+                            <th>Sport</th>
+                            <th>Status</th>
+                            <th>Registration Deadline</th>
+                            <th th:if="${isCap}">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="tournament : ${otherTeamTournaments}">
+                            <td>
+                                <a th:href="@{/tournament/view/{tournamentId}(tournamentId=${tournament.tournament.id})}" th:text="${tournament.tournament.name}">Tournament Name</a>
+                            </td>
+                            <td th:text="${tournament.tournament.sport}">Sport</td>
+                            <td th:text="${tournament.applicationStatus}">Application Status</td>
+                            <td th:text="${#temporals.format(tournament.tournament.registerDeadline, 'dd/MM/yyyy')}">Registration Deadline</td>
+                            <td th:if="${isCap}">
+                                <div th:if="${tournament.applicationStatus == T(com.course_work.Sports_Menagement_Platform.data.enums.ApplicationStatus).PENDING and
+                                            today.isBefore(tournament.tournament.registerDeadline)}">
+                                    <form th:action="@{/application/cancel/{tournamentId}/{teamId}(tournament=${tournament.id}, teamId=${teamId})}" method="post">
+                                        <button type="submit" class="btn btn-danger btn-sm">Cancel Application</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <div class="mt-4">

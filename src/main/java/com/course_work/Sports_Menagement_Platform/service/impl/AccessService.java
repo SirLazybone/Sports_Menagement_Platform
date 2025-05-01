@@ -4,6 +4,7 @@ import com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus;
 import com.course_work.Sports_Menagement_Platform.data.models.OrgCom;
 import com.course_work.Sports_Menagement_Platform.data.models.Tournament;
 import com.course_work.Sports_Menagement_Platform.data.models.UserOrgCom;
+import com.course_work.Sports_Menagement_Platform.data.models.UserTeam;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.OrgComService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TeamService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
@@ -58,5 +59,10 @@ public class AccessService {
 
     public boolean isUserCap(UUID userTeamId) {
         return teamService.isCapOfUserTeam(userTeamId);
+    }
+
+    public boolean isUserMemberOfTeam(UUID userId, UUID teamId) {
+        UserTeam userTeam = teamService.getUserTeamByUserAndTeam(userId, teamId);
+        return userTeam.getInvitationStatus().equals(InvitationStatus.ACCEPTED);
     }
 }

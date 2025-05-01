@@ -555,14 +555,29 @@ public class MatchController {
             Match match = matchService.getById(matchId);
             Stage stage = match.getStage();
             Tournament tournament = match.getStage().getTournament();
-            boolean isRef;
-            boolean isOrg;
+            boolean isRef = false;
+            boolean isOrg = false;
+            boolean isCap1 = false;
+            boolean isCap2 = false;
+
             try {
-                isRef = tournamentService.isUserRefOfTournament(user.getId(), tournament.getId());
-                isOrg = tournamentService.isUserChiefOfTournament(user.getId(), tournament.getId());
-            } catch (RuntimeException e) {
-                isRef = false;
-                isOrg = false;
+                isRef = accessService.isUserRefOfTournament(user.getId(), tournament.getId());
+            } catch (RuntimeException ignored) {
+            }
+
+            try {
+                isOrg = accessService.isUserChiefOfTournament(user.getId(), tournament.getId());
+            } catch (RuntimeException ignored) {
+            }
+
+            try {
+                isCap1 = accessService.isUserCapOfTeam(user.getId(), match.getTeam1().getId());
+            } catch (RuntimeException ignored) {
+            }
+
+            try {
+                isCap2 = accessService.isUserCapOfTeam(user.getId(), match.getTeam2().getId());
+            } catch (RuntimeException ignored) {
             }
 
             List<Goal> goals = goalService.getGoalsByMatch(matchId);
@@ -630,6 +645,8 @@ public class MatchController {
             model.addAttribute("tournament", tournament);
             model.addAttribute("isRef", isRef);
             model.addAttribute("isOrg", isOrg);
+            model.addAttribute("isCap1", isCap1);
+            model.addAttribute("isCap2", isCap2);
             model.addAttribute("team1Goals", team1Goals);
             model.addAttribute("team2Goals", team2Goals);
             model.addAttribute("team1Penalties", team1Penalties);
@@ -643,6 +660,46 @@ public class MatchController {
             return "match/view";
         } catch (RuntimeException e) {
             throw new ResourceNotFoundException("Матч не найден");
+        }
+    }
+
+    @PostMapping("/withdraw/{matchId}")
+    public String withdrawFromMatch(@PathVariable UUID matchId, @RequestParam UUID teamId, 
+                                  @AuthenticationPrincipal User user, RedirectAttributes redirectAttributes) {
+        boolean isCap1 = false;
+        boolean isCap2 = false;
+        Match match = matchService.getById(matchId);
+        try {
+            isCap1 = accessService.isUserCapOfTeam(user.getId(), match.getTeam1().getId());
+        } catch (RuntimeException ignored) {}
+        try {
+            isCap2 = accessService.isUserCapOfTeam(user.getId(), match.getTeam2().getId());
+        } catch (RuntimeException ignored) {}
+        try {
+            if (!isCap1 && !isCap2) {
+                redirectAttributes.addFlashAttribute("error", "Only team captains can withdraw from a match");
+                return "redirect:/match/view/" + matchId.toString();
+            }
+            
+            if (!teamId.equals(match.getTeam1().getId()) && !teamId.equals(match.getTeam2().getId())) {
+                redirectAttributes.addFlashAttribute("error", "Invalid team");
+                return "redirect:/match/view/" + matchId.toString();
+            }
+            
+            GoalDTO goalDTO = new GoalDTO();
+            goalDTO.setMatchId(matchId);
+            goalDTO.setTeamId(teamId);
+            goalDTO.setTime(-1);
+            goalDTO.setPlayerId(user.getId());
+            
+            goalService.addGoal(goalDTO);
+            matchService.publishResult(matchId);
+            
+            redirectAttributes.addFlashAttribute("success", "Team has withdrawn from the match");
+            return "redirect:/match/view/" + matchId.toString();
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error processing withdrawal: " + e.getMessage());
+            return "redirect:/match/view/" + matchId.toString();
         }
     }
 }

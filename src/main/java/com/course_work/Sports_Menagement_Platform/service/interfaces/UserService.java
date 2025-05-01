@@ -1,6 +1,7 @@
 package com.course_work.Sports_Menagement_Platform.service.interfaces;
 
 import com.course_work.Sports_Menagement_Platform.data.models.User;
+import com.course_work.Sports_Menagement_Platform.dto.ChangePasswordDTO;
 import com.course_work.Sports_Menagement_Platform.dto.UserCreationDTO;
 import com.course_work.Sports_Menagement_Platform.dto.UserDTO;
 
@@ -22,4 +23,5 @@ public interface UserService {
     void updateUser(User user, UserDTO userDTO);
 
 
+    boolean changePassword(UUID userId, ChangePasswordDTO changePasswordDTO);
 }

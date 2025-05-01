@@ -31,4 +31,6 @@ public interface TeamService {
     List<Team> findTeamsWhereUserIsCap(User user);
 
     boolean isCapOfUserTeam(UUID userTeamId);
+
+    UserTeam getUserTeamByUserAndTeam(UUID userId, UUID teamId);
 }

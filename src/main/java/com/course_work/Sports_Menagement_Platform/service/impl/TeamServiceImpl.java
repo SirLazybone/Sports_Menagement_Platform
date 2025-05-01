@@ -180,6 +180,11 @@ public class TeamServiceImpl implements TeamService {
 
     }
 
+    @Override
+    public UserTeam getUserTeamByUserAndTeam(UUID userId, UUID teamId) {
+        return userTeamRepository.findByUser_IdAndTeam_Id(userId, teamId).orElseThrow(() -> new RuntimeException("Пользователь не принадлежит к данной команде"));
+    }
+
 
 
 

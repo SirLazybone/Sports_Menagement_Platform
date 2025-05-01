@@ -22,7 +22,6 @@ public class TournamentServiceImpl implements TournamentService {
     private final CityRepository cityRepository;
     private final OrgComService orgComService;
     private final TeamService teamService;
-    private final TeamRepository teamRepository;
     private final UserTeamRepository userTeamRepository;
     private final StageStatusService stageStatusService;
     private final StageRepository stageRepository;
@@ -33,16 +32,15 @@ public class TournamentServiceImpl implements TournamentService {
     public TournamentServiceImpl(TournamentRepository tournamentRepository, OrgComService orgComService,
                                TournamentMapper tournamentMapper, CityRepository cityRepository,
                                TeamService teamService, TeamTournamentRepository teamTournamentRepository,
-                               TeamRepository teamRepository, UserTeamRepository userTeamRepository,
-                               StageStatusService stageStatusService, StageRepository stageRepository,
-                               GoalRepository goalRepository, MatchRepository matchRepository) {
+                                 UserTeamRepository userTeamRepository, StageStatusService stageStatusService,
+                                 StageRepository stageRepository, GoalRepository goalRepository,
+                                 MatchRepository matchRepository) {
         this.tournamentRepository = tournamentRepository;
         this.orgComService = orgComService;
         this.tournamentMapper = tournamentMapper;
         this.cityRepository = cityRepository;
         this.teamService = teamService;
         this.teamTournamentRepository = teamTournamentRepository;
-        this.teamRepository = teamRepository;
         this.userTeamRepository = userTeamRepository;
         this.stageStatusService = stageStatusService;
         this.stageRepository = stageRepository;
@@ -93,8 +91,7 @@ public class TournamentServiceImpl implements TournamentService {
 
     @Override
     public void createApplication(ApplicationDTO applicationDTO, UUID tournamentId, UUID userId) {
-
-        Team team = teamRepository.findById(applicationDTO.getTeam()).orElseThrow(() -> new RuntimeException("Команда не надена"));
+        Team team = teamService.getById(applicationDTO.getTeam());
         UserTeam userTeam = userTeamRepository.findByUser_IdAndTeam_Id(userId, team.getId()).orElseThrow(() -> new RuntimeException("Пользователь не состоит в команде"));
 
 
@@ -137,6 +134,13 @@ public class TournamentServiceImpl implements TournamentService {
     public void rejectApplication(UUID tournamentId, UUID teamId) {
         TeamTournament teamTournament = teamTournamentRepository.findByTournamentIdAndTeamId(tournamentId, teamId).orElseThrow(() -> new RuntimeException("Данная команда не подавалась на данный турнир"));
         teamTournament.setApplicationStatus(ApplicationStatus.DECLINED);
+        teamTournamentRepository.save(teamTournament);
+    }
+
+    @Override
+    public void cancelApplication(UUID tournamentId, UUID teamId) {
+        TeamTournament teamTournament = teamTournamentRepository.findByTournamentIdAndTeamId(tournamentId, teamId).orElseThrow(() -> new RuntimeException("Данная команда не подавалась на данный турнир"));
+        teamTournament.setApplicationStatus(ApplicationStatus.CANCELED);
         teamTournamentRepository.save(teamTournament);
     }
 
@@ -263,6 +267,26 @@ public class TournamentServiceImpl implements TournamentService {
                     continue;
                 }
                 List<Goal> goalsByMatch = goalRepository.findAllByMatchId(match.getId());
+                
+                boolean isTechnicalDefeat = goalsByMatch.stream()
+                    .anyMatch(goal -> goal.getTeam().getId().equals(teamTournament.getTeam().getId()) && goal.getTime() == -1);
+                boolean isOpponentTechnicalDefeat = goalsByMatch.stream()
+                    .anyMatch(goal -> !goal.getTeam().getId().equals(teamTournament.getTeam().getId()) && goal.getTime() == -1);
+                
+                if (isTechnicalDefeat) {
+                    loseCount++;
+                    continue;
+                } else if (isOpponentTechnicalDefeat) {
+                    winCount++;
+                    switch (teamTournament.getTournament().getSport()) {
+                        case FOOTBALL -> points += 3;
+                        case BASKETBALL -> points += 2;
+                        case HOCKEY -> points += 3;
+                        case VOLLEYBALL -> points += 2;
+                    }
+                    continue;
+                }
+                
                 int matchScoredGoals = 0;
                 int matchMissedGoals = 0;
                 int winBulletsCount = 0;
@@ -271,6 +295,10 @@ public class TournamentServiceImpl implements TournamentService {
                 List<Integer> lostGoalsBySet = Arrays.asList(0, 0, 0, 0, 0);
                 
                 for (var goal : goalsByMatch) {
+                    if (goal.getTime() == -1) {
+                        continue;
+                    }
+                    
                     if (goal.getTeam().getId() == teamTournament.getTeam().getId()) {
                         if (match.getStage().getTournament().getSport() == Sport.HOCKEY && goal.isPenalty()) {
                             winBulletsCount++;
@@ -415,5 +443,26 @@ public class TournamentServiceImpl implements TournamentService {
         tournament.setName(tournamentDTO.getName());
         tournament.setLogo(tournamentDTO.getLogo());
         tournamentRepository.save(tournament);
+    }
+
+    @Override
+    public List<TeamTournament> getAcceptedTeamTournament(UUID teamId) {
+        List<TeamTournament> teamTournaments = teamTournamentRepository.findAllTeamTournamentByTeamId(teamId);
+        return teamTournaments.stream()
+                .filter(x -> x.getApplicationStatus().equals(ApplicationStatus.ACCEPTED))
+                .toList();
+    }
+
+    @Override
+    public List<TeamTournament> getOtherTeamTournament(UUID teamId) {
+        List<TeamTournament> teamTournaments = teamTournamentRepository.findAllTeamTournamentByTeamId(teamId);
+        return teamTournaments.stream()
+                .filter(x -> !x.getApplicationStatus().equals(ApplicationStatus.ACCEPTED))
+                .toList();
+    }
+
+    @Override
+    public TeamTournament getTeamTournament(UUID teamId, UUID tournamentId) {
+        return teamTournamentRepository.findByTournamentIdAndTeamId(tournamentId, teamId).orElseThrow(() -> new RuntimeException("Команда не состоит в данном турнире"));
     }
 }

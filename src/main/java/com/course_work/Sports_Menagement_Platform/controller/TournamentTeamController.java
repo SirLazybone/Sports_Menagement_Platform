@@ -6,7 +6,9 @@ import com.course_work.Sports_Menagement_Platform.data.models.User;
 import com.course_work.Sports_Menagement_Platform.data.models.UserTeam;
 import com.course_work.Sports_Menagement_Platform.dto.ApplicationDTO;
 import com.course_work.Sports_Menagement_Platform.dto.RatingLineDTO;
+import com.course_work.Sports_Menagement_Platform.exception.AccessDeniedException;
 import com.course_work.Sports_Menagement_Platform.exception.ResourceNotFoundException;
+import com.course_work.Sports_Menagement_Platform.service.impl.AccessService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TeamService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.UserTeamService;
@@ -31,11 +33,13 @@ public class TournamentTeamController {
     private final UserTeamService userTeamService;
     private final TeamService teamService;
     private final TournamentService tournamentService;
+    private final AccessService accessService;
 
-    public TournamentTeamController(UserTeamService userTeamService, TeamService teamService, TournamentService tournamentService) {
+    public TournamentTeamController(UserTeamService userTeamService, TeamService teamService, TournamentService tournamentService, AccessService accessService) {
         this.userTeamService = userTeamService;
         this.teamService = teamService;
         this.tournamentService = tournamentService;
+        this.accessService = accessService;
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -140,5 +144,23 @@ public class TournamentTeamController {
 
         tournamentService.updatePlayOffTeams(tournamentId, formData.keySet().stream().map(i -> UUID.fromString(i)).collect(Collectors.toList()));
         return "redirect:/applications/rating/" + tournamentId.toString();
+    }
+
+    @PostMapping("/cancel/{tournamentId}/{teamId}")
+    public String cancelApplication(@PathVariable("tournamentId") UUID tournamentId, @PathVariable("teamId") UUID teamId, @AuthenticationPrincipal User user) {
+        TeamTournament teamTournament;
+        try {
+            teamTournament = tournamentService.getTeamTournament(teamId, tournamentId);
+        } catch (RuntimeException e) {
+            throw new ResourceNotFoundException(e.getMessage());
+        }
+        try {
+            accessService.isUserCap(teamTournament.getId());
+        } catch (RuntimeException e) {
+            throw new AccessDeniedException("Только капитан может отменять заявку");
+        }
+
+        tournamentService.cancelApplication(tournamentId, teamId);
+        return "redirect:/team/view/" + teamId.toString();
     }
 }

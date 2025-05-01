@@ -2,6 +2,7 @@ package com.course_work.Sports_Menagement_Platform.service.impl;
 
 import com.course_work.Sports_Menagement_Platform.data.enums.Role;
 import com.course_work.Sports_Menagement_Platform.data.models.User;
+import com.course_work.Sports_Menagement_Platform.dto.ChangePasswordDTO;
 import com.course_work.Sports_Menagement_Platform.dto.UserCreationDTO;
 import com.course_work.Sports_Menagement_Platform.dto.UserDTO;
 import com.course_work.Sports_Menagement_Platform.mapper.UserMapper;
@@ -97,6 +98,20 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         }
 
         userRepository.save(user);
+    }
+
+    @Override
+    public boolean changePassword(UUID userId, ChangePasswordDTO changePasswordDTO) {
+        User user = getById(userId);
+        if (!passwordEncoder.matches(changePasswordDTO.getOldPassword(), user.getPassword())) {
+            throw new RuntimeException("Неверный старый пароль!");
+        }
+        if (!changePasswordDTO.getConfirmPassword().equals(changePasswordDTO.getNewPassword())) {
+            throw new RuntimeException("Новые пароли не совпадают!");
+        }
+        user.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
+        userRepository.save(user);
+        return true;
     }
 
 }

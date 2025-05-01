@@ -56,21 +56,38 @@
                 <div class="row">
                     <div class="col-md-4">
                         <h5><span th:text="${match.team1.name}"></span></h5>
+                        <div th:if="${match.isResultPublished and #lists.size(team1Goals) > 0 and team1Goals[0].time == -1}">
+                            <span class="text-danger">Technical Defeat</span>
+                        </div>
+                        <div th:if="${not match.isResultPublished and (isCap1 or isCap2)}" class="mt-2">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmWithdrawal(this)" th:data-match-id="${match.id}" th:data-team-id="${isCap1 ? match.team1.id : match.team2.id}">Withdraw from Match</button>
+                        </div>
                     </div>
+
                     <div class="col-md-4 text-center">
                         <h5 th:if="${match.isResultPublished}">
-                            <span th:unless="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${#lists.size(team1Goals)}"></span> - <span th:unless="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${#lists.size(team2Goals)}"></span>
-                            <span th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${team1sets}"></span> - <span th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL" th:text="${team2sets}"></span>
+                    <span th:unless="${#lists.size(team1Goals) > 0 and team1Goals[0].time == -1 or #lists.size(team2Goals) > 0 and team2Goals[0].time == -1}">
+                        <span th:if="${tournament.sport != T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${#lists.size(team1Goals)}"></span> -
+                        <span th:if="${tournament.sport != T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${#lists.size(team2Goals)}"></span>
+                        <span th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${team1sets}"></span> -
+                        <span th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${team2sets}"></span>
+                    </span>
                         </h5>
                         <h5 th:unless="${match.isResultPublished}">VS</h5>
                     </div>
-                    <div class="col-md-4">
+
+                    <div class="col-md-4 text-end">
                         <h5><span th:text="${match.team2.name}"></span></h5>
+                        <div th:if="${match.isResultPublished and #lists.size(team2Goals) > 0 and team2Goals[0].time == -1}">
+                            <span class="text-danger">Technical Defeat</span>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Остальная информация -->
                 <div class="row mt-3">
                     <div class="col-md-12">
-                        <p>Stage: 
+                        <p>Stage:
                             <span th:if="${stage.bestPlace == 0}">Групповой этап</span>
                             <span th:if="${stage.bestPlace == 1}" th:text="${stage.bestPlace} + '/' + ${stage.worstPlace} + ' финала'"></span>
                             <span th:if="${stage.bestPlace > 1}" th:text="'Матчи за ' + ${stage.bestPlace} + '-' + ${stage.worstPlace} + ' места'"></span>
@@ -91,6 +108,7 @@
                 </div>
             </div>
         </div>
+
 
         <!-- Slot Management (for Organizers) -->
         <div th:if="${isOrg and not match.isResultPublished}" class="card mb-4">
@@ -474,7 +492,7 @@
         </div>
 
         <!-- Match Details Button -->
-        <div th:if="${match.isResultPublished}" class="text-center mb-4">
+        <div th:if="${match.isResultPublished and not ((#lists.size(team2Goals) > 0 and team2Goals[0].time == -1) or (#lists.size(team1Goals) > 0 and team1Goals[0].time == -1))}" class="text-center mb-4">
             <button type="button" class="btn btn-info" data-toggle="modal" data-target="#matchDetailsModal">
                 Match Details
             </button>
@@ -841,6 +859,27 @@
             form.appendChild(matchIdInput);
 
             form.submit();
+        }
+
+        // Function to handle withdrawal confirmation
+        function confirmWithdrawal(button) {
+            if (confirm('Are you sure you want to withdraw from the match? This will result in a technical defeat.')) {
+                const matchId = button.getAttribute('data-match-id');
+                const teamId = button.getAttribute('data-team-id');
+                
+                const form = document.createElement('form');
+                form.method = 'post';
+                form.action = `/match/withdraw/${matchId}`;
+                
+                const teamIdInput = document.createElement('input');
+                teamIdInput.type = 'hidden';
+                teamIdInput.name = 'teamId';
+                teamIdInput.value = teamId;
+                
+                form.appendChild(teamIdInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
         }
     </script>
 </body>

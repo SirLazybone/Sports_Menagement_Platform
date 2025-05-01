@@ -23,6 +23,8 @@ public interface TournamentService {
 
     void rejectApplication(UUID tournamentId, UUID teamId);
 
+    void cancelApplication(UUID tournamentId, UUID teamId);
+
     List<ApplicationDTO> getCurrParticipants(UUID tournamentId);
 
     List<TeamTournament> getCurrentParticipants(UUID tournamentId);
@@ -52,4 +54,10 @@ public interface TournamentService {
     void prolongRegister(UUID tournamentId, ProlongRegDTO prolongRegDTO);
 
     void updateTournament(UUID tournamentId, TournamentDTO tournamentDTO);
+
+    List<TeamTournament> getAcceptedTeamTournament(UUID teamId);
+
+    List<TeamTournament> getOtherTeamTournament(UUID teamId);
+
+    TeamTournament getTeamTournament(UUID teamId, UUID tournamentId);
 }

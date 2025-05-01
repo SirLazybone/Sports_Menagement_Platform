@@ -1,14 +1,13 @@
 package com.course_work.Sports_Menagement_Platform.controller;
 
-import com.course_work.Sports_Menagement_Platform.data.models.Team;
-import com.course_work.Sports_Menagement_Platform.data.models.User;
-import com.course_work.Sports_Menagement_Platform.data.models.UserTeam;
+import com.course_work.Sports_Menagement_Platform.data.models.*;
 import com.course_work.Sports_Menagement_Platform.dto.*;
 import com.course_work.Sports_Menagement_Platform.exception.AccessDeniedException;
 import com.course_work.Sports_Menagement_Platform.exception.ResourceNotFoundException;
 import com.course_work.Sports_Menagement_Platform.service.FileStorageService;
 import com.course_work.Sports_Menagement_Platform.service.impl.AccessService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.TeamService;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.UserService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,6 +17,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,13 +28,16 @@ public class TeamController {
     private final TeamService teamService;
     private final FileStorageService fileStorageService;
     private final AccessService accessService;
+    private final TournamentService tournamentService;
 
     public TeamController(UserService userService, TeamService teamService,
-                          FileStorageService fileStorageService, AccessService accessService) {
+                          FileStorageService fileStorageService, AccessService accessService,
+                          TournamentService tournamentService) {
         this.userService = userService;
         this.teamService = teamService;
         this.fileStorageService = fileStorageService;
         this.accessService = accessService;
+        this.tournamentService = tournamentService;
     }
 
     @GetMapping("/new")
@@ -79,20 +82,29 @@ public class TeamController {
         return "team/show_all";
     }
 
-    @GetMapping("/view/{id}")
-    public String viewTeam(@PathVariable UUID id, Model model, @AuthenticationPrincipal User user) {
+    @GetMapping("/view/{teamId}")
+    public String viewTeam(@PathVariable("teamId") UUID teamId, Model model, @AuthenticationPrincipal User user) {
         try {
-            teamService.getById(id);
+            teamService.getById(teamId);
+            model.addAttribute("teamId", teamId);
         } catch (RuntimeException e) {
             throw new ResourceNotFoundException("Такой команды нет");
         }
         try {
-            List<UserTeamDTO> list = teamService.getAllUserByTeamDTO(id);
+            List<UserTeamDTO> list = teamService.getAllUserByTeamDTO(teamId);
             model.addAttribute("members", list);
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
         }
-        Team team = teamService.getById(id);
+        try {
+            List<TeamTournament> acceptedTeamTournaments = tournamentService.getAcceptedTeamTournament(teamId);
+            List<TeamTournament> otherTeamTournaments = tournamentService.getOtherTeamTournament(teamId);
+            model.addAttribute("acceptedTeamTournaments", acceptedTeamTournaments);
+            model.addAttribute("otherTeamTournaments", otherTeamTournaments);
+        } catch (RuntimeException e) {
+            model.addAttribute("error", e.getMessage());
+        }
+        Team team = teamService.getById(teamId);
         model.addAttribute("teamId", team.getId());
         model.addAttribute("userId",  user != null ? user.getId() : "");
 
@@ -102,13 +114,17 @@ public class TeamController {
                 .logo(team.getLogo())
                 .build());
         model.addAttribute("invitationStatuses", new InvitationStatusDTO());
-        try {
-            teamService.isCap(id, user.getId());
-            model.addAttribute("isCap", true);
-        } catch (RuntimeException ignored) {
-            model.addAttribute("isCap", false);
-        }
 
+        boolean isCap = false;
+        boolean isUserMember = false;
+        try {
+            isCap = accessService.isUserCapOfTeam(user.getId(), teamId);
+            isUserMember = accessService.isUserMemberOfTeam(user.getId(), teamId);
+        } catch (RuntimeException ignored) {
+        }
+        model.addAttribute("isCap", isCap);
+        model.addAttribute("isUserMember", isUserMember);
+        model.addAttribute("today", LocalDate.now());
         return "team/view";
     }
 
@@ -263,5 +279,4 @@ public class TeamController {
             return "team/edit_team";
         }
     }
-
 }
