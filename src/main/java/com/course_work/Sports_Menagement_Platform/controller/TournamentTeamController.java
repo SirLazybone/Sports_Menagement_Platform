@@ -155,7 +155,11 @@ public class TournamentTeamController {
             throw new ResourceNotFoundException(e.getMessage());
         }
         try {
-            accessService.isUserCap(teamTournament.getId());
+            List<UserTeam> userTeamList = userTeamService.findByUserId(user.getId()).stream().filter(i -> i.getTeam().getId().equals(teamTournament.getTeam().getId())).collect(Collectors.toList());
+            if (userTeamList.isEmpty()) {
+                throw new AccessDeniedException("Вы не состоите в этой команде");
+            }
+            accessService.isUserCap(userTeamList.get(0).getId());
         } catch (RuntimeException e) {
             throw new AccessDeniedException("Только капитан может отменять заявку");
         }

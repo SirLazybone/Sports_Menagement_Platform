@@ -135,8 +135,8 @@
                             <td th:if="${isCap}">
                                 <div th:if="${tournament.applicationStatus == T(com.course_work.Sports_Menagement_Platform.data.enums.ApplicationStatus).PENDING and
                                             today.isBefore(tournament.tournament.registerDeadline)}">
-                                    <form th:action="@{/application/cancel/{tournamentId}/{teamId}(tournament=${tournament.id}, teamId=${teamId})}" method="post">
-                                        <button type="submit" class="btn btn-danger btn-sm">Отменить заявку</button>
+                                    <form th:action="@{/applications/cancel/{tournamentId}/{teamId}(tournamentId=${tournament.tournament.id}, teamId=${teamId})}" method="post">
+                                        <button type="submit" class="btn btn-danger btn-sm">Cancel Application</button>
                                     </form>
                                 </div>
                             </td>

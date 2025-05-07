@@ -119,11 +119,13 @@ public class MatchController {
             throw new ResourceNotFoundException("Этап не найден");
         }
         boolean isUserOrg = false;
+        boolean isUserChief = false;
         try {
             isUserOrg = accessService.isUserOrgOfTournament(user.getId(), stage.getTournament().getId());
              if (!isUserOrg) {
                  throw new AccessDeniedException("У вас нет доступа");
              }
+             isUserChief = accessService.isUserChiefOfTournament(user.getId(), stage.getTournament().getId());
         } catch (RuntimeException e) {
             throw new AccessDeniedException("У вас нет доступа");
         }
@@ -142,6 +144,7 @@ public class MatchController {
         model.addAttribute("tournamentId", stage.getTournament().getId());
 
         model.addAttribute("isUserOrg", isUserOrg);
+        model.addAttribute("isUserChief", isUserChief);
 
         return "match/fill_group";
     }
@@ -185,11 +188,13 @@ public class MatchController {
             throw new ResourceNotFoundException("Этап не найден");
         }
         boolean isUserOrg = false;
+        boolean isUserChief = false;
         try {
             isUserOrg = accessService.isUserOrgOfTournament(user.getId(), stage.getTournament().getId());
             if (!isUserOrg) {
                 throw new AccessDeniedException("У вас нет доступа");
             }
+            isUserChief = accessService.isUserChiefOfTournament(user.getId(), stage.getTournament().getId());
         } catch (RuntimeException e) {
             throw new AccessDeniedException("У вас нет доступа");
         }
@@ -211,7 +216,7 @@ public class MatchController {
         model.addAttribute("slots", availableSlots);
         model.addAttribute("stageId", stageId);
         model.addAttribute("isPublished", stage.isPublished());
-        model.addAttribute("isUserChief", isUserOrg);
+        model.addAttribute("isUserChief", isUserChief);
 
         model.addAttribute("notFilledMatches", matches.size());
         model.addAttribute("matchesCount", (stage.getWorstPlace() - stage.getBestPlace() + 1) / 2 - 1);
