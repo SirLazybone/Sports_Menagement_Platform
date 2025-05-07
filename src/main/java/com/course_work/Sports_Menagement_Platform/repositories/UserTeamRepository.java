@@ -35,7 +35,8 @@ public interface UserTeamRepository extends JpaRepository<UserTeam, UUID> {
     List<UserTeamDTO> findAllUserByTeamAndGetDTO(@Param("teamId") UUID teamId);
     List<UserTeam> findByUser(User user);
 
-
-
     Optional<UserTeam> findById(UUID id);
+
+    @Query("SELECT ut FROM UserTeam ut JOIN FETCH ut.team WHERE ut.user = :user AND ut.invitationStatus = com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus.PENDING")
+    List<UserTeam> findPendingInvitationsWithTeam(@Param("user") User user);
 }

@@ -33,4 +33,6 @@ public interface TeamService {
     boolean isCapOfUserTeam(UUID userTeamId);
 
     UserTeam getUserTeamByUserAndTeam(UUID userId, UUID teamId);
+
+    boolean isOnlyActiveCaptain(UUID teamId, UUID userId);
 }

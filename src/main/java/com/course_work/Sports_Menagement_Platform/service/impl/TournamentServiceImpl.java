@@ -279,10 +279,8 @@ public class TournamentServiceImpl implements TournamentService {
                 } else if (isOpponentTechnicalDefeat) {
                     winCount++;
                     switch (teamTournament.getTournament().getSport()) {
-                        case FOOTBALL -> points += 3;
-                        case BASKETBALL -> points += 2;
-                        case HOCKEY -> points += 3;
-                        case VOLLEYBALL -> points += 2;
+                        case FOOTBALL, HOCKEY -> points += 3;
+                        case BASKETBALL, VOLLEYBALL -> points += 2;
                     }
                     continue;
                 }

@@ -37,4 +37,6 @@ public interface UserOrgComRepository extends JpaRepository<UserOrgCom, UUID> {
     Optional<UserOrgCom> findByUser_IdAndOrgCom_Id(UUID userId, UUID orgComId);
     List<UserOrgCom> findByUser(User user);
 
+    @Query("SELECT uoc FROM UserOrgCom uoc JOIN FETCH uoc.orgCom WHERE uoc.user = :user AND uoc.invitationStatus = com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus.PENDING")
+    List<UserOrgCom> findPendingInvitationsWithOrgCom(@Param("user") User user);
 }

@@ -10,13 +10,15 @@ import java.nio.file.Paths;
 
 @Configuration
 public class FileUploadConfig implements WebMvcConfigurer {
+    private static final Logger logger = LoggerFactory.getLogger(FileUploadConfig.class);
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        String uploadDir = Paths.get("").toAbsolutePath().normalize().toString() + "/uploads/";
+        String uploadDir = Paths.get("uploads").toAbsolutePath().normalize().toString();
+        logger.info("Configuring upload directory: {}", uploadDir);
 
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:" + uploadDir)
+                .addResourceLocations("file:" + uploadDir + "/")
                 .setCachePeriod(0);
     }
 } 

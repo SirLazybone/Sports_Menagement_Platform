@@ -8,6 +8,7 @@ import com.course_work.Sports_Menagement_Platform.repositories.TeamRepository;
 import com.course_work.Sports_Menagement_Platform.repositories.UserTeamRepository;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -34,8 +35,10 @@ public class TeamServiceImpl implements TeamService {
 
     @Override
     public Team createTeam(TeamDTO teamDTO, User user) {
-
-
+        Optional<Team> optionalTeam = teamRepository.findByName(teamDTO.getName());
+        if (optionalTeam.isPresent()) {
+            throw new RuntimeException("Команда с таким именем уже существует, выберете другое");
+        }
         Team team = Team.builder().name(teamDTO.getName()).sport(teamDTO.getSport()).logo(teamDTO.getLogo()).build();
         teamRepository.save(team);
 
@@ -77,7 +80,7 @@ public class TeamServiceImpl implements TeamService {
     @Override
     public Boolean isCap(UUID teamId, UUID userId) {
         UserTeam userTeam = userTeamRepository.findByUser_IdAndTeam_Id(userId, teamId).orElseThrow(() -> new RuntimeException("Пользователь не является членом данной команды"));
-        return userTeam.isCap();
+        return userTeam.isCap() && userTeam.getInvitationStatus().equals(InvitationStatus.ACCEPTED);
     }
 
     @Override
@@ -87,9 +90,9 @@ public class TeamServiceImpl implements TeamService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<UserTeam> getActiveInvitations(User user) {
-        List<UserTeam> list = userTeamRepository.findByUser(user);
-        return list.stream().filter(x -> x.getInvitationStatus() == InvitationStatus.PENDING).toList();
+        return userTeamRepository.findPendingInvitationsWithTeam(user);
     }
 
     @Override
@@ -163,6 +166,8 @@ public class TeamServiceImpl implements TeamService {
         }
         team.setName(teamDTO.getName());
         team.setSport(teamDTO.getSport());
+        team.setLogo(teamDTO.getLogo());
+        team.setSport(teamDTO.getSport());
         teamRepository.save(team);
     }
 
@@ -185,7 +190,11 @@ public class TeamServiceImpl implements TeamService {
         return userTeamRepository.findByUser_IdAndTeam_Id(userId, teamId).orElseThrow(() -> new RuntimeException("Пользователь не принадлежит к данной команде"));
     }
 
-
-
-
+    @Override
+    public boolean isOnlyActiveCaptain(UUID teamId, UUID userId) {
+        List<UserTeamDTO> members = getAllUserByTeamDTO(teamId);
+        return members.stream()
+                .filter(member -> member.getInvitationStatus() == InvitationStatus.ACCEPTED && member.isCap())
+                .count() == 1 && isCap(teamId, userId);
+    }
 }

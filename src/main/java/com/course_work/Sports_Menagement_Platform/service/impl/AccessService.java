@@ -65,4 +65,8 @@ public class AccessService {
         UserTeam userTeam = teamService.getUserTeamByUserAndTeam(userId, teamId);
         return userTeam.getInvitationStatus().equals(InvitationStatus.ACCEPTED);
     }
+
+    public boolean isOnlyActiveCap(UserTeam userTeam) {
+        return teamService.isOnlyActiveCaptain(userTeam.getTeam().getId(), userTeam.getUser().getId());
+    }
 }

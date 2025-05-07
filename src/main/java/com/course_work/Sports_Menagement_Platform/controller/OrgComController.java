@@ -65,16 +65,6 @@ public class OrgComController {
         return "redirect:/home";
     }
 
-    @GetMapping("/invitations")
-    public String showInvitations(Model model, @AuthenticationPrincipal User user) {
-        List<UserOrgCom> list = orgComService.getAllInvitationsPending(user);
-        if (list == null || list.isEmpty()) {
-            model.addAttribute("error", "There are no invitations yet");
-        }
-        model.addAttribute("invitations", list);
-        return "org_com/invitations";
-    }
-
     @GetMapping("/create_invitation/{orgComId}")
     public String createInvitation(@PathVariable UUID orgComId, Model model, @AuthenticationPrincipal User user) {
         try {
@@ -106,28 +96,6 @@ public class OrgComController {
             return "org_com/new_invitation";
         }
         return "redirect:/org_com/view/" + orgComId.toString();
-    }
-
-    @PostMapping("/invitation/{id}/accept")
-    public String acceptInvitation(@PathVariable("id") UUID userOrgComId, Model model) {
-        try {
-            orgComService.acceptInvitation(userOrgComId);
-        } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
-            return "redirect:/org_com/invitations";
-        }
-
-        return "org_com/invitations";
-    }
-
-    @PostMapping("/invitation/{id}/decline")
-    public String declineInvitation(@PathVariable("id") UUID userOrgComId, Model model) {
-        try {
-            orgComService.declineInvitation(userOrgComId);
-        } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
-        }
-        return "org_com/invitations";
     }
 
     @GetMapping("/show_all")

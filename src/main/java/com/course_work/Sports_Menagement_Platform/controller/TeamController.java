@@ -16,6 +16,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -84,8 +85,9 @@ public class TeamController {
 
     @GetMapping("/view/{teamId}")
     public String viewTeam(@PathVariable("teamId") UUID teamId, Model model, @AuthenticationPrincipal User user) {
+        Team team;
         try {
-            teamService.getById(teamId);
+            team = teamService.getById(teamId);
             model.addAttribute("teamId", teamId);
         } catch (RuntimeException e) {
             throw new ResourceNotFoundException("Такой команды нет");
@@ -104,7 +106,6 @@ public class TeamController {
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
         }
-        Team team = teamService.getById(teamId);
         model.addAttribute("teamId", team.getId());
         model.addAttribute("userId",  user != null ? user.getId() : "");
 
@@ -117,13 +118,15 @@ public class TeamController {
 
         boolean isCap = false;
         boolean isUserMember = false;
+        boolean isOnlyActiveCaptain = false;
         try {
             isCap = accessService.isUserCapOfTeam(user.getId(), teamId);
             isUserMember = accessService.isUserMemberOfTeam(user.getId(), teamId);
-        } catch (RuntimeException ignored) {
-        }
+            isOnlyActiveCaptain = teamService.isOnlyActiveCaptain(teamId, user.getId());
+        } catch (RuntimeException ignored) {}
         model.addAttribute("isCap", isCap);
         model.addAttribute("isUserMember", isUserMember);
+        model.addAttribute("isOnlyActiveCaptain", isOnlyActiveCaptain);
         model.addAttribute("today", LocalDate.now());
         return "team/view";
     }
@@ -161,39 +164,6 @@ public class TeamController {
         return "redirect:/team/view/" + teamId.toString();
     }
 
-    @GetMapping("/invitations")
-    public String getInvitations(Model model, @AuthenticationPrincipal User user) {
-        try {
-            List<UserTeam> list = teamService.getActiveInvitations(user);
-            model.addAttribute("invitations", list);
-        } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
-        }
-
-        return "team/invitations";
-    }
-
-    @PostMapping("/invitation/{id}/accept")
-    public String acceptInvitation(@PathVariable("id") UUID userTeamId, Model model) {
-        try {
-            teamService.acceptInvitation(userTeamId);
-        } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
-        }
-
-        return "team/invitations";
-    }
-
-    @PostMapping("/invitation/{id}/decline")
-    public String declineInvitation(@PathVariable("id") UUID userTeamId, Model model) {
-        try {
-            teamService.declineInvitation(userTeamId);
-        } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
-        }
-        return "team/invitations";
-    }
-
     @PostMapping("/kick/{teamId}/{userTel}")
     public String kickUser(@PathVariable UUID teamId, @PathVariable String userTel, Model model) {
         try {
@@ -216,14 +186,14 @@ public class TeamController {
         return "redirect:/team/view/" + teamId.toString();
     }
 
-    @PostMapping("/left/{teamId}")
-    public String leftTeam(@PathVariable UUID teamId, @AuthenticationPrincipal User user, Model model) {
+    @PostMapping("/leave/{teamId}")
+    public String leaveTeam(@PathVariable UUID teamId, @AuthenticationPrincipal User user, RedirectAttributes model) {
         try {
             teamService.leftTeam(teamId, user.getId());
         } catch (Exception e) {
-            model.addAttribute("error", "smth really wrong: " + e.getMessage());
+            model.addFlashAttribute("error", "smth really wrong: " + e.getMessage());
         }
-        return "redirect:/team/show_all";
+        return "redirect:/team/view/" + teamId.toString();
     }
 
     @GetMapping("/edit/{teamId}")
@@ -261,17 +231,15 @@ public class TeamController {
         try {
             Team existingTeam = teamService.getById(teamId);
             if (logoFile != null && !logoFile.isEmpty()) {
-                // Delete old logo if exists
                 if (existingTeam.getLogo() != null) {
                     fileStorageService.deleteFile(existingTeam.getLogo());
                 }
-                // Store new logo
                 String fileName = fileStorageService.storeFile(logoFile);
                 team.setLogo(fileName);
             } else {
-                // Keep existing logo
                 team.setLogo(existingTeam.getLogo());
             }
+            team.setSport(existingTeam.getSport());
             teamService.editTeam(teamId, team);
             return "redirect:/team/view/" + teamId;
         } catch (RuntimeException e) {

@@ -37,10 +37,16 @@ public class UserTeamController {
         } catch (RuntimeException e) {
             throw new AccessDeniedException("У вас нет доступа");
         }
+        boolean isOnlyActiveCap = false;
         UserTeam userTeam = userTeamService.findById(userTeamId);
+        try {
+            isOnlyActiveCap = accessService.isOnlyActiveCap(userTeam);
+        } catch (RuntimeException e) {
+            throw new AccessDeniedException("У вас нет доступа");
+        }
         model.addAttribute("user_team", userTeam);
         model.addAttribute("userId", user.getId());
-        model.addAttribute("isOnlyCap", userTeamService.isOnlyCap(userTeam));
+        model.addAttribute("isOnlyCap", isOnlyActiveCap);
         return "team/edit_member";
 
     }
@@ -49,34 +55,34 @@ public class UserTeamController {
     @GetMapping("/remove_as_cap/{userTeamId}")
     public String removeAsCap(@PathVariable UUID userTeamId, Model model, @AuthenticationPrincipal User user) {
         userTeamService.setCapStatus(userTeamId, false);
-        return "redirect:edit_user_team/" + userTeamId.toString();
+        return "redirect:/edit_user_team/" + userTeamId.toString();
     }
 
 
     @GetMapping("/assign_as_cap/{userTeamId}")
     public String assignAsCap(@PathVariable UUID userTeamId, Model model, @AuthenticationPrincipal User user) {
         userTeamService.setCapStatus(userTeamId, true);
-        return "redirect:edit_user_team/" + userTeamId.toString();
+        return "redirect:/edit_user_team/" + userTeamId.toString();
     }
 
     @GetMapping("/remove_as_playing/{userTeamId}")
     public String removeAsPlaying(@PathVariable UUID userTeamId, Model model, @AuthenticationPrincipal User user) {
         userTeamService.setPlaying(userTeamId, false);
-        return "redirect:edit_user_team/" + userTeamId.toString();
+        return "redirect:/edit_user_team/" + userTeamId.toString();
 
     }
 
     @GetMapping("/assign_as_playing/{userTeamId}")
     public String assignAsPlaying(@PathVariable UUID userTeamId, Model model, @AuthenticationPrincipal User user) {
         userTeamService.setPlaying(userTeamId, true);
-        return "redirect:edit_user_team/" + userTeamId.toString();
+        return "redirect:/edit_user_team/" + userTeamId.toString();
 
     }
 
     @GetMapping("/cancel_invitation/{userTeamId}")
     public String cancelInvitation(@PathVariable UUID userTeamId, Model model, @AuthenticationPrincipal User user) {
         userTeamService.setInvitationStatis(userTeamId, InvitationStatus.CANCELED);
-        return "redirect:edit_user_team/" + userTeamId.toString();
+        return "redirect:/edit_user_team/" + userTeamId.toString();
 
     }
 
@@ -84,7 +90,7 @@ public class UserTeamController {
     public String remove(@PathVariable UUID userTeamId, Model model, @AuthenticationPrincipal User user) {
         userTeamService.setInvitationStatis(userTeamId, InvitationStatus.KICKED);
 
-        return "redirect:edit_user_team/" + userTeamId.toString();
+        return "redirect:/edit_user_team/" + userTeamId.toString();
 
     }
 
@@ -92,14 +98,14 @@ public class UserTeamController {
     @GetMapping("/leave/{userTeamId}")
     public String leave(@PathVariable UUID userTeamId, Model model, @AuthenticationPrincipal User user) {
         userTeamService.setInvitationStatis(userTeamId, InvitationStatus.LEFT);
-        return "redirect:edit_user_team/" + userTeamId.toString();
+        return "redirect:/edit_user_team/" + userTeamId.toString();
 
     }
 
     @GetMapping("/acceptInvitation/{userTeamId}")
     public String join(@PathVariable UUID userTeamId, Model model, @AuthenticationPrincipal User user) {
         userTeamService.setInvitationStatis(userTeamId, InvitationStatus.ACCEPTED);
-        return "redirect:edit_user_team/" + userTeamId.toString();
+        return "redirect:/edit_user_team/" + userTeamId.toString();
 
     }
 
@@ -107,7 +113,7 @@ public class UserTeamController {
     @GetMapping("/declineInvitation/{userTeamId}")
     public String decline(@PathVariable UUID userTeamId, Model model, @AuthenticationPrincipal User user) {
         userTeamService.setInvitationStatis(userTeamId, InvitationStatus.DECLINED);
-        return "redirect:edit_user_team/" + userTeamId.toString();
+        return "redirect:/edit_user_team/" + userTeamId.toString();
 
     }
 

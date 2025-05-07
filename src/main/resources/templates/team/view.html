@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Team View</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .logo-preview {
             width: 150px;
@@ -25,6 +25,8 @@
     </style>
 </head>
 <body>
+    <div th:replace="fragments/header :: header"></div>
+
     <div class="container mt-4">
         <div class="row">
             <div class="col-md-3">
@@ -38,38 +40,45 @@
                 </div>
             </div>
             <div class="col-md-9">
-                <h1 th:text="${team.name}">Team Name</h1>
-                <h3 th:text="${team.sport}">Sport</h3>
+                <h1 th:text="${team.name}">Название команды</h1>
+                <h3 th:text="${team.sport}">Спорт</h3>
                 
-                <div th:if="${isCap != null}">
-                    <a th:href="@{/team/edit/{id}(id=${teamId})}" class="btn btn-primary">Edit Team</a>
-                    <a th:href="@{/team/create_invitation/{id}(id=${teamId})}" class="btn btn-success">Invite Member</a>
+                <div th:if="${isCap}">
+                    <a th:href="@{/team/edit/{id}(id=${teamId})}" class="btn btn-primary">Редактировать команду</a>
+                    <a th:href="@{/team/create_invitation/{id}(id=${teamId})}" class="btn btn-success">Пригласить участника</a>
                 </div>
             </div>
         </div>
 
         <div class="mt-4">
-            <h2>Team Members</h2>
+            <h2>Участники команды</h2>
             <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
             
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th>Имя</th>
+                        <th>Роль</th>
+                        <th>Статус</th>
+                        <th th:if="${isCap}">Действия</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="member : ${members}">
-                        <td th:text="${member.name + ' ' + member.surname}">Member Name</td>
-                        <td th:text="${member.isCap ? 'Captain' : 'Member'}">Role</td>
-                        <td th:text="${member.invitationStatus}">Status</td>
+                    <tr th:each="member : ${members}" th:if="${isCap or member.invitationStatus == T(com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus).ACCEPTED}">
                         <td>
-                            <div th:if="${(isCap and member.invitationStatus == T(com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus).ACCEPTED) || member.userId == userId}">
+                            <a th:href="@{/user/profile/{id}(id=${member.userId})}" class="text-dark text-decoration-none" th:text="${member.name + ' ' + member.surname}">Member Name</a>
+                        </td>
+                        <td th:text="${member.isCap ? 'Капитан' : 'Член команды'}">Role</td>
+                        <td th:text="${member.invitationStatus}">Status</td>
+                        <td th:if="${isCap}">
+                            <div th:if="${isCap and member.invitationStatus == T(com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus).ACCEPTED}">
                                 <form th:action="@{/edit_user_team/{id}(id = ${member.userTeamId})}" method="get">
                                     <button type="submit">Редактировать</button>
+                                </form>
+                            </div>
+                            <div th:if="${isCap and member.invitationStatus == T(com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus).PENDING}">
+                                <form th:action="@{/team/cancel/{teamId}/{userTel}(teamId=${teamId}, userTel=${member.tel})}" method="post" style="display: inline;">
+                                    <button type="submit" class="btn btn-warning btn-sm">Отменить приглашение</button>
                                 </form>
                             </div>
                         </td>
@@ -80,21 +89,21 @@
 
         <!-- Accepted Tournaments Section -->
         <div class="mt-4">
-            <h2>Active Tournaments</h2>
+            <h2>Активные турниры</h2>
             <div class="table-responsive">
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th>Tournament Name</th>
-                            <th>Sport</th>
+                            <th>Название турнира</th>
+                            <th>Спорт</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr th:each="tournament : ${acceptedTeamTournaments}">
                             <td>
-                                <a th:href="@{/tournament/view/{tournamentId}(tournamentId=${tournament.tournament.id})}" th:text="${tournament.tournament.name}">Tournament Name</a>
+                                <a th:href="@{/tournament/view/{tournamentId}(tournamentId=${tournament.tournament.id})}" class="text-dark text-decoration-none" th:text="${tournament.tournament.name}">Название турнира</a>
                             </td>
-                            <td th:text="${tournament.tournament.sport}">Sport</td>
+                            <td th:text="${tournament.tournament.sport}">Спорт</td>
                         </tr>
                     </tbody>
                 </table>
@@ -103,31 +112,31 @@
 
         <!-- Other Tournaments Section (Visible only to team members) -->
         <div class="mt-4" th:if="${isUserMember}">
-            <h2>Tournament Applications</h2>
+            <h2>Заявки на турниры</h2>
             <div class="table-responsive">
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th>Tournament Name</th>
-                            <th>Sport</th>
-                            <th>Status</th>
-                            <th>Registration Deadline</th>
-                            <th th:if="${isCap}">Actions</th>
+                            <th>Название турнира</th>
+                            <th>Спорт</th>
+                            <th>Статус</th>
+                            <th>Срок регистрации</th>
+                            <th th:if="${isCap}">Действия</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr th:each="tournament : ${otherTeamTournaments}">
                             <td>
-                                <a th:href="@{/tournament/view/{tournamentId}(tournamentId=${tournament.tournament.id})}" th:text="${tournament.tournament.name}">Tournament Name</a>
+                                <a th:href="@{/tournament/view/{tournamentId}(tournamentId=${tournament.tournament.id})}" th:text="${tournament.tournament.name}">Название турнира</a>
                             </td>
-                            <td th:text="${tournament.tournament.sport}">Sport</td>
-                            <td th:text="${tournament.applicationStatus}">Application Status</td>
-                            <td th:text="${#temporals.format(tournament.tournament.registerDeadline, 'dd/MM/yyyy')}">Registration Deadline</td>
+                            <td th:text="${tournament.tournament.sport}">Спорт</td>
+                            <td th:text="${tournament.applicationStatus}">Статус заявки</td>
+                            <td th:text="${#temporals.format(tournament.tournament.registerDeadline, 'dd/MM/yyyy')}">Срок регистрации</td>
                             <td th:if="${isCap}">
                                 <div th:if="${tournament.applicationStatus == T(com.course_work.Sports_Menagement_Platform.data.enums.ApplicationStatus).PENDING and
                                             today.isBefore(tournament.tournament.registerDeadline)}">
                                     <form th:action="@{/application/cancel/{tournamentId}/{teamId}(tournament=${tournament.id}, teamId=${teamId})}" method="post">
-                                        <button type="submit" class="btn btn-danger btn-sm">Cancel Application</button>
+                                        <button type="submit" class="btn btn-danger btn-sm">Отменить заявку</button>
                                     </form>
                                 </div>
                             </td>
@@ -139,11 +148,10 @@
 
         <div class="mt-4">
             <a th:href="@{/team/show_all}" class="btn btn-secondary">К командам</a>
+            <a th:if="${isUserMember and not isOnlyActiveCaptain}" th:href="@{/team/leave/{teamId}(teamId=${teamId})}" class="btn btn-danger">Покинуть команду</a>
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

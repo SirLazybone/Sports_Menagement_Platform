@@ -103,9 +103,9 @@ public class OrgComServiceImpl implements OrgComService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<UserOrgCom> getAllInvitationsPending(User user) {
-        List<UserOrgCom> list = userOrgComRepository.findByUser(user);
-        return list.stream().filter(x -> x.getInvitationStatus() == InvitationStatus.PENDING).toList();
+        return userOrgComRepository.findPendingInvitationsWithOrgCom(user);
     }
 
     @Override
