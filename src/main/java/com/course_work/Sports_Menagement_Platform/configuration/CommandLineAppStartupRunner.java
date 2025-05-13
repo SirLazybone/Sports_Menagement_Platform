@@ -98,6 +98,7 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
 
         Tournament tournament = Tournament.builder().sport(Sport.FOOTBALL).userOrgCom(userOrgCom).city(cityService.getCities().get(0)).minMembers(5).
                 name("Tour2").registerDeadline(LocalDate.of(2025, 8, 01)).is_stopped(false).build();
+        UUID tour2Id = tournament.getId();
         tournamentRepository.save(tournament);
          tournament = Tournament.builder().sport(Sport.BASKETBALL).userOrgCom(userOrgCom).city(cityService.getCities().get(1)).minMembers(5).
                 name("Tour3").registerDeadline(LocalDate.of(2025, 8, 01)).is_stopped(false).build();
@@ -115,8 +116,9 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
 
         tournament = Tournament.builder().sport(Sport.FOOTBALL).userOrgCom(userOrgCom).city(cityService.getCities().get(0)).minMembers(5).
                 name("Tour1").registerDeadline(LocalDate.of(2025, 01, 01)).is_stopped(false).build();
-        return tournamentRepository.save(tournament);
 
+
+        return tournamentRepository.save(tournament);
 
 
     }
@@ -155,7 +157,29 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
         groupRepository.save(groupFinal1);
         groupRepository.save(groupFinal2);
 
-       Location location = Location.builder().address("Ленина 1").name("Стадион 1").tournament(tournament).build();
+        Stage stage2 = Stage.builder().isPublished(false).bestPlace(0).worstPlace(0).tournament(tournamentRepository.findByName("Tour2")).build();
+        stageRepository.save(stage2);
+        ArrayList<Team> group21 = new ArrayList<>();
+        group21.add(teamRepository.findByName("Team1").get());
+        group21.add(teamRepository.findByName("Team2").get());
+        group21.add(teamRepository.findByName("Team3").get());
+        group21.add(teamRepository.findByName("Team4").get());
+        group21.add(teamRepository.findByName("Team5").get());
+
+        ArrayList<Team> group22 = new ArrayList<>();
+        group22.add(teamRepository.findByName("Team6").get());
+        group22.add(teamRepository.findByName("Team7").get());
+        group22.add(teamRepository.findByName("Team8").get());
+        group22.add(teamRepository.findByName("Team9").get());
+        group22.add(teamRepository.findByName("Team10").get());
+
+        Group groupFinal21 = Group.builder().teams(group21).name("С").stage(stage2).build();
+        Group groupFinal22 = Group.builder().teams(group22).name("D").stage(stage2).build();
+        groupRepository.save(groupFinal21);
+        groupRepository.save(groupFinal22);
+
+
+        Location location = Location.builder().address("Ленина 1").name("Стадион 1").tournament(tournament).build();
         location = locationRepository.save(location);
 
         for (int i = 1; i <= 30; i++) {

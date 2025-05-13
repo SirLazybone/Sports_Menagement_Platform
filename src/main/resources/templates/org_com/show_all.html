@@ -2,20 +2,108 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Show All Orgcoms</title>
+    <title>Оргкомитеты - Sports Management Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body { 
+            background: #f8fafc;
+            min-height: 100vh;
+        }
+        .orgcoms-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .page-title {
+            color: #2c3e50;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #eaf6ff;
+        }
+        .orgcom-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: inherit;
+            height: 100%;
+        }
+        .orgcom-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-color: #3498db;
+        }
+        .card-body {
+            padding: 1.25rem;
+        }
+        .card-title {
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .card-text {
+            color: #64748b;
+        }
+        .error-message {
+            background-color: #fee2e2;
+            border-left: 4px solid #dc2626;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+            color: #991b1b;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        .btn-primary {
+            background: #3498db;
+            border: none;
+        }
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+    </style>
 </head>
 <body>
-<div th:if="${error}">
-    <p th:text="${error}"></p>
-</div>
+    <header th:replace="~{fragments/header :: header}"></header>
 
-<h1>Список оргкомитетов</h1>
+    <div class="container">
+        <div class="orgcoms-container">
+            <div th:if="${error}" class="error-message" th:text="${error}"></div>
+            <div th:unless="${error}">
+                <h1 class="page-title">
+                    <i class="bi bi-building me-2"></i>Список оргкомитетов
+                </h1>
 
-<ul>
-    <li th:each="orgcom : ${orgcoms}">
-        <a th:href="@{/org_com/view/{id}(id=${orgcom.id})}" th:text="${orgcom.name}"></a>
-    </li>
-</ul>
+                <div class="row g-4">
+                    <div th:each="orgcom : ${orgcoms}" class="col-md-4">
+                        <a th:href="@{/org_com/view/{id}(id=${orgcom.id})}" class="orgcom-card">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    <i class="bi bi-building me-2"></i>
+                                    <span th:text="${orgcom.name}"></span>
+                                </h5>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <br>
+            <div th:if="${#authorization.expression('isAuthenticated()')}" class="d-flex gap-3">
+                <a href="/org_com/new" th:href="@{/org_com/new}" class="btn btn-primary"><i class="bi bi-building"></i> Создать оргкомитет</a>
+            </div>
+        </div>
+    </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

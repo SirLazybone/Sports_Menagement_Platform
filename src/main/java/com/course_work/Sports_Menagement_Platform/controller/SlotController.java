@@ -57,6 +57,7 @@ public class SlotController {
         List<SlotDTO> slotDTOS = slots.stream().map(i -> SlotDTO.builder().id(i.getId()).
                 time(i.getTime()).date(i.getDate()).hasMatches(!i.getMatches().isEmpty()).
                 locationId(i.getLocation().getId()).locationName(i.getLocation().getName()).build()).collect(Collectors.toList());
+        model.addAttribute("tournamentId", tournamentId);
         model.addAttribute("slotDTO", slotDTOS);
         model.addAttribute("slotCreation", new SlotCreationDTO());
         model.addAttribute("locations", locationService.getLocationsByTournamentId(tournamentId));
@@ -86,7 +87,7 @@ public class SlotController {
             redirectAttributes.addAttribute("error", e.getMessage());
         }
         UUID tournamentId = locationService.getById(slotDTO.getLocation()).getTournament().getId();
-        return "redirect:slot/all/" + tournamentId.toString();
+        return "redirect:/slot/all/" + tournamentId.toString();
     }
 
     @GetMapping("/view/{slotId}")
@@ -99,5 +100,15 @@ public class SlotController {
         }
         model.addAttribute("slot", slot);
         return "tournament/slot";
+    }
+
+    @PostMapping("/slot/delete/{slotId}/{tournamentId}")
+    public String deleteSlot(@PathVariable UUID slotId, @PathVariable UUID tournamentId, RedirectAttributes redirectAttributes) {
+        try {
+            slotService.deleteSlot(slotId);
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/slot/all/" + tournamentId.toString();
     }
 }

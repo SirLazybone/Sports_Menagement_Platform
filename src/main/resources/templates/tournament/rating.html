@@ -1,26 +1,87 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Рейтинг турнира</title>
+    <title>Рейтинг турнира - Sports Management Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
-        table {
-            border-collapse: collapse;
-            width: 100%;
+        body {
+            background: #f8fafc;
+            min-height: 100vh;
         }
-        th, td {
-            border: 1px solid black;
-            padding: 8px;
+        .rating-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .page-title {
+            color: #2c3e50;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #eaf6ff;
+        }
+        .rating-table {
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .rating-table th {
+            background-color: #f8fafc;
+            color: #64748b;
+            font-weight: 600;
+            padding: 1rem;
+            border-bottom: 2px solid #e2e8f0;
             text-align: center;
         }
-        th {
-            background-color: #f2f2f2;
+        .rating-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            color: #2c3e50;
+            text-align: center;
+        }
+        .rating-table tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        .rating-table tr:last-child td {
+            border-bottom: none;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-primary {
+            background: #3498db;
+            border: none;
+        }
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        .checkbox-cell {
+            vertical-align: middle;
         }
     </style>
 </head>
 <body>
+    <header th:replace="~{fragments/header :: header}"></header>
+    <div class="rating-container">
+        <h1 class="page-title">
+            <i class="bi bi-trophy me-2"></i>Рейтинг турнира
+        </h1>
 <form th:action="@{/applications/rating/{tournamentId}(tournamentId=${tournamentId})}" method="post">
-    <table>
+            <div class="table-responsive">
+                <table class="rating-table">
         <thead>
         <tr>
             <th>Место</th>
@@ -30,24 +91,21 @@
             <th>Поражения</th>
             <th>Ничьи</th>
             <th>Очки</th>
-
             <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}">Забито</th>
             <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}">Пропущено</th>
             <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}">Разница</th>
             <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}">Победы по буллитам</th>
             <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}">Поражения по буллитам</th>
-
             <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}">Выиграно сетов</th>
             <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}">Проиграно сетов</th>
             <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}">Соотношение сетов</th>
             <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}">Забито мячей</th>
             <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}">Пропущено мячей</th>
             <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}">Соотношение мячей</th>
-
             <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).FOOTBALL or sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).BASKETBALL}">Забито</th>
             <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).FOOTBALL or sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).BASKETBALL}">Пропущено</th>
             <th th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).FOOTBALL or sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).BASKETBALL}">Разница</th>
-            <th>Проходит в плей-офф</th>
+            <th th:if="${isOrg}">Проходит в плей-офф</th>
         </tr>
         </thead>
         <tbody>
@@ -59,30 +117,32 @@
             <td th:text="${team.loseCount}"></td>
             <td th:text="${team.drawCount}"></td>
             <td th:text="${team.points}"></td>
-
             <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}" th:text="${team.scoredGoals}"></td>
             <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}" th:text="${team.missedGoals}"></td>
             <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}" th:text="${team.diffGoals}"></td>
             <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}" th:text="${team.wonByBullets}"></td>
             <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}" th:text="${team.lostByBullets}"></td>
-
             <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${team.wonSets}"></td>
             <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${team.lostSets}"></td>
             <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${#numbers.formatDecimal(team.setsRatio, 1, 2)}"></td>
             <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${team.scoredGoals}"></td>
             <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${team.missedGoals}"></td>
             <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${#numbers.formatDecimal(team.goalsRatio, 1, 2)}"></td>
-
             <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).FOOTBALL or sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).BASKETBALL}" th:text="${team.scoredGoals}"></td>
             <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).FOOTBALL or sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).BASKETBALL}" th:text="${team.missedGoals}"></td>
             <td th:if="${sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).FOOTBALL or sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).BASKETBALL}" th:text="${team.diffGoals}"></td>
-            <td>
+                        <td th:if="${isOrg}" class="checkbox-cell">
                 <input type="checkbox" th:name="${team.teamTournamentId}" th:checked="${team.goesToPlayOff}">
             </td>
         </tr>
         </tbody>
     </table>
-    <button type="submit">Сохранить</button>
+            </div>
+            <button type="submit" class="btn btn-primary mt-4">
+                <i class="bi bi-save"></i>Сохранить
+            </button>
 </form>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

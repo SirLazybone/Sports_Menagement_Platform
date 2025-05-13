@@ -7,6 +7,7 @@ import com.course_work.Sports_Menagement_Platform.repositories.GroupRepository;
 import com.course_work.Sports_Menagement_Platform.repositories.TeamRepository;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.GroupService;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.StageService;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.MatchService;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -17,7 +18,9 @@ public class GroupServiceImpl implements GroupService {
     private final GroupRepository groupRepository;
     private final StageService stageService;
     private final TeamRepository teamRepository;
-    public GroupServiceImpl(GroupRepository groupRepository, StageService stageService, TeamRepository teamRepository) {
+
+    public GroupServiceImpl(GroupRepository groupRepository, StageService stageService, 
+                          TeamRepository teamRepository) {
         this.groupRepository = groupRepository;
         this.stageService = stageService;
         this.teamRepository = teamRepository;
@@ -26,7 +29,15 @@ public class GroupServiceImpl implements GroupService {
     @Override
     public List<Group> getGroups(UUID tournamentId) {
         Stage stage = stageService.createGroupStageIfNotExists(tournamentId);
-        return groupRepository.findByStageId(stage.getId());
+        System.out.println("DEBUG: Stage for tournament " + tournamentId + ": " + stage);
+        if (stage == null) {
+            System.out.println("DEBUG: No stage found for tournament " + tournamentId);
+            return new ArrayList<>();
+        }
+        List<Group> groups = groupRepository.findByStageId(stage.getId());
+        System.out.println("DEBUG: Found groups for stage " + stage.getId() + ": " + groups);
+        System.out.println("DEBUG: Group names: " + groups.stream().map(Group::getName).collect(Collectors.toList()));
+        return groups;
     }
 
     @Override
@@ -49,7 +60,6 @@ public class GroupServiceImpl implements GroupService {
             Group group = Group.builder().stage(stage).name(groupEntry.getKey()).teams(teams).build();
             groupRepository.save(group);
         }
+
     }
-
-
 }

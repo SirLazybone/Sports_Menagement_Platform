@@ -132,20 +132,47 @@ public class TournamentController {
         try {
             Tournament tournament = tournamentService.getById(id);
             stageService.createGroupStageIfNotExists(id);
-            List<Stage> stages = tournament.getStages().stream().filter(stage -> stage.getBestPlace() >= 0).collect(Collectors.toList());
-            List<Stage> stagesTeamsKnown = stages.stream().filter(stage -> stageService.getStageStatus(stage) == StageStatus.TEAMS_KNOWN).collect(Collectors.toList());
-            List<Stage> stagesPublished = stages.stream().filter(stage -> stageService.getStageStatus(stage) == StageStatus.SCHEDULE_PUBLISHED).collect(Collectors.toList());
-            List<Stage> stagesFinished = stages.stream().filter(stage -> stageService.getStageStatus(stage) == StageStatus.FINISHED).collect(Collectors.toList());
+            
+            List<Stage> stages = tournament.getStages().stream()
+                .filter(stage -> stage.getBestPlace() >= 0)
+                .collect(Collectors.toList());
+            
+            // Находим групповой этап
+            Stage groupStage = stages.stream()
+                .filter(stage -> stage.getBestPlace() == 0 && stage.getWorstPlace() == 0)
+                .findFirst()
+                .orElse(null);
+            
+            // Разделяем этапы по статусам
+            List<Stage> stagesTeamsKnown = stages.stream()
+                .filter(stage -> stageService.getStageStatus(stage) == StageStatus.TEAMS_KNOWN)
+                .collect(Collectors.toList());
+                
+            // Добавляем групповой этап в stagesTeamsKnown, если он существует
+            if (groupStage != null && !stagesTeamsKnown.contains(groupStage)) {
+                stagesTeamsKnown.add(groupStage);
+            }
+                
+            List<Stage> stagesPublished = stages.stream()
+                .filter(stage -> stage.isPublished() && stageService.getStageStatus(stage) != StageStatus.FINISHED)
+                .collect(Collectors.toList());
+                
+            List<Stage> stagesFinished = stages.stream()
+                .filter(stage -> stageService.getStageStatus(stage) == StageStatus.FINISHED)
+                .collect(Collectors.toList());
 
             model.addAttribute("tournament", tournament);
             model.addAttribute("stagesTeamsKnown", stagesTeamsKnown);
             model.addAttribute("stagesPublished", stagesPublished);
             model.addAttribute("stagesFinished", stagesFinished);
+            
             boolean isUserOrg = false;
             boolean isUserChiefOrg = false;
 
             if (user != null) {
-                List<UserOrgCom> userOrgComList = tournament.getUserOrgCom().getOrgCom().getUserOrgComList().stream().filter(userOrgCom -> userOrgCom.getUser().getId().equals(user.getId())).collect(Collectors.toList());
+                List<UserOrgCom> userOrgComList = tournament.getUserOrgCom().getOrgCom().getUserOrgComList().stream()
+                    .filter(userOrgCom -> userOrgCom.getUser().getId().equals(user.getId()))
+                    .collect(Collectors.toList());
                 if (userOrgComList.size() != 0) {
                     isUserOrg = true;
                     if (userOrgComList.get(0).getOrgRole() == Org.CHIEF) isUserChiefOrg = true;
@@ -157,6 +184,7 @@ public class TournamentController {
             model.addAttribute("tournamentId", id);
             model.addAttribute("registrationOpen", tournament.getRegisterDeadline().isAfter(ChronoLocalDate.from(LocalDateTime.now())));
         } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
             throw new ResourceNotFoundException("Чемпионат не найден");
         }
         return "tournament/view";

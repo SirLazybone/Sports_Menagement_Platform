@@ -20,6 +20,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import java.time.LocalDate;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -193,82 +194,121 @@ public class StageController {
 
         try {
             stageService.publishStage(stageId);
+            return "redirect:/tournament/view/" + tournamentId.toString();
         } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            Stage stage = stageService.getStageById(stageId);
+            if (stage.getBestPlace() == 0) {
+                return "redirect:/match/fill_group_stage/" + stageId.toString();
+            } else {
+                return "redirect:/match/fill_playoff_stage/" + stageId.toString();
+            }
         }
-        return "redirect:/stage/create_stage/" + tournamentId.toString();
     }
 
     @GetMapping("/manage_groups/{tournamentId}")
-    public String manageGroups(@PathVariable UUID tournamentId, Model model, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user, @RequestParam(defaultValue = "") String savingError) {
+    public String manageGroups(@PathVariable UUID tournamentId, Model model, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
+        System.out.println("Entering manageGroups for tournamentId: " + tournamentId);
         try {
-            tournamentService.getById(tournamentId);
+            Tournament tournament = tournamentService.getById(tournamentId);
+            System.out.println("Found tournament: " + tournament.getName());
+            
+            // Check access rights
+            boolean isUserOrg = accessService.isUserOrgOfTournament(user.getId(), tournamentId);
+            System.out.println("Is user org: " + isUserOrg);
+            if (!isUserOrg) {
+                throw new AccessDeniedException("У вас нет доступа к управлению группами");
+            }
+            
+            // Check registration status
+            Stage groupStage = stageService.createGroupStageIfNotExists(tournamentId);
+            System.out.println("Group stage created/exists: " + (groupStage != null));
+            if (groupStage == null) {
+                if (tournament.getRegisterDeadline().isAfter(LocalDate.now())) {
+                    System.out.println("Registration deadline not passed");
+                    model.addAttribute("error", "Регистрация еще не завершена. Группы можно будет настроить после " + tournament.getRegisterDeadline());
+                } else {
+                    System.out.println("Has pending applications");
+                    model.addAttribute("error", "Есть ожидающие заявки на участие. Группы можно будет настроить после их рассмотрения");
+                }
+                model.addAttribute("registrationNotFinished", true);
+                return "stage/manage_groups";
+            }
+            
+            // Get groups and teams
+            List<Group> groups = groupService.getGroups(tournamentId);
+            List<Team> teams = tournamentService.getAllTeamsByTournamentId(tournamentId);
+            System.out.println("Found " + groups.size() + " groups and " + teams.size() + " teams");
+            
+            // Prepare data for view
+            Map<String, List<Pair<UUID, String>>> groupsMap = groups.stream()
+                .collect(Collectors.toMap(
+                    Group::getName,
+                    group -> group.getTeams().stream()
+                        .map(team -> Pair.of(team.getId(), team.getName()))
+                        .collect(Collectors.toList())
+                ));
+            System.out.println("DEBUG: Groups map keys: " + groupsMap.keySet());
+            System.out.println("DEBUG: Groups map values: " + groupsMap.values());
+                
+            List<Pair<UUID, String>> teamsPairs = teams.stream()
+                .map(team -> Pair.of(team.getId(), team.getName()))
+                .collect(Collectors.toList());
+                
+            // Add attributes to model
+            model.addAttribute("teams", teamsPairs);
+            model.addAttribute("groups", groupsMap);
+            model.addAttribute("tournamentId", tournamentId);
+            model.addAttribute("newGroupName", "");
+            model.addAttribute("stageId", groupStage.getId());
+            
+            // Add flash attributes if they exist
+            if (redirectAttributes.getFlashAttributes().containsKey("error")) {
+                model.addAttribute("error", redirectAttributes.getFlashAttributes().get("error"));
+            }
+            if (redirectAttributes.getFlashAttributes().containsKey("success")) {
+                model.addAttribute("success", redirectAttributes.getFlashAttributes().get("success"));
+            }
+            
+            return "stage/manage_groups";
+            
+        } catch (AccessDeniedException e) {
+            System.out.println("Access denied: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/tournament/view/" + tournamentId;
         } catch (RuntimeException e) {
-            throw new ResourceNotFoundException("Чемпионат не найден");
+            System.out.println("Runtime exception: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Произошла ошибка: " + e.getMessage());
+            return "redirect:/tournament/view/" + tournamentId;
         }
-        try {
-            if (!accessService.isUserOrgOfTournament(user.getId(), tournamentId)) {
-                throw new AccessDeniedException("У вас нет доступа");
-            }
-        } catch (RuntimeException e) {
-            throw new AccessDeniedException("У вас нет доступа");
-        }
-        List<Group> groups = groupService.getGroups(tournamentId);
-        List<Team> teams = tournamentService.getAllTeamsByTournamentId(tournamentId);
-        Map<String, List<Pair<UUID, String>>> groupsMap = new HashMap<>();
-        for (Group group : groups) {
-            List<Pair<UUID, String>> teamsPair = group.getTeams().stream().map(i -> Pair.of(i.getId(), i.getName())).collect(Collectors.toList());
-            groupsMap.put(group.getName(), teamsPair);
-        }
-        List<Pair<UUID, String>> teamsPairs = teams.stream().map(i -> Pair.of(i.getId(), i.getName())).collect(Collectors.toList());
-        model.addAttribute("teams", teamsPairs);
-        model.addAttribute("groups", groupsMap);
-        model.addAttribute("tournamentId", tournamentId);
-        model.addAttribute("savingError", "");
-        model.addAttribute("registrationNotFinished", false);
-
-        if (stageService.createGroupStageIfNotExists(tournamentId) == null) {
-            model.addAttribute("savingError", "Регистрация еще не завершена, настройка групп недоступна");
-            model.addAttribute("registrationNotFinished", true);
-        }
-        else if (!savingError.equals("")) {
-            if (savingError.equals("1")) {
-                model.addAttribute("savingError", "Одна команда может быть только в одной группе");
-            }
-            if (savingError.equals("2")) {
-                model.addAttribute("savingError", "Нельзя создать группу с одной командой");
-            }
-        }
-
-        model.addAttribute("newGroupName", "");
-        model.addAttribute("stageId", stageService.getGroupStage(tournamentId));
-
-        return "stage/manage_groups";
     }
-
-
-
-
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/create_groups/{tournamentId}")
-    public String createGroups(@PathVariable UUID tournamentId, @RequestParam Map<String, String> allParams, RedirectAttributes redirectAttributes,
-                             @AuthenticationPrincipal User user) {
+    public String createGroups(@PathVariable UUID tournamentId, @RequestParam Map<String, String> allParams, 
+                             RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
 
         if (stageService.createGroupStageIfNotExists(tournamentId) == null) {
+            redirectAttributes.addFlashAttribute("error", "Регистрация еще не завершена, настройка групп недоступна");
             return "redirect:/stage/manage_groups/" + tournamentId.toString();
         }
 
+        // Extract group names and validate for duplicates
         Set<String> groupNames = allParams.keySet().stream()
                 .filter(k -> k.startsWith("groupNames["))
                 .map(k -> k.substring("groupNames[".length(), k.length() - 1))
                 .collect(Collectors.toSet());
+                
+
         Map<String, List<UUID>> groups = new HashMap<>();
+        
         for (String groupName : groupNames) {
             List<UUID> teamIds = allParams.keySet().stream()
                     .filter(k -> k.startsWith("groupTeams[" + groupName + "]"))
                     .map(k -> UUID.fromString(allParams.get(k)))
                     .collect(Collectors.toList());
+                    
+            
             groups.put(groupName, teamIds);
         }
 
@@ -276,19 +316,19 @@ public class StageController {
 
         try {
             groupService.updateGroupTeams(stage.getId(), groups);
+            matchService.createGroupMatchIfNotCreated(stage.getId());
         } catch (RuntimeException e) {
-
-            if (e.getMessage() == "Одна команда может быть только в одной группе") {
-                return "redirect:/stage/manage_groups/" + tournamentId.toString() + "?savingError=" + 1;
-            } else if (e.getMessage() == "Нельзя создать группу с одной командой") {
-                return "redirect:/stage/manage_groups/" + tournamentId.toString() + "?savingError=" + 2;
+            if (e.getMessage().equals("Одна команда может быть только в одной группе")) {
+                redirectAttributes.addFlashAttribute("error", "Одна команда может быть только в одной группе");
+            } else if (e.getMessage().equals("Нельзя создать группу с одной командой")) {
+                redirectAttributes.addFlashAttribute("error", "Нельзя создать группу с одной командой");
+            } else {
+                redirectAttributes.addFlashAttribute("error", "Произошла ошибка при сохранении групп: " + e.getMessage());
             }
-            else {
-                return "redirect:/stage/manage_groups/" + tournamentId.toString();
-            }
+            return "redirect:/stage/manage_groups/" + tournamentId.toString();
         }
 
-
+        redirectAttributes.addFlashAttribute("success", "Группы успешно сохранены");
         return "redirect:/stage/manage_groups/" + tournamentId.toString();
     }
 

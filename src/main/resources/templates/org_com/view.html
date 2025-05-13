@@ -2,163 +2,323 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Пользователи в оргкомитете</title>
+    <title>Просмотр оргкомитета - Sports Management Platform</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
-        .user-link {
-            color: #000 !important;
-            text-decoration: none !important;
+        body { 
+            background: #f8fafc;
+            min-height: 100vh;
         }
-        .user-link:hover {
-            color: #333 !important;
-            text-decoration: underline !important;
-        }
-        .logo-preview {
-            width: 150px;
-            height: 150px;
-            object-fit: cover;
-            border-radius: 8px;
-        }
-        .default-logo {
-            width: 150px;
-            height: 150px;
-            background-color: #f0f0f0;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 50px;
-            color: #666;
-        }
-        .card-orgcom {
-            background: #fff;
+        .orgcom-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
             border-radius: 16px;
-            box-shadow: 0 2px 16px rgba(0,0,0,0.08);
-            padding: 32px 32px 24px 32px;
-            margin-top: 32px;
-            margin-bottom: 32px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         .section-title {
+            color: #2c3e50;
             font-size: 1.5rem;
             font-weight: 600;
-            margin-bottom: 18px;
-            margin-top: 32px;
+            margin: 2rem 0 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #eaf6ff;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        .btn-primary {
+            background: #3498db;
+            border: none;
+        }
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        .btn-success {
+            background: #2ecc71;
+            border: none;
+        }
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        .btn-danger {
+            background: #ef4444;
+            border: none;
+        }
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        .btn-info {
+            background: #0ea5e9;
+            border: none;
+            color: white;
+        }
+        .btn-info:hover {
+            background: #0284c7;
+            color: white;
+        }
+        .table {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .table thead {
+            background-color: #f8fafc;
+        }
+        .table th {
+            font-weight: 600;
+            color: #2c3e50;
+            padding: 1rem;
+        }
+        .table td {
+            padding: 1rem;
+            vertical-align: middle;
+        }
+        .member-link {
+            color: #2c3e50;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .member-link:hover {
+            color: #3498db;
+        }
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .status-accepted {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        .status-pending {
+            background-color: #fef3c7;
+            color: #92400e;
         }
         .action-buttons {
-            gap: 10px;
+            gap: 0.5rem;
+        }
+        .header-section {
+            margin-bottom: 2rem;
+        }
+        .header-section h1 {
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .header-section h5 {
+            color: #64748b;
+        }
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid #eaf6ff;
+        }
+        .button-group-left {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            flex: 1;
+        }
+        .button-group-right {
+            display: flex;
+            gap: 0.75rem;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 160px;
+        }
+        .btn-sm {
+            min-width: auto;
         }
         @media (max-width: 768px) {
-            .card-orgcom { padding: 16px 4px; }
-            .section-title { font-size: 1.2rem; margin-top: 18px; }
+            .button-group {
+                flex-direction: column;
+            }
+            .button-group-left, .button-group-right {
+                width: 100%;
+            }
+            .button-group-right {
+                margin-top: 0.75rem;
+            }
+            .btn {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-    <div th:replace="fragments/header :: header"></div>
+    <header th:replace="~{fragments/header :: header}"></header>
 
     <div class="container">
-        <div class="card-orgcom">
-            <div class="row align-items-center mb-4">
-                <div class="col-12">
-                    <h1 class="mb-1" th:text="${orgComName}"></h1>
-                    <h5 class="text-muted">Пользователи оргкомитета</h5>
-                </div>
+        <div class="orgcom-container">
+            <div class="header-section">
+                <h1 th:text="${orgComName}">Название оргкомитета</h1>
+                <h5>Пользователи оргкомитета</h5>
             </div>
 
-            <div class="row">
-                <div class="col-12">
-                    <div class="section-title">Активные участники</div>
-                    <div class="table-responsive">
-                        <table class="table table-striped align-middle mb-4">
-                            <thead>
-                                <tr>
-                                    <th>Имя</th>
-                                    <th>Фамилия</th>
-                                    <th>Роль</th>
-                                    <th>Статус</th>
-                                    <th th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">Действие</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="user : ${members}" th:if="${user.invitationStatus == invitationStatuses.accepted}">
-                                    <td>
-                                        <a th:href="@{/user/profile/{id}(id=${user.id})}" class="user-link" th:text="${user.name}"></a>
-                                    </td>
-                                    <td>
-                                        <a th:href="@{/user/profile/{id}(id=${user.id})}" class="user-link" th:text="${user.surname}"></a>
-                                    </td>
-                                    <td th:text="${user.orgRole}"></td>
-                                    <td>
-                                        <span th:if="${user.isRef}">Судья</span>
-                                    </td>
-                                    <td th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">
-                                        <a th:href="@{/user_org_com/edit/{orgComId}/{userId}(orgComId=${orgComId}, userId=${user.id})}" class="btn btn-primary btn-sm">Изменить настройки</a>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <div class="section-title">
+                <i class="bi bi-people me-2"></i>Активные участники
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Имя</th>
+                            <th>Фамилия</th>
+                            <th>Роль</th>
+                            <th>Статус</th>
+                            <th th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="user : ${members}" th:if="${user.invitationStatus == invitationStatuses.accepted}">
+                            <td>
+                                <a th:href="@{/user/profile/{id}(id=${user.id})}" class="member-link" th:text="${user.name}"></a>
+                            </td>
+                            <td>
+                                <a th:href="@{/user/profile/{id}(id=${user.id})}" class="member-link" th:text="${user.surname}"></a>
+                            </td>
+                            <td>
+                                <span class="status-badge" th:text="${user.orgRole}"></span>
+                            </td>
+                            <td>
+                                <span th:if="${user.isRef}" class="status-badge status-accepted">Судья</span>
+                            </td>
+                            <td th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" th:data-bs-target="${'#editOrgMemberModal_' + user.id}">
+                                    <i class="bi bi-three-dots"></i>
+                                </button>
+                                <!-- Модальное окно для управления пользователем оргкома -->
+                                <div class="modal fade" th:id="${'editOrgMemberModal_' + user.id}" tabindex="-1" aria-labelledby="editOrgMemberModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="editOrgMemberModalLabel">
+                                                    <i class="bi bi-person-gear me-2"></i>Действия с пользователем
+                                                </h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="mb-3 fw-bold text-center" th:text="${user.name + ' ' + user.surname}"></div>
+                                                <div class="d-flex flex-column gap-2">
+                                                    <a th:if = "${user.orgRole != T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}" th:href="@{/user_org_com/assign_to_chief/{orgComId}/{userId}(orgComId=${orgComId}, userId=${user.id})}" class="btn btn-outline-primary">
+                                                        <i class="bi bi-person-badge"></i> Назначить старшим организатором
+                                                    </a>
+                                                    <a th:if = "${user.orgRole != T(com.course_work.Sports_Menagement_Platform.data.enums.Org).ORG}" th:href="@{/user_org_com/assign_to_org/{orgComId}/{userId}(orgComId=${orgComId}, userId=${user.id})}" class="btn btn-outline-primary">
+                                                        <i class="bi bi-person-plus"></i> Назначить организатором (не старшим)
+                                                    </a>
+                                                    <a th:if = "${user.orgRole != T(com.course_work.Sports_Menagement_Platform.data.enums.Org).NONE}" th:href="@{/user_org_com/assign_to_none/{orgComId}/{userId}(orgComId=${orgComId}, userId=${user.id})}" class="btn btn-outline-primary">
+                                                        <i class="bi bi-person-dash"></i> Забрать права организатора
+                                                    </a>
+                                                    <a th:unless = "${user.isRef}" th:href="@{/user_org_com/assign_to_referee/{orgComId}/{userId}(orgComId=${orgComId}, userId=${user.id})}" class="btn btn-outline-primary">
+                                                        <i class="bi bi-person-check"></i> Назначить судьей
+                                                    </a>
+                                                    <a th:if = "${user.isRef}" th:href="@{/user_org_com/remove_as_referee/{orgComId}/{userId}(orgComId=${orgComId}, userId=${user.id})}" class="btn btn-outline-primary">
+                                                        <i class="bi bi-person-x"></i> Забрать права судьи
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
 
-            <div class="row" th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">
-                <div class="col-12">
-                    <div class="section-title">Еще не ответили на приглашение</div>
-                    <div class="table-responsive">
-                        <table class="table table-striped align-middle mb-4">
-                            <thead>
-                                <tr>
-                                    <th>Имя</th>
-                                    <th>Фамилия</th>
-                                    <th>Роль</th>
-                                    <th>Статус</th>
-                                    <th>Действие</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="user : ${members}" th:if="${user.invitationStatus == invitationStatuses.pending}">
-                                    <td>
-                                        <a th:href="@{/user/profile/{id}(id=${user.id})}" class="user-link" th:text="${user.name}"></a>
-                                    </td>
-                                    <td>
-                                        <a th:href="@{/user/profile/{id}(id=${user.id})}" class="user-link" th:text="${user.surname}"></a>
-                                    </td>
-                                    <td th:text="${user.orgRole}"></td>
-                                    <td>
-                                        <span th:if="${user.isRef}">Судья</span>
-                                    </td>
-                                    <td>
-                                        <a th:href="@{/user_org_com/edit/{orgComId}/{userId}(orgComId=${orgComId}, userId=${user.id})}" class="btn btn-primary btn-sm">Изменить настройки</a>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <div class="section-title" th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">
+                <i class="bi bi-clock-history me-2"></i>Ожидающие ответа
+            </div>
+            <div class="table-responsive" th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Имя</th>
+                            <th>Фамилия</th>
+                            <th>Роль</th>
+                            <th>Статус</th>
+                            <th>Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="user : ${members}" th:if="${user.invitationStatus == invitationStatuses.pending}">
+                            <td>
+                                <a th:href="@{/user/profile/{id}(id=${user.id})}" class="member-link" th:text="${user.name}"></a>
+                            </td>
+                            <td>
+                                <a th:href="@{/user/profile/{id}(id=${user.id})}" class="member-link" th:text="${user.surname}"></a>
+                            </td>
+                            <td>
+                                <span class="status-badge" th:text="${user.orgRole}"></span>
+                            </td>
+                            <td>
+                                <span th:if="${user.isRef}" class="status-badge status-accepted">Судья</span>
+                            </td>
+                            <td>
+                                <a th:href="@{/user_org_com/edit/{orgComId}/{userId}(orgComId=${orgComId}, userId=${user.id})}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-pencil me-1"></i>Изменить настройки
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
 
-            <div class="row mt-4">
-                <div class="col-12 d-flex flex-wrap align-items-center action-buttons">
+            <div class="button-group">
+                <div class="button-group-left">
                     <div th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">
-                        <a th:href="@{/org_com/create_invitation/{orgComId}(orgComId=${orgComId})}" class="btn btn-success mb-2 me-2">Добавить людей</a>
+                        <a th:href="@{/org_com/create_invitation/{orgComId}(orgComId=${orgComId})}" class="btn btn-success">
+                            <i class="bi bi-person-plus me-2"></i>Добавить людей
+                        </a>
                     </div>
                     <div th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">
-                        <a th:href="@{/org_com/edit/{orgComId}(orgComId=${orgComId})}" class="btn btn-primary mb-2 me-2">Редактировать</a>
+                        <a th:href="@{/tournament/create/{orgComId}(orgComId=${orgComId})}" class="btn btn-success">
+                            <i class="bi bi-trophy me-2"></i>Создать чемпионат
+                        </a>
                     </div>
-                    <form th:action="@{/org_com/left/{orgComId}(orgComId=${orgComId})}" method="post" style="display: inline;">
-                        <button type="submit" class="btn btn-danger mb-2 me-2">Покинуть Оргкомитет</button>
-                    </form>
+                    <a th:href="@{/org_com/tournaments/{orgComId}(orgComId=${orgComId})}" class="btn btn-info">
+                        <i class="bi bi-list-check me-2"></i>Чемпионаты
+                    </a>
                     <div th:if="${role == T(com.course_work.Sports_Menagement_Platform.data.enums.Org).CHIEF}">
-                        <a th:href="@{/tournament/create/{orgComId}(orgComId=${orgComId})}" class="btn btn-success mb-2 me-2">Создать чемпионат</a>
+                        <a th:href="@{/org_com/edit/{orgComId}(orgComId=${orgComId})}" class="btn btn-primary">
+                            <i class="bi bi-pencil me-2"></i>Редактировать
+                        </a>
                     </div>
-                    <a th:href="@{/org_com/tournaments/{orgComId}(orgComId=${orgComId})}" class="btn btn-info mb-2">Чемпионаты</a>
+                </div>
+                <br>
+                <div class="button-group-right">
+                    <button type="button" class="btn btn-danger" th:onclick="'handleLeaveClick(' + ${isUserOnlyChief} + ')'">
+                        <i class="bi bi-box-arrow-right me-2"></i>Покинуть оргкомитет
+                    </button>
                 </div>
             </div>
 
-            <div th:if="${error}" class="alert alert-danger mt-4" th:text="${error}"></div>
+            <div th:if="${error}" class="alert alert-danger mt-4" role="alert" th:text="${error}"></div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function handleLeaveClick(isUserOnlyChief) {
+            if (isUserOnlyChief) {
+                alert('Единственный старший организатор не может покинуть организацию');
+            } else {
+                if (confirm('Вы уверены, что хотите покинуть оргкомитет?')) {
+                    document.querySelector('form[action*="/org_com/left/"]').submit();
+                }
+            }
+        }
+    </script>
 </body>
 </html>

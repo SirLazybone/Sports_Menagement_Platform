@@ -1,0 +1,2048 @@
+openapi: 3.0.3
+info:
+  title: Sports Tournament Management API
+  description: API for managing sports tournaments, teams, matches, and organization committees
+  version: 1.0.0
+servers:
+  - url: 'https://api.example.com/v1'
+    description: Production server
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: SESSION
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        surname:
+          type: string
+        tel:
+          type: string
+        photo:
+          type: string
+        role:
+          $ref: '#/components/schemas/Role'
+        telegram:
+          type: string
+        telegram_open:
+          type: string
+        phone_open:
+          type: string
+      required:
+        - name
+        - surname
+        - tel
+      
+    Role:
+      type: string
+      enum: [USER, ADMIN]
+      
+    Org:
+      type: string
+      enum: [CHIEF, ORG, NONE]
+      
+    UserCreationDTO:
+      type: object
+      properties:
+        name:
+          type: string
+        surname:
+          type: string
+        tel:
+          type: string
+        password:
+          type: string
+      required:
+        - name
+        - surname
+        - tel
+        - password
+        
+    LoginDTO:
+      type: object
+      properties:
+        tel:
+          type: string
+        password:
+          type: string
+      required:
+        - tel
+        - password
+        
+    OrgCom:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        logo:
+          type: string
+        role:
+          $ref: '#/components/schemas/Org'
+      required:
+        - name
+        
+    OrgComDTO:
+      type: object
+      properties:
+        name:
+          type: string
+        logo:
+          type: string
+      required:
+        - name
+        
+    Tournament:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        org_id:
+          type: string
+          format: uuid
+        city:
+          type: string
+        min_member:
+          type: integer
+        orgcom_id:
+          type: string
+          format: uuid
+        register_deadline:
+          type: string
+          format: date-time
+        logo:
+          type: string
+        description:
+          type: string
+        is_stopped:
+          type: boolean
+      required:
+        - name
+        - org_id
+        
+    Team:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        sport:
+          $ref: '#/components/schemas/Sport'
+        count_member:
+          type: integer
+        wins:
+          type: integer
+        loss:
+          type: integer
+        logo:
+          type: string
+      required:
+        - name
+        - sport
+        
+    TeamDTO:
+      type: object
+      properties:
+        name:
+          type: string
+        sport:
+          $ref: '#/components/schemas/Sport'
+      required:
+        - name
+        - sport
+        
+    Sport:
+      type: string
+      enum: [FOOTBALL, BASKETBALL, VOLLEYBALL, TENNIS]
+      
+    Stage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tournament_id:
+          type: string
+          format: uuid
+        is_published:
+          type: boolean
+        best_place:
+          type: integer
+        worst_place:
+          type: integer
+      required:
+        - tournament_id
+        
+    Location:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        address:
+          type: string
+      required:
+        - name
+        - address
+        
+    LocationCreationDTO:
+      type: object
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+      required:
+        - name
+        - address
+        
+    Slot:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date-time
+        location:
+          type: string
+          format: uuid
+      required:
+        - date
+        - location
+        
+    SlotCreationDTO:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date-time
+        locationId:
+          type: string
+          format: uuid
+      required:
+        - date
+        - locationId
+        
+    Match:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        slot:
+          type: string
+          format: uuid
+        team_1:
+          type: string
+          format: uuid
+        team_2:
+          type: string
+          format: uuid
+        tournament_id:
+          type: string
+          format: uuid
+        stage_id:
+          type: string
+          format: uuid
+        is_results_published:
+          type: boolean
+      required:
+        - tournament_id
+        - stage_id
+        
+    AdditionalMatchDTO:
+      type: object
+      properties:
+        team1Id:
+          type: string
+          format: uuid
+        team2Id:
+          type: string
+          format: uuid
+        slotId:
+          type: string
+          format: uuid
+      required:
+        - team1Id
+        - team2Id
+        - slotId
+        
+    Goal:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        is_penalty:
+          type: boolean
+        time:
+          type: integer
+        points:
+          type: integer
+        set_number:
+          type: integer
+        team_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        match_id:
+          type: string
+          format: uuid
+      required:
+        - team_id
+        - match_id
+        - set_number
+        
+    GoalDTO:
+      type: object
+      properties:
+        teamId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        setNumber:
+          type: integer
+        time:
+          type: integer
+        points:
+          type: integer
+        isPenalty:
+          type: boolean
+      required:
+        - teamId
+        - setNumber
+        - points
+        
+    Penalties:
+      type: object
+      properties:
+        penalties:
+          type: array
+          items:
+            type: object
+            properties:
+              userId:
+                type: string
+                format: uuid
+              teamId:
+                type: string
+                format: uuid
+              isSuccess:
+                type: boolean
+            required:
+              - userId
+              - teamId
+              - isSuccess
+      required:
+        - penalties
+        
+    Groups:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        group_name:
+          type: string
+        index:
+          type: string
+        count_teams:
+          type: integer
+      required:
+        - group_name
+        
+    InvitationStatus:
+      type: string
+      enum: [PENDING, ACCEPTED, DECLINED, LEFT, CANCELLED]
+      
+    InvitationTeamDTO:
+      type: object
+      properties:
+        userTel:
+          type: string
+        isCap:
+          type: boolean
+      required:
+        - userTel
+        
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: integer
+      required:
+        - message
+        - code
+
+paths:
+  /auth/login:
+    get:
+      summary: Get login page
+      responses:
+        '200':
+          description: Login page
+          
+    post:
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginDTO'
+      responses:
+        '200':
+          description: Login successful
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: "Неправильный логин или пароль"
+                code: 400
+  
+  /auth/registration:
+    get:
+      summary: Get registration page
+      responses:
+        '200':
+          description: Registration page
+          
+    post:
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreationDTO'
+      responses:
+        '200':
+          description: Registration successful
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                empty_fields:
+                  value:
+                    message: "Не заполнено имя, фамилия, номер телефона или пароль"
+                    code: 400
+                user_exists:
+                  value:
+                    message: "Пользователь с таким номером уже существует"
+                    code: 400
+                    
+  /location/all:
+    get:
+      summary: Get all locations for a tournament
+      parameters:
+        - name: tournamentId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: List of locations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Location'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                not_found:
+                  value:
+                    message: "Чемпионат не найден"
+                    code: 404
+                no_access:
+                  value:
+                    message: "Нет доступа (пользователь – не член оргкомитета)"
+                    code: 403
+                    
+  /location/create:
+    post:
+      summary: Create a new location
+      parameters:
+        - name: tournament_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationCreationDTO'
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Location created
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                empty_fields:
+                  value:
+                    message: "Не заполнено название или адрес"
+                    code: 400
+                not_found:
+                  value:
+                    message: "Чемпионат не найден"
+                    code: 404
+                no_access:
+                  value:
+                    message: "Нет доступа (пользователь – не член оргкомитета)"
+                    code: 403
+                    
+  /match/additional:
+    get:
+      summary: Get additional match information
+      parameters:
+        - name: tournamentId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Additional match information
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: "Чемпионат не найден"
+                code: 404
+                
+  /match/new_additional:
+    post:
+      summary: Create a new additional match
+      parameters:
+        - name: tournamentId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdditionalMatchDTO'
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Additional match created
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_access:
+                  value:
+                    message: "Нет доступа (пользователь – не член чемпионата)"
+                    code: 403
+                missing_team:
+                  value:
+                    message: "Не выбрана одна из команд или слот"
+                    code: 400
+                same_team:
+                  value:
+                    message: "С обеих сторон одна команда (team1 = team2)"
+                    code: 400
+                    
+  /match/fill_group_stage:
+    get:
+      summary: Get group stage filling information
+      parameters:
+        - name: stageId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Group stage filling information
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_access:
+                  value:
+                    message: "Нет доступа (пользователь – не член оргкомитета)"
+                    code: 403
+                published:
+                  value:
+                    message: "Этап уже опубликован"
+                    code: 400
+                not_found:
+                  value:
+                    message: "Этап не найден"
+                    code: 404
+                wrong_type:
+                  value:
+                    message: "Выбран не групповой этап"
+                    code: 400
+                incorrect_distribution:
+                  value:
+                    message: "Распределение команд по группам некорректно (уже есть)"
+                    code: 400
+                    
+    post:
+      summary: Fill group stage
+      parameters:
+        - name: stageId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: string
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Group stage filled
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_access:
+                  value:
+                    message: "Нет доступа (пользователь – не член оргкомитета)"
+                    code: 403
+                published:
+                  value:
+                    message: "Этап уже опубликован"
+                    code: 400
+                not_found:
+                  value:
+                    message: "Этап не найден"
+                    code: 404
+                wrong_type:
+                  value:
+                    message: "Выбран не групповой этап"
+                    code: 400
+                incorrect_distribution:
+                  value:
+                    message: "Распределение команд по группам некорректно (добавить проверку в POST)"
+                    code: 400
+                duplicate_slot:
+                  value:
+                    message: "Один слот выбран два раза"
+                    code: 400
+                occupied_slot:
+                  value:
+                    message: "Выбран уже занятый слот"
+                    code: 400
+                    
+  /match/fill_playoff_stage:
+    get:
+      summary: Get playoff stage filling information
+      parameters:
+        - name: stageId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Playoff stage filling information
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_access:
+                  value:
+                    message: "Нет доступа (пользователь – не член оргкомитета)"
+                    code: 403
+                not_found:
+                  value:
+                    message: "Этап не найден"
+                    code: 404
+                wrong_type:
+                  value:
+                    message: "Выбран не этап плей-оффа"
+                    code: 400
+                published:
+                  value:
+                    message: "Этап уже опубликован"
+                    code: 400
+                    
+    post:
+      summary: Fill playoff stage
+      parameters:
+        - name: stageId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: string
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Playoff stage filled
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_access:
+                  value:
+                    message: "Нет доступа (пользователь – не член оргкомитета)"
+                    code: 403
+                not_found:
+                  value:
+                    message: "Этап не найден"
+                    code: 404
+                wrong_type:
+                  value:
+                    message: "Выбран не этап плей-оффа"
+                    code: 400
+                published:
+                  value:
+                    message: "Этап уже опубликован"
+                    code: 400
+                team_vs_self:
+                  value:
+                    message: "Есть матч, в котором команда играет сама с собой"
+                    code: 400
+                team_multiple_matches:
+                  value:
+                    message: "Одна команда играет в двух матчах"
+                    code: 400
+                duplicate_slot:
+                  value:
+                    message: "Один слот выбран два раза"
+                    code: 400
+                occupied_slot:
+                  value:
+                    message: "Выбран уже занятый слот"
+                    code: 400
+                    
+  /match/update_slot:
+    post:
+      summary: Update match slot
+      parameters:
+        - name: matchId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: slotId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Slot updated
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                published:
+                  value:
+                    message: "Опубликованы результаты матча"
+                    code: 400
+                no_access:
+                  value:
+                    message: "Нет доступа"
+                    code: 403
+                    
+  /match/view:
+    get:
+      summary: View match details
+      parameters:
+        - name: matchId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Match details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Match'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_access:
+                  value:
+                    message: "Нет доступа (этап матча еще не опубликован, если смотрит не член оргкомитета)"
+                    code: 403
+                not_found:
+                  value:
+                    message: "Матч не найден"
+                    code: 404
+                    
+  /match/add_goal:
+    post:
+      summary: Add goal to match
+      parameters:
+        - name: matchId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoalDTO'
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Goal added
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                missing_info:
+                  value:
+                    message: "Команда, сет или очки не выбраны (можно вносить без минуты и игрока)"
+                    code: 400
+                no_access:
+                  value:
+                    message: "Нет доступа (пользователь – не судья)"
+                    code: 403
+                published:
+                  value:
+                    message: "Результаты уже опубликованы"
+                    code: 400
+                not_found:
+                  value:
+                    message: "Матч не найден"
+                    code: 404
+                    
+  /match/add_after_match_penalties:
+    post:
+      summary: Add penalties after match
+      parameters:
+        - name: matchId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Penalties'
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Penalties added
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_access:
+                  value:
+                    message: "Нет доступа (пользователь – не судья)"
+                    code: 403
+                published:
+                  value:
+                    message: "Результаты уже опубликованы"
+                    code: 400
+                not_found:
+                  value:
+                    message: "Матч не найден"
+                    code: 404
+                missing_info:
+                  value:
+                    message: "Не выбран игрок или не проставлены результаты (уже есть)"
+                    code: 400
+                    
+  /match/withdraw:
+    post:
+      summary: Withdraw team from match
+      parameters:
+        - name: matchId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: teamId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Team withdrawn
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_access:
+                  value:
+                    message: "Нет доступа (пользователь – не капитан команды)"
+                    code: 403
+                not_participating:
+                  value:
+                    message: "Команда не участвует в матче"
+                    code: 400
+                not_found:
+                  value:
+                    message: "Команда или матч не найден"
+                    code: 404
+                published:
+                  value:
+                    message: "Результаты матча уже опубликованы"
+                    code: 400
+                    
+  /org_com/new:
+    get:
+      summary: Get new organization committee page
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: New organization committee page
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: "Пользователь не авторизован"
+                code: 401
+                
+  /org_com/create:
+    post:
+      summary: Create new organization committee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrgComDTO'
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Organization committee created
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                unauthorized:
+                  value:
+                    message: "Пользователь не авторизован"
+                    code: 401
+                empty_name:
+                  value:
+                    message: "Название пустое"
+                    code: 400
+                    
+  /org_com/create_invitation:
+    get:
+      summary: Get invitation creation page
+      parameters:
+        - name: orgComId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Invitation creation page
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_access:
+                  value:
+                    message: "Нет доступа – пользователь не старший организатор"
+                    code: 403
+                not_found:
+                  value:
+                    message: "Оргкомитет не найден"
+                    code: 404
+                    
+  /org_com/send_invitation:
+    post:
+      summary: Send invitation to organization committee
+      parameters:
+        - name: orgComId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userTel:
+                  type: string
+              required:
+                - userTel
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Invitation sent
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_access:
+                  value:
+                    message: "Нет доступа – пользователь не старший организатор"
+                    code: 403
+                not_found_org:
+                  value:
+                    message: "Оргкомитет не найден"
+                    code: 404
+                not_found_user:
+                  value:
+                    message: "Пользователь не найден"
+                    code: 404
+                duplicate:
+                  value:
+                    message: "Приглашение на этого пользователья уже есть в статусе PENDING или ACCEPTED"
+                    code: 400
+                    
+  /org_com/show_all:
+    get:
+      summary: Show all organization committees
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: List of organization committees
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrgCom'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: "Пользователь не авторизован"
+                code: 401
+                
+  /org_com/view:
+    get:
+      summary: View organization committee details
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Organization committee details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrgCom'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_access:
+                  value:
+                    message: "Нет доступа (пользователь – не член оргкомитета)"
+                    code: 403
+                not_found:
+                  value:
+                    message: "Оркомитет не найден"
+                    code: 404
+                    
+  /org_com/left:
+    post:
+      summary: Leave organization committee
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Left organization committee
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_status:
+                  value:
+                    message: "Приглашение (userOrgCom) не найдено или в статусе не ACCEPTED"
+                    code: 400
+                not_found:
+                  value:
+                    message: "userOrgCom не найден"
+                    code: 404
+                only_senior:
+                  value:
+                    message: "Пользователь – единственный старший организатор"
+                    code: 400
+                    
+  /org_com/kick:
+    post:
+      summary: Kick user from organization committee
+      parameters:
+        - name: orgComId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: userTel
+          in: query
+          required: true
+          schema:
+            type: string
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: User kicked
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_access:
+                  value:
+                    message: "Пользователь не старший организатор (нет доступа)"
+                    code: 403
+                not_found:
+                  value:
+                    message: "userOrgCom не найден"
+                    code: 404
+                invalid_status:
+                  value:
+                    message: "userOrgCom не в статусе ACCEPTED"
+                    code: 400
+                    
+  /org_com/cancel:
+    post:
+      summary: Cancel invitation to organization committee
+      parameters:
+        - name: orgComId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: userTel
+          in: query
+          required: true
+          schema:
+            type: string
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Invitation cancelled
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_access:
+                  value:
+                    message: "Пользователь не старший организатор (нет доступа)"
+                    code: 403
+                not_found:
+                  value:
+                    message: "userOrgCom не найден"
+                    code: 404
+                invalid_status:
+                  value:
+                    message: "userOrgCom не в статусе PENDING"
+                    code: 400
+                    
+  /org_com/edit:
+    get:
+      summary: Get edit organization committee page
+      parameters:
+        - name: orgComId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Edit organization committee page
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_access:
+                  value:
+                    message: "Нет доступа (пользователь – не старший орг)"
+                    code: 403
+                not_found:
+                  value:
+                    message: "Оргкомитет на найден"
+                    code: 404
+                    
+    post:
+      summary: Edit organization committee
+      parameters:
+        - name: orgComId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrgComDTO'
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Organization committee edited
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_access:
+                  value:
+                    message: "Нет доступа (пользователь – не старший орг)"
+                    code: 403
+                not_found:
+                  value:
+                    message: "Оргкомитет на найден"
+                    code: 404
+                empty_name:
+                  value:
+                    message: "Название пустое"
+                    code: 400
+                    
+  /org_com/tournaments:
+    get:
+      summary: Get tournaments for organization committee
+      parameters:
+        - name: orgComId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: List of tournaments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tournament'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_access:
+                  value:
+                    message: "Нет доступа (пользователь – не член оргкомитета)"
+                    code: 403
+                not_found:
+                  value:
+                    message: "Оргкомитет не найден"
+                    code: 404
+                    
+  /slot/all:
+    get:
+      summary: Get all slots for a tournament
+      parameters:
+        - name: tournamentId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: List of slots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Slot'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_access:
+                  value:
+                    message: "Нет доступа (пользователь – не член оргкомитета)"
+                    code: 403
+                not_found:
+                  value:
+                    message: "Чемпионат не найден"
+                    code: 404
+                    
+  /slot/delete:
+    delete:
+      summary: Delete a slot
+      parameters:
+        - name: slotID
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Slot deleted
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_access:
+                  value:
+                    message: "Нет доступа (пользователь – не член оргкомитета)"
+                    code: 403
+                not_found_tournament:
+                  value:
+                    message: "Чемпионат не найден"
+                    code: 404
+                not_found_slot:
+                  value:
+                    message: "Слот не найден"
+                    code: 404
+                has_match:
+                  value:
+                    message: "Есть матч, привязанный к слоту"
+                    code: 400
+                    
+  /slot/create:
+    post:
+      summary: Create a new slot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SlotCreationDTO'
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Slot created
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                missing_fields:
+                  value:
+                    message: "Не заполено время, дата или слот"
+                    code: 400
+                no_access:
+                  value:
+                    message: "Нет доступа (пользователь – не член оргкомитета)"
+                    code: 403
+                not_found:
+                  value:
+                    message: "Чемпионат не найден"
+                    code: 404
+                    
+  /stage/publish_stage:
+    post:
+      summary: Publish a stage
+      parameters:
+        - name: stageId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Stage published
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_access:
+                  value:
+                    message: "Нет доступа (пользователь – не старший организатор)"
+                    code: 403
+                not_found:
+                  value:
+                    message: "Этап не найден"
+                    code: 404
+                already_published:
+                  value:
+                    message: "Этап уже опубликован"
+                    code: 400
+                    
+  /stage/manage_groups:
+    get:
+      summary: Get group management page
+      parameters:
+        - name: tournamentId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Group management page
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                not_found:
+                  value:
+                    message: "Чемпионат не найден"
+                    code: 404
+                already_published:
+                  value:
+                    message: "Групповой этап уже опубликован"
+                    code: 400
+                no_access:
+                  value:
+                    message: "Нет доступа (пользователь – не старший организатор)"
+                    code: 403
+                    
+  /stage/create_groups:
+    post:
+      summary: Create groups for tournament
+      parameters:
+        - name: tournamentId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: string
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Groups created
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                team_one_group:
+                  value:
+                    message: "Есть команда с одной группой"
+                    code: 400
+                not_found:
+                  value:
+                    message: "Чемпионат не найден"
+                    code: 404
+                no_access:
+                  value:
+                    message: "Нет доступа (пользователь – не старший организатор)"
+                    code: 403
+                team_two_groups:
+                  value:
+                    message: "Есть команда в двух группах"
+                    code: 400
+                    
+  /stage/info:
+    get:
+      summary: Get stage information
+      parameters:
+        - name: stageId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Stage information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stage'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                not_published:
+                  value:
+                    message: "Этап еще не опубликован"
+                    code: 400
+                not_found:
+                  value:
+                    message: "Этап не найден"
+                    code: 404
+                    
+  /team/new:
+    get:
+      summary: Get new team page
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: New team page
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: "Пользователь не авторизован"
+                code: 401
+                
+  /team/create:
+    post:
+      summary: Create a new team
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamDTO'
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Team created
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                missing_fields:
+                  value:
+                    message: "Не выбран спорт или название"
+                    code: 400
+                unauthorized:
+                  value:
+                    message: "Пользователь не авторизован"
+                    code: 401
+                    
+  /team/show_all:
+    get:
+      summary: Show all teams
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: List of teams
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Team'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: "Пользователь не авторизован"
+                code: 401
+                
+  /team/view:
+    get:
+      summary: View team details
+      parameters:
+        - name: teamId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Team details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: "Команда не найдена"
+                code: 404
+                
+  /team/create_invitation:
+    get:
+      summary: Get team invitation creation page
+      parameters:
+        - name: teamId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Team invitation creation page
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                not_found:
+                  value:
+                    message: "Команда не найдена"
+                    code: 404
+                no_access:
+                  value:
+                    message: "Нет доступа (пользователь – не капитан)"
+                    code: 403
+                    
+  /team/send_invitation:
+    post:
+      summary: Send invitation to team
+      parameters:
+        - name: teamID
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvitationTeamDTO'
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Invitation sent
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                not_found_team:
+                  value:
+                    message: "Команда не найдена"
+                    code: 404
+                no_access:
+                  value:
+                    message: "Нет доступа (пользователь – не капитан)"
+                    code: 403
+                not_found_user:
+                  value:
+                    message: "Пользователь не найден"
+                    code: 404
+                duplicate:
+                  value:
+                    message: "Приглашение на этого пользователья уже есть в статусе PENDING или ACCEPTED"
+                    code: 400
+                    
+  /team/kick/{teamId}:
+    post:
+      summary: Kick user from team
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: User kicked
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_access:
+                  value:
+                    message: "Пользователь не капитан (нет доступа)"
+                    code: 403
+                not_found:
+                  value:
+                    message: "userTeam не найден"
+                    code: 404
+                invalid_status:
+                  value:
+                    message: "userTeam не в статусе ACCEPTED"
+                    code: 400
+                    
+  /team/cancel/{teamId}/{userTel}:
+    post:
+      summary: Cancel invitation to team
+      parameters:
+        - name: teamId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: userTel
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Invitation cancelled
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_access:
+                  value:
+                    message: "Пользователь не капитан (нет доступа)"
+                    code: 403
+                not_found:
+                  value:
+                    message: "userTeam не найден"
+                    code: 404
+                invalid_status:
+                  value:
+                    message: "userTeam не в статусе PENDING"
+                    code: 400
+                    
+  /team/leave:
+    post:
+      summary: Leave team
+      parameters:
+        - name: teamId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Left team
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_status:
+                  value:
+                    message: "Приглашение (userOrgCom) не найдено или в статусе не ACCEPTED"
+                    code: 400
+                not_found:
+                  value:
+                    message: "userTeam не найден"
+                    code: 404
+                only_captain:
+                  value:
+                    message: "Пользователь – единственный капитан"
+                    code: 400
+                    
+  /team/edit:
+    get:
+      summary: Get edit team page
+      parameters:
+        - name: teamId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Edit team page
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_access:
+                  value:
+                    message: "Нет доступа (пользователь – не капитан)"
+                    code: 403
+                not_found:
+                  value:
+                    message: "Команда не найдена"
+                    code: 404
+                    
+    post:
+      summary: Edit team
+      parameters:
+        - name: teamId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamDTO'
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Team edited
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_access:
+                  value:
+                    message: "Нет доступа (пользователь – не капитан)"
+                    code: 403
+                not_found:
+                  value:
+                    message: "Команда не найдена"
+                    code: 404
+                empty_name:
+                  value:
+                    message: "Название пустое"
+                    code: 400

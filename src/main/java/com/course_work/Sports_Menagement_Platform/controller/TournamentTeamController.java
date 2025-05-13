@@ -21,6 +21,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -74,14 +75,17 @@ public class TournamentTeamController {
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/applications/{tournamentId}")
     public String showApplications(@PathVariable UUID tournamentId, Model model, @AuthenticationPrincipal User user, RedirectAttributes redirectAttributes) {
-
+        boolean actions_allowed = false;
+        try {
+            actions_allowed = tournamentService.isUserChiefOfTournament(user.getId(), tournamentId);
+        } catch (RuntimeException ignored) {}
         List<TeamTournament> list = tournamentService.getCurrAppl(tournamentId);
         if (list == null || list.isEmpty()) {
             model.addAttribute("error", "There are no applications from teams yet");
         }
         model.addAttribute("applications", list);
         model.addAttribute("tournamentId", tournamentId);
-        model.addAttribute("actions_allowed", tournamentService.isUserChiefOfTournament(user.getId(), tournamentId));
+        model.addAttribute("actions_allowed", actions_allowed);
 
 
 
@@ -127,14 +131,23 @@ public class TournamentTeamController {
         } catch (RuntimeException e) {
             throw new ResourceNotFoundException("Нет такого турнира");
         }
+        boolean isOrg = false;
+        try {
+            isOrg = accessService.isUserOrgOfTournament(user.getId(), tournamentId);
+        } catch (RuntimeException ignored) {}
         List<TeamTournament> teamTournamentList = tournamentService.getCurrentParticipants(tournamentId);
+        List<RatingLineDTO> ratingLineDTOS = new ArrayList<>();
+        Tournament tournament = tournamentService.getById(tournamentId);
+        try {
+            ratingLineDTOS = tournamentService.getRating(teamTournamentList);
+        } catch (RuntimeException e) {
+            model.addAttribute("error", e.getMessage());
+        }
 
-        List<RatingLineDTO> ratingLineDTOS = tournamentService.getRating(teamTournamentList);
-
-        // В шаблоне столбцы отображать через if в зависимости от вида спорта
-        model.addAttribute("sport", teamTournamentList.get(0).getTournament().getSport());
+        model.addAttribute("sport", tournament.getSport());
         model.addAttribute("teams", ratingLineDTOS);
         model.addAttribute("tournamentId", tournamentId);
+        model.addAttribute("isOrg", isOrg);
         return "tournament/rating";
     }
 

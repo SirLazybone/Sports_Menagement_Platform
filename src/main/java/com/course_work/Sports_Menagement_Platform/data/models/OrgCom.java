@@ -22,6 +22,7 @@ public class OrgCom {
     private String name;
     private String logo;
 
+    @Builder.Default
     @OneToMany(mappedBy = "orgCom", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserOrgCom> userOrgComList = new ArrayList<>();
 

@@ -104,82 +104,137 @@ public class MatchServiceImpl implements MatchService {
     @Override
     public Map<Group, List<Match>> createGroupMatchIfNotCreated(UUID stageId) {
         Stage stage = stageService.getStageById(stageId);
-        List<Stage> stageList = new ArrayList<>();
-        stageList.add(stage);
-        List<Match> matches = getMatchesByStagesMap(stageList).get(stageId);
+        List<Group> groups = stageService.getGroupsByStage(stageId);
         Map<Group, List<Match>> result = new HashMap<>();
 
+        for (Group group : groups) {
+            Set<UUID> groupTeamIds = group.getTeams().stream()
+                    .map(Team::getId)
+                    .collect(Collectors.toSet());
+            
+            // Получаем существующие матчи для этой группы
+            List<Match> existingMatches = matchRepository.findAllMatchesByStageId(stageId).stream()
+                    .filter(match -> groupTeamIds.contains(match.getTeam1().getId()) 
+                            && groupTeamIds.contains(match.getTeam2().getId()))
+                    .collect(Collectors.toList());
 
-        if (matches.isEmpty()) {
-             List<Group> groups = stageService.getGroupsByStage(stageId);
-             for (Group group : groups) {
-                 result.put(group, new ArrayList<>());
-                 for (Team team1 : group.getTeams()) {
-                     for (Team team2 : group.getTeams()) {
-                        if (!team1.getId().equals(team2.getId())) {
-                            Match match = Match.builder().team1(team1).team2(team2).isResultPublished(false).stage(stage).build();
-                            match = matchRepository.save(match);
-                            result.get(group).add(match);
-                        }
-                     }
-                 }
-             }
-        }
-        else {
-            List<Group> groups = stageService.getGroupsByStage(stageId);
-            for (Group group : groups) {
-                List<String> teamIds = group.getTeams().stream().map(i -> i.getId().toString()).collect(Collectors.toList());
-                List<Match> groupMatches = matches.stream().filter(i -> teamIds.contains(i.getTeam1().getId().toString())).toList();
-                result.put(group, groupMatches);
-
+            if (existingMatches.isEmpty()) {
+                // Создаем новые матчи для группы
+                List<Match> newMatches = new ArrayList<>();
+                List<Team> teams = group.getTeams();
+                for (int i = 0; i < teams.size(); i++) {
+                    for (int j = i + 1; j < teams.size(); j++) {
+                        Team team1 = teams.get(i);
+                        Team team2 = teams.get(j);
+                        Match match = Match.builder()
+                                .team1(team1)
+                                .team2(team2)
+                                .isResultPublished(false)
+                                .stage(stage)
+                                .build();
+                        match = matchRepository.save(match);
+                        newMatches.add(match);
+                    }
+                }
+                result.put(group, newMatches);
+            } else {
+                result.put(group, existingMatches);
             }
-
-
         }
         return result;
-
-
     }
 
     @Override
     public void setSlots(UUID stageId, Map<UUID, UUID> assignments) {
-        // TODO: проверки
-        assignments.forEach((matchId, slotId) -> {
-            Match match = matchRepository.findById(matchId).get();
-            match.setSlot(slotService.getById(slotId));
-            matchRepository.save(match);
+        Stage stage = stageService.getStageById(stageId);
+        List<Match> stageMatches = getAllMatches(stageId);
+        
+        // Проверяем, что все матчи существуют
+        for (UUID matchId : assignments.keySet()) {
+            if (!stageMatches.stream().anyMatch(match -> match.getId().equals(matchId))) {
+                throw new RuntimeException("Матч не найден: " + matchId);
             }
-        );
+        }
+        
+        // Проверяем, что все слоты существуют и доступны
+        for (UUID slotId : assignments.values()) {
+            try {
+                Slot slot = slotService.getById(slotId);
+                if (slot == null) {
+                    throw new RuntimeException("Слот не найден: " + slotId);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Ошибка при получении слота: " + e.getMessage());
+            }
+        }
+        
+        // Назначаем слоты
+        assignments.forEach((matchId, slotId) -> {
+            Match match = getById(matchId);
+            Slot slot = slotService.getById(slotId);
+            match.setSlot(slot);
+            matchRepository.save(match);
+        });
     }
 
     @Override
     public void setSlotsForPlayOff(UUID stageId, Map<Pair<UUID, UUID>, UUID> assignments, List<Pair<UUID, UUID>> assigmentsWithNoSlot) {
-
         Stage stage = stageService.getStageById(stageId);
         List<Stage> stageList = new ArrayList<>();
         stageList.add(stage);
-        List<Match> matches = getMatchesByStagesMap(stageList).get(stageId);
-        matchRepository.deleteAll(matches);
+        List<Match> existingMatches = getMatchesByStagesMap(stageList).get(stageId);
+        
+        // Create a map of existing matches by team pairs
+        Map<Pair<UUID, UUID>, Match> existingMatchesMap = new HashMap<>();
+        for (Match match : existingMatches) {
+            if (match.getTeam1() != null && match.getTeam2() != null) {
+                existingMatchesMap.put(Pair.of(match.getTeam1().getId(), match.getTeam2().getId()), match);
+            }
+        }
 
-        assignments.forEach((teams, slotId) -> {
-                    Match match = Match.builder().slot(slotService.getById(slotId)).
-                            team1(teamService.getById(teams.getFirst())).team2(teamService.getById(teams.getSecond())).
-                            isResultPublished(false).stage(stage).build();
-                    matchRepository.save(match);
+        // Process matches with slots
+        for (Map.Entry<Pair<UUID, UUID>, UUID> entry : assignments.entrySet()) {
+            Pair<UUID, UUID> teams = entry.getKey();
+            UUID slotId = entry.getValue();
+            
+            Match match = existingMatchesMap.getOrDefault(teams, 
+                Match.builder()
+                    .team1(teamService.getById(teams.getFirst()))
+                    .team2(teamService.getById(teams.getSecond()))
+                    .isResultPublished(false)
+                    .stage(stage)
+                    .build());
+            
+            match.setSlot(slotService.getById(slotId));
+            matchRepository.save(match);
+        }
 
+        // Process matches without slots
+        for (Pair<UUID, UUID> teams : assigmentsWithNoSlot) {
+            Match match = existingMatchesMap.getOrDefault(teams,
+                Match.builder()
+                    .team1(teamService.getById(teams.getFirst()))
+                    .team2(teamService.getById(teams.getSecond()))
+                    .isResultPublished(false)
+                    .stage(stage)
+                    .build());
+            
+            match.setSlot(null);
+            matchRepository.save(match);
+        }
+
+        // Delete matches that are no longer needed
+        Set<Pair<UUID, UUID>> allNewMatches = new HashSet<>(assignments.keySet());
+        allNewMatches.addAll(assigmentsWithNoSlot);
+        
+        for (Match match : existingMatches) {
+            if (match.getTeam1() != null && match.getTeam2() != null) {
+                Pair<UUID, UUID> teams = Pair.of(match.getTeam1().getId(), match.getTeam2().getId());
+                if (!allNewMatches.contains(teams)) {
+                    matchRepository.delete(match);
                 }
-        );
-
-        assigmentsWithNoSlot.forEach((teams) -> {
-                    Match match = Match.builder().
-                            team1(teamService.getById(teams.getFirst())).team2(teamService.getById(teams.getSecond())).
-                            isResultPublished(false).stage(stage).build();
-                    matchRepository.save(match);
-
-                }
-        );
-
-
+            }
+        }
     }
 
     @Override

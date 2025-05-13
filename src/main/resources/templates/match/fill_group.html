@@ -1,110 +1,241 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Управление матчами - Sports Management Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body { 
+            background: #f8fafc;
+            min-height: 100vh;
+        }
+        .container_main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .group-container {
+            margin-bottom: 2.5rem;
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            background: #fff;
+            transition: all 0.2s ease;
+        }
+        .group-container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-color: #3498db;
+        }
+        .group-title {
+            color: #2c3e50;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #eaf6ff;
+        }
+        .match-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 1rem;
+        }
+        .match-table th {
+            background-color: #f8fafc;
+            color: #64748b;
+            font-weight: 500;
+            padding: 1rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .match-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            color: #2c3e50;
+        }
+        .match-table tr:hover {
+            background-color: #f8fafc;
+        }
+        .current-slot {
+            color: #2ecc71;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .no-slot {
+            color: #94a3b8;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .slot-select {
+            padding: 0.5rem;
+            min-width: 300px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            color: #2c3e50;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+        .slot-select:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+            outline: none;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-primary {
+            background: #3498db;
+            border: none;
+        }
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        .btn-success {
+            background: #2ecc71;
+            border: none;
+        }
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        .alert {
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .alert-success {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        .alert-danger {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .alert-info {
+            background-color: #e0f2fe;
+            color: #0369a1;
+        }
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .empty-group-message {
+            color: #94a3b8;
+            font-style: italic;
+            text-align: center;
+            padding: 1rem;
+            background-color: #f8fafc;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+    </style>
 </head>
 <body>
+    <header th:replace="~{fragments/header :: header}"></header>
 
-<div th:unless="${isPublished}">
-    <form th:action="@{/stage/manage_groups/{id}(id=${tournamentId})}" method="get">
-        <button type="submit">Настроить группы</button>
-    </form>
-</div>
+    <div class="container_main">
+        <div class="button-group">
+            <div th:unless="${isPublished}">
+                <a th:href="@{/stage/manage_groups/{id}(id=${tournamentId})}" class="btn btn-primary">
+                    <i class="bi bi-gear"></i>Настроить группы
+                </a>
+            </div>
 
-<div th:if="${!isPublished && isUserChief}">
-    <form th:action="@{/stage/publish_stage/{id}(id=${stageId})}" method="post">
-        <button type="submit">Опубликовать</button>
-    </form>
-</div>
+            <div th:if="${!isPublished && isUserChief}">
+                <form th:action="@{/stage/publish_stage/{id}(id=${stageId})}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i>Опубликовать
+                    </button>
+                </form>
+            </div>
+        </div>
 
-<form th:action="@{/match/fill_group_stage/{stageId}(stageId=${stageId})}" method="post">
-    <!-- Iterate through each group and its matches -->
-    <div th:each="groupEntry : ${matches}" class="group-container">
-        <h2 th:text="${groupEntry.key.name}"></h2>
+        <!-- Display success/error/info messages -->
+        <div th:if="${success}" class="alert alert-success">
+            <i class="bi bi-check-circle"></i>
+            <span th:text="${success}"></span>
+        </div>
+        <div th:if="${error}" class="alert alert-danger">
+            <i class="bi bi-exclamation-circle"></i>
+            <span th:text="${error}"></span>
+        </div>
+        <div th:if="${info}" class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            <span th:text="${info}"></span>
+        </div>
 
-        <table class="match-table">
-            <thead>
-            <tr>
-                <th>Team 1</th>
-                <th>Team 2</th>
-            </tr>
-            </thead>
-            <tbody>
-            <!-- Iterate through each match in the group -->
-            <tr th:each="match : ${groupEntry.value}" class="match-row">
-                <td th:text="${match.team1.name}">Team 1</td>
-                <td th:text="${match.team2.name}">Team 2</td>
-                <td>
-                    <!-- Slot selection dropdown -->
-                    <select th:name="'slotAssignments[' + ${match.id} + ']'">
-                        <option value="">-- Select Slot --</option>
-                        <!-- Iterate through available slots -->
-                        <option th:each="slot : ${slot}"
-                                th:value="${slot.id}"
-                                th:text="${#temporals.format(slot.date, 'yyyy-MM-dd') + ' - ' + #temporals.format(slot.time, 'HH:mm') + ' - ' + slot.location.name}"
-                                th:selected="${match.slot != null && match.slot.id == slot.id}">
-                            Slot time - venue
-                        </option>
-                    </select>
-                    <!-- Display currently assigned slot if any
-                    <span th:if="${match.slot != null}" class="current-slot">
-                            (Current: <span th:text="${#temporals.format(slot.date, 'yyyy-MM-dd') + ' - ' + #temporals.format(slot.time, 'HH:mm') + ' - ' + slot.location.name}"></span>)
-                        </span>-->
-                </td>
-            </tr>
-            </tbody>
-        </table>
+        <!-- Matches Form -->
+        <form th:action="@{/match/fill_group_stage/{stageId}(stageId=${stageId})}" method="post">
+            <div th:each="groupEntry : ${matches}" class="group-container">
+                <h2 class="group-title" th:text="${groupEntry.key.name}"></h2>
+
+                <div th:if="${groupEntry.value.empty}" class="empty-group-message">
+                    <i class="bi bi-info-circle"></i>
+                    В этой группе пока нет команд
+                </div>
+
+                <table th:unless="${groupEntry.value.empty}" class="match-table">
+                    <thead>
+                        <tr>
+                            <th>Команда 1</th>
+                            <th>Команда 2</th>
+                            <th>Текущий слот</th>
+                            <th>Назначить слот</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="match : ${groupEntry.value}" class="match-row">
+                            <td th:text="${match.team1.name}">Team 1</td>
+                            <td th:text="${match.team2.name}">Team 2</td>
+                            <td>
+                                <span th:if="${match.slot != null}" class="current-slot">
+                                    <i class="bi bi-calendar-check"></i>
+                                    <span th:text="${#temporals.format(match.slot.date, 'dd.MM.yyyy') + ' ' + #temporals.format(match.slot.time, 'HH:mm') + ' - ' + match.slot.location.name}"></span>
+                                </span>
+                                <span th:unless="${match.slot != null}" class="no-slot">
+                                    <i class="bi bi-calendar-x"></i>
+                                    <span>Не назначен</span>
+                                </span>
+                            </td>
+                            <td>
+                                <select th:name="'slotAssignments[' + ${match.id} + ']'" class="slot-select">
+                                    <option value="">-- Выберите слот --</option>
+                                    <option th:each="slot : ${slot}"
+                                            th:value="${slot.id}"
+                                            th:text="${#temporals.format(slot.date, 'dd.MM.yyyy') + ' ' + #temporals.format(slot.time, 'HH:mm') + ' - ' + slot.location.name}"
+                                            th:selected="${match.slot != null && match.slot.id == slot.id}">
+                                        Slot time - venue
+                                    </option>
+                                </select>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i>Сохранить выбранные слоты
+            </button>
+        </form>
     </div>
 
-    <button type="submit" class="btn btn-primary">Сохранить</button>
-</form>
-
-<style>
-    .group-container {
-        margin-bottom: 2rem;
-        padding: 1rem;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-    }
-
-    .match-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .match-table th, .match-table td {
-        padding: 0.5rem;
-        border: 1px solid #eee;
-    }
-
-    .match-table th {
-        background-color: #f5f5f5;
-    }
-
-    .current-slot {
-        color: #666;
-        font-size: 0.9em;
-        margin-left: 0.5rem;
-    }
-
-    select {
-        padding: 0.3rem;
-        min-width: 250px;
-    }
-
-    .btn {
-        padding: 0.5rem 1rem;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-
-    .btn:hover {
-        background-color: #0069d9;
-    }
-</style>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

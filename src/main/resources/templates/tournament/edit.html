@@ -2,89 +2,169 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Edit Tournament</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Редактирование турнира</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
+        body { 
+            background: #f8fafc;
+            min-height: 100vh;
+        }
+        .container_main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+        }
+        .page-title {
+            color: #2c3e50;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #eaf6ff;
+        }
+        .form-label {
+            color: #2c3e50;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        .form-control {
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem 1rem;
+        }
+        .form-control:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+        .form-control:disabled {
+            background-color: #f8fafc;
+            cursor: not-allowed;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-primary {
+            background: #3498db;
+            border: none;
+        }
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        .btn-secondary {
+            background: #64748b;
+            border: none;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #475569;
+            color: white;
+        }
         .logo-preview {
             width: 150px;
             height: 150px;
             object-fit: cover;
-            border-radius: 8px;
+            border-radius: 12px;
+            border: 3px solid #3498db;
         }
         .default-logo {
             width: 150px;
             height: 150px;
-            background-color: #f0f0f0;
-            border-radius: 8px;
+            background-color: #eaf6ff;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 50px;
-            color: #666;
+            font-size: 48px;
+            color: #3498db;
+            border: 3px solid #3498db;
+        }
+        .logo-section {
+            background: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
-    <div class="container mt-4">
-        <h1>Edit Tournament</h1>
+    <header th:replace="~{fragments/header :: header}"></header>
+    
+    <div class="container_main">
+        <h1 class="page-title">
+            <i class="bi bi-pencil-square me-2"></i>Редактирование турнира
+        </h1>
         
-        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+        <div th:if="${error}" class="alert alert-danger mb-4">
+            <i class="bi bi-exclamation-circle me-2"></i>
+            <span th:text="${error}"></span>
+        </div>
 
         <form th:action="@{/tournament/edit/{id}(id=${tournamentId})}" th:object="${tournament}" method="post" enctype="multipart/form-data">
-            <div class="row">
+            <div class="row g-4">
                 <div class="col-md-3">
-                    <div class="text-center mb-4">
-                        <div th:if="${tournament.logo != null}">
-                            <img th:src="@{'/uploads/' + ${tournament.logo}}" class="logo-preview mb-2" alt="Tournament Logo">
+                    <div class="logo-section">
+                        <div th:if="${tournament.logo != null}" class="mb-3">
+                            <img th:src="@{'/uploads/' + ${tournament.logo}}" class="logo-preview" alt="Tournament Logo">
                         </div>
-                        <div th:unless="${tournament.logo != null}" class="default-logo mb-2">
+                        <div th:unless="${tournament.logo != null}" class="default-logo mb-3">
                             <span>T</span>
                         </div>
-                        <div class="form-group">
-                            <label for="logoFile">Change Logo</label>
-                            <input type="file" class="form-control-file" id="logoFile" name="logoFile" accept="image/*">
+                        <div class="mb-3">
+                            <label for="logoFile" class="form-label">Изменить логотип</label>
+                            <input type="file" class="form-control" id="logoFile" name="logoFile" accept="image/*">
                         </div>
                     </div>
                 </div>
                 <div class="col-md-9">
-                    <div class="form-group">
-                        <label for="name">Tournament Name:</label>
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Название турнира:</label>
                         <input type="text" class="form-control" th:field="*{name}" id="name" required>
                         <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="text-danger"></span>
                     </div>
-                    <div class="form-group">
-                        <label>Sport:</label>
+                    <div class="mb-3">
+                        <label class="form-label">Вид спорта:</label>
                         <input type="text" class="form-control" th:value="${tournament.sport}" disabled>
                     </div>
-                    <div class="form-group">
-                        <label>City:</label>
+                    <div class="mb-3">
+                        <label class="form-label">Город:</label>
                         <input type="text" class="form-control" th:value="${tournament.cityName}" disabled>
                     </div>
-                    <div class="form-group">
-                        <label>Minimum Members:</label>
+                    <div class="mb-3">
+                        <label class="form-label">Минимальное количество игроков:</label>
                         <input type="number" class="form-control" th:value="${tournament.minMembers}" disabled>
                     </div>
-                    <div class="form-group">
-                        <label>Registration Deadline:</label>
+                    <div class="mb-3">
+                        <label class="form-label">Дедлайн регистрации:</label>
                         <input type="date" class="form-control" th:value="${#temporals.format(tournament.registerDeadline, 'yyyy-MM-dd')}" disabled>
                     </div>
-                    <div class="form-group">
-                        <label>Description:</label>
-                        <textarea class="form-control" th:text="${tournament.description}" disabled></textarea>
+                    <div class="mb-3">
+                        <label class="form-label">Описание:</label>
+                        <textarea class="form-control" th:text="${tournament.description}" disabled rows="4"></textarea>
                     </div>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary">Update Tournament</button>
-            <a th:href="@{/tournament/view/{id}(id=${tournamentId})}" class="btn btn-secondary">Cancel</a>
+            
+            <div class="d-flex gap-3 mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check2-circle me-2"></i>Сохранить изменения
+                </button>
+                <a th:href="@{/tournament/view/{id}(id=${tournamentId})}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle me-2"></i>Отмена
+                </a>
+            </div>
         </form>
     </div>
 
-    <div th:if="${error}">
-        <p th:text="${error}"></p>
-    </div>
-
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+</html> 
 </html> 

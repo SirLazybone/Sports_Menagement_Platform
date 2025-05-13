@@ -39,4 +39,10 @@ public interface UserOrgComRepository extends JpaRepository<UserOrgCom, UUID> {
 
     @Query("SELECT uoc FROM UserOrgCom uoc JOIN FETCH uoc.orgCom WHERE uoc.user = :user AND uoc.invitationStatus = com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus.PENDING")
     List<UserOrgCom> findPendingInvitationsWithOrgCom(@Param("user") User user);
+
+    @Query("SELECT uoc FROM UserOrgCom uoc WHERE uoc.user.id = :userId AND uoc.invitationStatus = com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus.ACCEPTED")
+    List<UserOrgCom> findAllByUserId(@Param("userId") UUID userId);
+
+    @Query("SELECT COUNT(uoc) FROM UserOrgCom uoc WHERE uoc.orgCom.id = :orgComId AND uoc.invitationStatus = com.course_work.Sports_Menagement_Platform.data.enums.InvitationStatus.ACCEPTED")
+    int countChiefs(@Param("orgComId") UUID orgComId);
 }

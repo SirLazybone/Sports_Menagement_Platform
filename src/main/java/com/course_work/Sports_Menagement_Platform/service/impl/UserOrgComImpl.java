@@ -49,4 +49,14 @@ public class UserOrgComImpl implements UserOrgComService {
     public List<UserOrgCom> getUsersOrgComByOrgComId(UUID orgComId) {
         return userOrgComRepository.findUsersByOrgComIdNotDTO(orgComId);
     }
+
+    @Override
+    public List<UserOrgCom> findAllByUserId(UUID userId) {
+        return userOrgComRepository.findAllByUserId(userId);
+    }
+
+    @Override
+    public int countChiefs(UUID orgComId) {
+        return userOrgComRepository.countChiefs(orgComId);
+    }
 }

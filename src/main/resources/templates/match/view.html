@@ -1,125 +1,284 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Match Details</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <meta charset="UTF-8">
+    <title>Детали матча</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
+        body { 
+            background: #f8fafc;
+            min-height: 100vh;
+        }
+        .container_main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+        }
+        .page-title {
+            color: #2c3e50;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #eaf6ff;
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 1.5rem;
+        }
+        .card-header {
+            background: #f8fafc;
+            border-bottom: 2px solid #eaf6ff;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .card-body {
+            padding: 1.5rem;
+        }
+        .match-header {
+            background: #eaf6ff;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .team-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        .score {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 1rem 0;
+        }
+        .match-info {
+            color: #64748b;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .table {
+            margin-bottom: 0;
+        }
+        .table th {
+            background: #f8fafc;
+            color: #2c3e50;
+            font-weight: 600;
+            border-bottom: 2px solid #eaf6ff;
+        }
+        .table td {
+            vertical-align: middle;
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-primary {
+            background: #3498db;
+            border: none;
+        }
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        .btn-danger {
+            background: #ef4444;
+            border: none;
+        }
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        .btn-success {
+            background: #10b981;
+            border: none;
+        }
+        .btn-success:hover {
+            background: #059669;
+        }
+        .form-control {
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem 1rem;
+        }
+        .form-control:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+        .form-label {
+            color: #2c3e50;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
         .penalty-round {
-            margin-bottom: 20px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
         }
         .team-penalty {
-            margin-bottom: 10px;
+            margin-bottom: 1rem;
         }
         .team-penalty span {
-            font-weight: bold;
+            font-weight: 600;
+            color: #2c3e50;
             display: block;
-            margin-bottom: 5px;
-        }
-        .team-penalty select {
-            width: 100%;
-            margin-bottom: 10px;
+            margin-bottom: 0.5rem;
         }
         .penalty-result {
             display: flex;
-            gap: 10px;
+            gap: 0.5rem;
         }
         .penalty-result button {
             flex: 1;
         }
         .penalty-result button.active {
-            opacity: 0.7;
+            opacity: 0.8;
         }
-        .text-right {
-            text-align: right;
+        .modal-content {
+            border-radius: 16px;
+            border: none;
         }
-        .text-right .penalty-result {
-            justify-content: flex-end;
+        .modal-header {
+            background: #f8fafc;
+            border-bottom: 2px solid #eaf6ff;
+            padding: 1rem 1.5rem;
+        }
+        .modal-title {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        .modal-body {
+            padding: 1.5rem;
+        }
+        .modal-footer {
+            border-top: 2px solid #eaf6ff;
+            padding: 1rem 1.5rem;
         }
     </style>
 </head>
 <body>
-    <div class="container mt-4">
-        <h2>Match Details</h2>
+    <header th:replace="~{fragments/header :: header}"></header>
+    
+    <div class="container_main">
+        <h1 class="page-title">
+            <i class="bi bi-trophy me-2"></i>Детали матча
+        </h1>
         
         <!-- Error message -->
-        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+        <div th:if="${error}" class="alert alert-danger mb-4">
+            <i class="bi bi-exclamation-circle me-2"></i>
+            <span th:text="${error}"></span>
+        </div>
 
         <!-- Match Information -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h4>Match Information</h4>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <h5><span th:text="${match.team1.name}"></span></h5>
-                        <div th:if="${match.isResultPublished and #lists.size(team1Goals) > 0 and team1Goals[0].time == -1}">
-                            <span class="text-danger">Technical Defeat</span>
-                        </div>
-                        <div th:if="${not match.isResultPublished and (isCap1 or isCap2)}" class="mt-2">
-                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmWithdrawal(this)" th:data-match-id="${match.id}" th:data-team-id="${isCap1 ? match.team1.id : match.team2.id}">Withdraw from Match</button>
-                        </div>
+        <div class="match-header">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <div class="team-name">
+                        <i class="bi bi-shield me-2"></i>
+                        <span th:text="${match.team1.name}"></span>
                     </div>
-
-                    <div class="col-md-4 text-center">
-                        <h5 th:if="${match.isResultPublished}">
-                    <span th:unless="${#lists.size(team1Goals) > 0 and team1Goals[0].time == -1 or #lists.size(team2Goals) > 0 and team2Goals[0].time == -1}">
-                        <span th:if="${tournament.sport != T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${#lists.size(team1Goals)}"></span> -
-                        <span th:if="${tournament.sport != T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${#lists.size(team2Goals)}"></span>
-                        <span th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${team1sets}"></span> -
-                        <span th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" th:text="${team2sets}"></span>
-                    </span>
-                        </h5>
-                        <h5 th:unless="${match.isResultPublished}">VS</h5>
+                    <div th:if="${match.isResultPublished and #lists.size(team1Goals) > 0 and team1Goals[0].time == -1}" class="text-danger">
+                        <i class="bi bi-x-circle me-2"></i>Техническое поражение
                     </div>
-
-                    <div class="col-md-4 text-end">
-                        <h5><span th:text="${match.team2.name}"></span></h5>
-                        <div th:if="${match.isResultPublished and #lists.size(team2Goals) > 0 and team2Goals[0].time == -1}">
-                            <span class="text-danger">Technical Defeat</span>
-                        </div>
+                    <div th:if="${not match.isResultPublished and (isCap1 or isCap2)}" class="mt-3">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmWithdrawal(this)" 
+                                th:data-match-id="${match.id}" 
+                                th:data-team-id="${isCap1 ? match.team1.id : match.team2.id}">
+                            <i class="bi bi-x-circle me-2"></i>Отказаться от матча
+                        </button>
                     </div>
                 </div>
 
-                <!-- Остальная информация -->
-                <div class="row mt-3">
-                    <div class="col-md-12">
-                        <p>Stage:
-                            <span th:if="${stage.bestPlace == 0}">Групповой этап</span>
-                            <span th:if="${stage.bestPlace == 1}" th:text="${stage.bestPlace} + '/' + ${stage.worstPlace} + ' финала'"></span>
-                            <span th:if="${stage.bestPlace > 1}" th:text="'Матчи за ' + ${stage.bestPlace} + '-' + ${stage.worstPlace} + ' места'"></span>
-                            <span th:if="${stage.bestPlace < 0}">Дополнительный матч группового этапа</span>
-                        </p>
-                        <p>Tournament: <span th:text="${tournament.name}"></span></p>
-                        <div th:unless="${match.isResultPublished}">
-                            <p th:if="${match.slot != null}">
-                                Date: <span th:text="${#temporals.format(match.slot.date, 'yyyy-MM-dd')}"></span><br>
-                                Time: <span th:text="${#temporals.format(match.slot.time, 'HH:mm')}"></span><br>
-                                Location: <span th:text="${match.slot.location.name}"></span>
-                            </p>
-                            <p th:unless="${match.slot != null}" class="text-warning">
-                                Match time and location not set yet
-                            </p>
+                <div class="col-md-4 text-center">
+                    <div class="score" th:if="${match.isResultPublished}">
+                        <span th:unless="${#lists.size(team1Goals) > 0 and team1Goals[0].time == -1 or #lists.size(team2Goals) > 0 and team2Goals[0].time == -1}">
+                            <span th:if="${tournament.sport != T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" 
+                                  th:text="${#lists.size(team1Goals)}"></span>
+                            <span th:if="${tournament.sport != T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}"> - </span>
+                            <span th:if="${tournament.sport != T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" 
+                                  th:text="${#lists.size(team2Goals)}"></span>
+                            <span th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" 
+                                  th:text="${team1sets}"></span>
+                            <span th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}"> - </span>
+                            <span th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}" 
+                                  th:text="${team2sets}"></span>
+                        </span>
+                    </div>
+                    <div class="score" th:unless="${match.isResultPublished}">VS</div>
+                </div>
+
+                <div class="col-md-4 text-end">
+                    <div class="team-name">
+                        <i class="bi bi-shield me-2"></i>
+                        <span th:text="${match.team2.name}"></span>
+                    </div>
+                    <div th:if="${match.isResultPublished and #lists.size(team2Goals) > 0 and team2Goals[0].time == -1}" class="text-danger">
+                        <i class="bi bi-x-circle me-2"></i>Техническое поражение
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="match-info">
+                        <i class="bi bi-diagram-3 me-2"></i>
+                        <span th:if="${stage.bestPlace == 0}">Групповой этап</span>
+                        <span th:if="${stage.bestPlace == 1}" th:text="${stage.bestPlace} + '/' + ${stage.worstPlace} + ' финала'"></span>
+                        <span th:if="${stage.bestPlace > 1}" th:text="'Матчи за ' + ${stage.bestPlace} + '-' + ${stage.worstPlace} + ' места'"></span>
+                        <span th:if="${stage.bestPlace < 0}">Дополнительный матч группового этапа</span>
+                    </div>
+                    <div class="match-info">
+                        <i class="bi bi-trophy me-2"></i>
+                        <span th:text="${tournament.name}"></span>
+                    </div>
+                    <div th:unless="${match.isResultPublished}" class="mt-3">
+                        <div th:if="${match.slot != null}" class="match-info">
+                            <i class="bi bi-calendar-event me-2"></i>
+                            <span th:text="${#temporals.format(match.slot.date, 'yyyy-MM-dd')}"></span>
+                            <span th:text="${#temporals.format(match.slot.time, 'HH:mm')}"></span>
+                        </div>
+                        <div th:if="${match.slot != null and match.slot.location != null}" class="match-info">
+                            <i class="bi bi-geo-alt me-2"></i>
+                            <span th:text="${match.slot.location.name}"></span>
+                        </div>
+                        <div th:unless="${match.slot != null}" class="text-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Время и место проведения матча пока не назначены
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-
         <!-- Slot Management (for Organizers) -->
-        <div th:if="${isOrg and not match.isResultPublished}" class="card mb-4">
+        <div th:if="${isOrg and not match.isResultPublished}" class="card">
             <div class="card-header">
-                <h4>Slot Management</h4>
+                <i class="bi bi-calendar-plus me-2"></i>Управление временем матча
             </div>
             <div class="card-body">
                 <form th:action="@{/match/update_slot/{matchId}(matchId=${match.id})}" method="post">
-                    <div class="form-group">
-                        <label for="slot">Select Slot:</label>
-                        <select class="form-control" id="slot" name="slotId">
+                    <div class="mb-3">
+                        <label for="slot" class="form-label">Выберите время:</label>
+                        <select class="form-select" id="slot" name="slotId">
                             <option th:each="slot : ${availableSlots}"
                                     th:value="${slot.id}"
                                     th:text="${#temporals.format(slot.date, 'yyyy-MM-dd') + ' - ' + #temporals.format(slot.time, 'HH:mm') + ' - ' + slot.location.name}"
@@ -127,235 +286,351 @@
                             </option>
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-primary">Update Slot</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check2-circle me-2"></i>Обновить время
+                    </button>
                 </form>
             </div>
         </div>
 
         <!-- Match Results -->
-        <div th:if="${isRef and not match.isResultPublished}" class="card mb-4">
+        <div th:if="${isRef and not match.isResultPublished}" class="card">
             <div class="card-header">
-                <h4>Match Results</h4>
+                <i class="bi bi-clipboard-data me-2"></i>Результаты матча
             </div>
             <div class="card-body">
                 <!-- Football/Hockey Results -->
                 <div th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).FOOTBALL or tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}">
-                    <h5>Goals</h5>
-                    <div class="row">
+                    <h5 class="mb-4">Голы</h5>
+                    <div class="row g-4">
                         <div class="col-md-6">
-                            <h6 th:text="${match.team1.name} + ' Goals'"></h6>
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Player</th>
-                                        <th>Minute</th>
-                                        <th>Type</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="goal : ${team1Goals}">
-                                        <td th:text="${goal.player.name}"></td>
-                                        <td th:text="${goal.time}"></td>
-                                        <td th:text="${goal.isPenalty ? 'Penalty' : 'Regular'}"></td>
-                                        <td>
-                                            <form th:action="@{/match/delete_goal/{goalId}(goalId=${goal.id})}" method="post">
-                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="bi bi-shield me-2"></i>
+                                    <span th:text="${match.team1.name} + ' - Голы'"></span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Игрок</th>
+                                                    <th>Минута</th>
+                                                    <th>Тип</th>
+                                                    <th>Действия</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr th:each="goal : ${team1Goals}">
+                                                    <td th:text="${goal.player.name}"></td>
+                                                    <td th:text="${goal.time}"></td>
+                                                    <td>
+                                                        <span th:if="${goal.isPenalty}" class="badge bg-warning">Пенальти</span>
+                                                        <span th:unless="${goal.isPenalty}" class="badge bg-success">Обычный</span>
+                                                    </td>
+                                                    <td>
+                                                        <form th:action="@{/match/delete_goal}" method="post" class="d-inline">
+                                                            <input type="hidden" name="goalId" th:value="${goal.id}" />
+                                                            <input type="hidden" name="matchId" th:value="${match.id}" />
+                                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-md-6">
-                            <h6 th:text="${match.team2.name} + ' Goals'"></h6>
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Player</th>
-                                        <th>Minute</th>
-                                        <th>Type</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="goal : ${team2Goals}">
-                                        <td th:text="${goal.player.name}"></td>
-                                        <td th:text="${goal.time}"></td>
-                                        <td th:text="${goal.isPenalty ? 'Penalty' : 'Regular'}"></td>
-                                        <td>
-                                            <form th:action="@{/match/delete_goal/{goalId}(goalId=${goal.id})}" method="post">
-                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="bi bi-shield me-2"></i>
+                                    <span th:text="${match.team2.name} + ' - Голы'"></span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Игрок</th>
+                                                    <th>Минута</th>
+                                                    <th>Тип</th>
+                                                    <th>Действия</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr th:each="goal : ${team2Goals}">
+                                                    <td th:text="${goal.player.name}"></td>
+                                                    <td th:text="${goal.time}"></td>
+                                                    <td>
+                                                        <span th:if="${goal.isPenalty}" class="badge bg-warning">Пенальти</span>
+                                                        <span th:unless="${goal.isPenalty}" class="badge bg-success">Обычный</span>
+                                                    </td>
+                                                    <td>
+                                                        <form th:action="@{/match/delete_goal}" method="post" class="d-inline">
+                                                            <input type="hidden" name="goalId" th:value="${goal.id}" />
+                                                            <input type="hidden" name="matchId" th:value="${match.id}" />
+                                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <!-- After Match Penalties -->
-                    <h5 class="mt-4">After Match Penalties</h5>
-                    <div class="row">
+                    <h5 class="mt-4 mb-4">Послематчевые пенальти</h5>
+                    <div class="row g-4">
                         <div class="col-md-6">
-                            <h6 th:text="${match.team1.name} + ' Penalties'"></h6>
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Player</th>
-                                        <th>Success</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="penalty : ${team1Penalties}">
-                                        <td th:text="${penalty.player.name}"></td>
-                                        <td th:text="${penalty.scored ? 'Yes' : 'No'}"></td>
-                                        <td>
-                                            <form th:action="@{/match/delete_penalty/{penaltyId}(penaltyId=${penalty.id})}" method="post">
-                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="bi bi-shield me-2"></i>
+                                    <span th:text="${match.team1.name} + ' - Пенальти'"></span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Игрок</th>
+                                                    <th>Результат</th>
+                                                    <th>Действия</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr th:each="penalty : ${team1Penalties}">
+                                                    <td th:text="${penalty.player.name}"></td>
+                                                    <td>
+                                                        <span th:if="${penalty.scored}" class="badge bg-success">Забит</span>
+                                                        <span th:unless="${penalty.scored}" class="badge bg-danger">Промах</span>
+                                                    </td>
+                                                    <td>
+                                                        <form th:action="@{/match/delete_penalty/{penaltyId}(penaltyId=${penalty.id})}" method="post" class="d-inline">
+                                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-md-6">
-                            <h6 th:text="${match.team2.name} + ' Penalties'"></h6>
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Player</th>
-                                        <th>Success</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="penalty : ${team2Penalties}">
-                                        <td th:text="${penalty.player.name}"></td>
-                                        <td th:text="${penalty.scored ? 'Yes' : 'No'}"></td>
-                                        <td>
-                                            <form th:action="@{/match/delete_penalty/{penaltyId}(penaltyId=${penalty.id})}" method="post">
-                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="bi bi-shield me-2"></i>
+                                    <span th:text="${match.team2.name} + ' - Пенальти'"></span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Игрок</th>
+                                                    <th>Результат</th>
+                                                    <th>Действия</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr th:each="penalty : ${team2Penalties}">
+                                                    <td th:text="${penalty.player.name}"></td>
+                                                    <td>
+                                                        <span th:if="${penalty.scored}" class="badge bg-success">Забит</span>
+                                                        <span th:unless="${penalty.scored}" class="badge bg-danger">Промах</span>
+                                                    </td>
+                                                    <td>
+                                                        <form th:action="@{/match/delete_penalty/{penaltyId}(penaltyId=${penalty.id})}" method="post" class="d-inline">
+                                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Basketball Results -->
                 <div th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).BASKETBALL}">
-                    <h5>Shots</h5>
-                    <div class="row">
+                    <h5 class="mb-4">Броски</h5>
+                    <div class="row g-4">
                         <div class="col-md-6">
-                            <h6 th:text="${match.team1.name} + ' Shots'"></h6>
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Player</th>
-                                        <th>Minute</th>
-                                        <th>Points</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="shot : ${team1Goals}">
-                                        <td th:text="${shot.player.name}"></td>
-                                        <td th:text="${shot.time}"></td>
-                                        <td th:text="${shot.points}"></td>
-                                        <td>
-                                            <form th:action="@{/match/delete_shot/{shotId}(shotId=${shot.id})}" method="post">
-                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="bi bi-shield me-2"></i>
+                                    <span th:text="${match.team1.name} + ' - Броски'"></span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Игрок</th>
+                                                    <th>Минута</th>
+                                                    <th>Очки</th>
+                                                    <th>Действия</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr th:each="shot : ${team1Goals}">
+                                                    <td th:text="${shot.player.name}"></td>
+                                                    <td th:text="${shot.time}"></td>
+                                                    <td>
+                                                        <span class="badge" th:classappend="${shot.points == 3 ? 'bg-danger' : (shot.points == 2 ? 'bg-warning' : 'bg-success')}"
+                                                              th:text="${shot.points + ' очка'}"></span>
+                                                    </td>
+                                                    <td>
+                                                        <form th:action="@{/match/delete_shot/{shotId}(shotId=${shot.id})}" method="post" class="d-inline">
+                                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-md-6">
-                            <h6 th:text="${match.team2.name} + ' Shots'"></h6>
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Player</th>
-                                        <th>Minute</th>
-                                        <th>Points</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="shot : ${team2Goals}">
-                                        <td th:text="${shot.player.name}"></td>
-                                        <td th:text="${shot.time}"></td>
-                                        <td th:text="${shot.points}"></td>
-                                        <td>
-                                            <form th:action="@{/match/delete_shot/{shotId}(shotId=${shot.id})}" method="post">
-                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="bi bi-shield me-2"></i>
+                                    <span th:text="${match.team2.name} + ' - Броски'"></span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Игрок</th>
+                                                    <th>Минута</th>
+                                                    <th>Очки</th>
+                                                    <th>Действия</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr th:each="shot : ${team2Goals}">
+                                                    <td th:text="${shot.player.name}"></td>
+                                                    <td th:text="${shot.time}"></td>
+                                                    <td>
+                                                        <span class="badge" th:classappend="${shot.points == 3 ? 'bg-danger' : (shot.points == 2 ? 'bg-warning' : 'bg-success')}"
+                                                              th:text="${shot.points + ' очка'}"></span>
+                                                    </td>
+                                                    <td>
+                                                        <form th:action="@{/match/delete_shot/{shotId}(shotId=${shot.id})}" method="post" class="d-inline">
+                                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Volleyball Results -->
                 <div th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}">
-                    <h5>Points</h5>
-                    <div class="row">
+                    <h5 class="mb-4">Очки</h5>
+                    <div class="row g-4">
                         <div class="col-md-6">
-                            <h6 th:text="${match.team1.name} + ' Points'"></h6>
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Player</th>
-                                        <th>Minute</th>
-                                        <th>Set</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="point : ${team1Goals}">
-                                        <td th:text="${point.player.name}"></td>
-                                        <td th:text="${point.time}"></td>
-                                        <td th:text="${point.setNumber}"></td>
-                                        <td>
-                                            <form th:action="@{/match/delete_point/{pointId}(pointId=${point.id})}" method="post">
-                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="bi bi-shield me-2"></i>
+                                    <span th:text="${match.team1.name} + ' - Очки'"></span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Игрок</th>
+                                                    <th>Минута</th>
+                                                    <th>Сет</th>
+                                                    <th>Действия</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr th:each="point : ${team1Goals}">
+                                                    <td th:text="${point.player.name}"></td>
+                                                    <td th:text="${point.time}"></td>
+                                                    <td>
+                                                        <span class="badge bg-primary" th:text="${point.setNumber + ' сет'}"></span>
+                                                    </td>
+                                                    <td>
+                                                        <form th:action="@{/match/delete_point/{pointId}(pointId=${point.id})}" method="post" class="d-inline">
+                                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="col-md-6">
-                            <h6 th:text="${match.team2.name} + ' Points'"></h6>
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Player</th>
-                                        <th>Minute</th>
-                                        <th>Set</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="point : ${team2Goals}">
-                                        <td th:text="${point.player.name}"></td>
-                                        <td th:text="${point.time}"></td>
-                                        <td th:text="${point.setNumber}"></td>
-                                        <td>
-                                            <form th:action="@{/match/delete_point/{pointId}(pointId=${point.id})}" method="post">
-                                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="bi bi-shield me-2"></i>
+                                    <span th:text="${match.team2.name} + ' - Очки'"></span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Игрок</th>
+                                                    <th>Минута</th>
+                                                    <th>Сет</th>
+                                                    <th>Действия</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr th:each="point : ${team2Goals}">
+                                                    <td th:text="${point.player.name}"></td>
+                                                    <td th:text="${point.time}"></td>
+                                                    <td>
+                                                        <span class="badge bg-primary" th:text="${point.setNumber + ' сет'}"></span>
+                                                    </td>
+                                                    <td>
+                                                        <form th:action="@{/match/delete_point/{pointId}(pointId=${point.id})}" method="post" class="d-inline">
+                                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -363,123 +638,178 @@
         </div>
 
         <!-- Forms for Referees -->
-        <div th:if="${isRef and not match.isResultPublished}" class="card mb-4">
+        <div th:if="${isRef and not match.isResultPublished}" class="card">
             <div class="card-header">
-                <h4>Add New Event</h4>
+                <i class="bi bi-plus-circle me-2"></i>Добавить событие
             </div>
             <div class="card-body">
                 <!-- Football/Hockey Forms -->
                 <div th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).FOOTBALL or tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}">
-                    <h5>Add Goal</h5>
-                    <form th:action="@{/match/add_goal}" method="post">
-                        <input type="hidden" name="matchId" th:value="${match.id}">
-                        <div class="form-group">
-                            <label for="teamId">Team:</label>
-                            <select class="form-control" id="teamId" name="teamId" required onchange="updatePlayers(this.value)">
-                                <option value="">-- Select Team --</option>
-                                <option th:value="${match.team1.id}" th:text="${match.team1.name}"></option>
-                                <option th:value="${match.team2.id}" th:text="${match.team2.name}"></option>
-                            </select>
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="bi bi-ball me-2"></i>Добавить гол
                         </div>
-                        <div class="form-group">
-                            <label for="playerId">Player:</label>
-                            <select class="form-control" id="playerId" name="playerId" required>
-                                <option value="">-- Select Player --</option>
-                            </select>
+                        <div class="card-body">
+                            <form th:action="@{/match/add_goal}" method="post">
+                                <input type="hidden" name="matchId" th:value="${match.id}">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Команда:</label>
+                                        <select class="form-select" id="teamId" name="teamId" required onchange="updatePlayers(this.value)">
+                                            <option value="">Выберите команду</option>
+                                            <option th:value="${match.team1.id}" th:text="${match.team1.name}"></option>
+                                            <option th:value="${match.team2.id}" th:text="${match.team2.name}"></option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Игрок:</label>
+                                        <select class="form-select" id="playerId" name="playerId" required>
+                                            <option value="">Выберите игрока</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Минута:</label>
+                                        <input type="number" class="form-control" id="time" name="time" required>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="isPenalty" name="isPenalty">
+                                        <label class="form-check-label" for="isPenalty" 
+                                               th:text="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).FOOTBALL ? 'Штрафной' : 'Буллит'}">
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-plus-circle me-2"></i>Добавить гол
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                        <div class="form-group">
-                            <label for="time">Minute:</label>
-                            <input type="number" class="form-control" id="time" name="time" required>
-                        </div>
-                        <div class="form-group">
-                            <div class="form-check">
-                                <input type="checkbox" class="form-check-input" id="isPenalty" name="isPenalty">
-                                <label class="form-check-label" for="isPenalty" th:text="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).FOOTBALL ? 'Штрафной' : 'Буллит'}"></label>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Add Goal</button>
-                    </form>
+                    </div>
 
-                    <h5 class="mt-4">Add After Match Penalty</h5>
-                    <form th:action="@{/match/add_after_match_penalties}" method="post" class="goal-form" id="penaltiesForm">
-                        <input type="hidden" name="matchId" th:value="${match.id}"/>
-                        
-                        <div class="penalty-shootout" id="penaltyShootout">
-                            <!-- Здесь будут добавляться раунды пенальти -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="bi bi-flag me-2"></i>Послематчевые пенальти
                         </div>
-                        
-                        <button type="button" class="btn btn-secondary" onclick="addPenaltyRound()">Add Penalty Round</button>
-                        
-                        <div class="penalty-summary" id="penaltySummary">
-                            Penalty Score: <span id="team1PenaltyScore">0</span> - <span id="team2PenaltyScore">0</span>
+                        <div class="card-body">
+                            <form th:action="@{/match/add_after_match_penalties}" method="post" class="goal-form" id="penaltiesForm">
+                                <input type="hidden" name="matchId" th:value="${match.id}"/>
+                                
+                                <div class="penalty-shootout" id="penaltyShootout">
+                                    <!-- Здесь будут добавляться раунды пенальти -->
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-secondary" onclick="addPenaltyRound()">
+                                        <i class="bi bi-plus-circle me-2"></i>Добавить раунд пенальти
+                                    </button>
+                                </div>
+                                
+                                <div class="penalty-summary mt-3 p-3 bg-light rounded">
+                                    <h6 class="mb-2">Счет по пенальти:</h6>
+                                    <div class="h4 mb-0">
+                                        <span id="team1PenaltyScore">0</span> - <span id="team2PenaltyScore">0</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-primary" onclick="submitPenalties()">
+                                        <i class="bi bi-save me-2"></i>Сохранить результаты пенальти
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                        
-                        <button type="button" class="btn btn-primary" onclick="submitPenalties()" style="margin-top: 20px;">Save Penalty Results</button>
-                    </form>
+                    </div>
                 </div>
 
                 <!-- Basketball Form -->
                 <div th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).BASKETBALL}">
-                    <h5>Add Shot</h5>
-                    <form th:action="@{/match/add_shot}" method="post">
-                        <input type="hidden" name="matchId" th:value="${match.id}">
-                        <div class="form-group">
-                            <label for="playerId">Player:</label>
-                            <select class="form-control" id="playerId" name="playerId" required>
-                                <option value="">-- Select Player --</option>
-                                <optgroup th:each="team : ${players.entrySet()}" 
-                                         th:label="${team.key == match.team1.id ? match.team1.name : match.team2.name}">
-                                    <option th:each="player : ${team.value}"
-                                            th:value="${player.id}"
-                                            th:text="${player.name}">
-                                    </option>
-                                </optgroup>
-                            </select>
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="bi bi-basketball me-2"></i>Добавить бросок
                         </div>
-                        <div class="form-group">
-                            <label for="time">Minute:</label>
-                            <input type="number" class="form-control" id="time" name="time" required>
+                        <div class="card-body">
+                            <form th:action="@{/match/add_shot}" method="post">
+                                <input type="hidden" name="matchId" th:value="${match.id}">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Игрок:</label>
+                                        <select class="form-select" id="playerId" name="playerId" required>
+                                            <option value="">Выберите игрока</option>
+                                            <optgroup th:each="team : ${players.entrySet()}" 
+                                                     th:label="${team.key == match.team1.id ? match.team1.name : match.team2.name}">
+                                                <option th:each="player : ${team.value}"
+                                                        th:value="${player.id}"
+                                                        th:text="${player.name}">
+                                                </option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Минута:</label>
+                                        <input type="number" class="form-control" id="time" name="time" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Очки:</label>
+                                        <select class="form-select" id="points" name="points" required>
+                                            <option value="1">1 очко</option>
+                                            <option value="2">2 очка</option>
+                                            <option value="3">3 очка</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-plus-circle me-2"></i>Добавить бросок
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                        <div class="form-group">
-                            <label for="points">Points:</label>
-                            <select class="form-control" id="points" name="points" required>
-                                <option value="1">1 point</option>
-                                <option value="2">2 points</option>
-                                <option value="3">3 points</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Add Shot</button>
-                    </form>
+                    </div>
                 </div>
 
                 <!-- Volleyball Form -->
                 <div th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}">
-                    <h5>Add Point</h5>
-                    <form th:action="@{/match/add_point}" method="post">
-                        <input type="hidden" name="matchId" th:value="${match.id}">
-                        <div class="form-group">
-                            <label for="player">Player:</label>
-                            <select class="form-control" id="player" name="playerId" required>
-                                <option value="">-- Select Player --</option>
-                                <optgroup th:each="team : ${players.entrySet()}" 
-                                         th:label="${team.key == match.team1.id ? match.team1.name : match.team2.name}">
-                                    <option th:each="player : ${team.value}"
-                                            th:value="${player.id}"
-                                            th:text="${player.name}">
-                                    </option>
-                                </optgroup>
-                            </select>
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="bi bi-circle me-2"></i>Добавить очко
                         </div>
-                        <div class="form-group">
-                            <label for="time">Minute:</label>
-                            <input type="number" class="form-control" id="time" name="time" required>
+                        <div class="card-body">
+                            <form th:action="@{/match/add_point}" method="post">
+                                <input type="hidden" name="matchId" th:value="${match.id}">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Игрок:</label>
+                                        <select class="form-select" id="player" name="playerId" required>
+                                            <option value="">Выберите игрока</option>
+                                            <optgroup th:each="team : ${players.entrySet()}" 
+                                                     th:label="${team.key == match.team1.id ? match.team1.name : match.team2.name}">
+                                                <option th:each="player : ${team.value}"
+                                                        th:value="${player.id}"
+                                                        th:text="${player.name}">
+                                                </option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Минута:</label>
+                                        <input type="number" class="form-control" id="time" name="time" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Номер сета:</label>
+                                        <input type="number" class="form-control" id="setNumber" name="setNumber" required min="1">
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-plus-circle me-2"></i>Добавить очко
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                        <div class="form-group">
-                            <label for="setNumber">Set Number:</label>
-                            <input type="number" class="form-control" id="setNumber" name="setNumber" required min="1">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Add Point</button>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -487,213 +817,310 @@
         <!-- Publish Button -->
         <div th:if="${isRef and not match.isResultPublished}" class="text-center mb-4">
             <form th:action="@{/match/publish/{matchId}(matchId=${match.id})}" method="post">
-                <button type="submit" class="btn btn-success btn-lg">Publish Results</button>
+                <button type="submit" class="btn btn-success btn-lg">
+                    <i class="bi bi-check2-circle me-2"></i>Опубликовать результаты
+                </button>
             </form>
         </div>
 
         <!-- Match Details Button -->
-        <div th:if="${match.isResultPublished and not ((#lists.size(team2Goals) > 0 and team2Goals[0].time == -1) or (#lists.size(team1Goals) > 0 and team1Goals[0].time == -1))}" class="text-center mb-4">
-            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#matchDetailsModal">
-                Match Details
+        <div th:if="${match.isResultPublished and not ((#lists.size(team2Goals) > 0 and team2Goals[0].time == -1) or (#lists.size(team1Goals) > 0 and team1Goals[0].time == -1))}" 
+             class="text-center mb-4">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#matchDetailsModal">
+                <i class="bi bi-info-circle me-2"></i>Детали матча
             </button>
         </div>
 
         <!-- Match Details Modal -->
-        <div class="modal fade" id="matchDetailsModal" tabindex="-1" role="dialog" aria-labelledby="matchDetailsModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg" role="document">
+        <div class="modal fade" id="matchDetailsModal" tabindex="-1" aria-labelledby="matchDetailsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="matchDetailsModalLabel">Match Details</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
+                        <h5 class="modal-title" id="matchDetailsModalLabel">
+                            <i class="bi bi-info-circle me-2"></i>Детали матча
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <!-- Football/Hockey Results -->
                         <div th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).FOOTBALL or tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY}">
-                            <h5>Goals</h5>
-                            <div class="row">
+                            <h5 class="mb-4">Голы</h5>
+                            <div class="row g-4">
                                 <div class="col-md-6">
-                                    <h6 th:text="${match.team1.name} + ' Goals'"></h6>
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>Player</th>
-                                                <th>Minute</th>
-                                                <th>Type</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr th:each="goal : ${team1Goals}">
-                                                <td th:text="${goal.player.name}"></td>
-                                                <td th:text="${goal.time}"></td>
-                                                <td th:text="${goal.isPenalty ? 'Penalty' : 'Regular'}"></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <i class="bi bi-shield me-2"></i>
+                                            <span th:text="${match.team1.name} + ' - Голы'"></span>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Игрок</th>
+                                                            <th>Минута</th>
+                                                            <th>Тип</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr th:each="goal : ${team1Goals}">
+                                                            <td th:text="${goal.player.name}"></td>
+                                                            <td th:text="${goal.time}"></td>
+                                                            <td>
+                                                                <span th:if="${goal.isPenalty}" class="badge bg-warning">Пенальти</span>
+                                                                <span th:unless="${goal.isPenalty}" class="badge bg-success">Обычный</span>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <h6 th:text="${match.team2.name} + ' Goals'"></h6>
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>Player</th>
-                                                <th>Minute</th>
-                                                <th>Type</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr th:each="goal : ${team2Goals}">
-                                                <td th:text="${goal.player.name}"></td>
-                                                <td th:text="${goal.time}"></td>
-                                                <td th:text="${goal.isPenalty ? 'Penalty' : 'Regular'}"></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <i class="bi bi-shield me-2"></i>
+                                            <span th:text="${match.team2.name} + ' - Голы'"></span>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Игрок</th>
+                                                            <th>Минута</th>
+                                                            <th>Тип</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr th:each="goal : ${team2Goals}">
+                                                            <td th:text="${goal.player.name}"></td>
+                                                            <td th:text="${goal.time}"></td>
+                                                            <td>
+                                                                <span th:if="${goal.isPenalty}" class="badge bg-warning">Пенальти</span>
+                                                                <span th:unless="${goal.isPenalty}" class="badge bg-success">Обычный</span>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- After Match Penalties -->
-                            <h5 class="mt-4">After Match Penalties</h5>
-                            <div class="row">
+                            <h5 class="mt-4 mb-4">Послематчевые пенальти</h5>
+                            <div class="row g-4">
                                 <div class="col-md-6">
-                                    <h6 th:text="${match.team1.name} + ' Penalties'"></h6>
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>Player</th>
-                                                <th>Success</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr th:each="penalty : ${team1Penalties}">
-                                                <td th:text="${penalty.player.name}"></td>
-                                                <td th:text="${penalty.scored ? 'Yes' : 'No'}"></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <i class="bi bi-shield me-2"></i>
+                                            <span th:text="${match.team1.name} + ' - Пенальти'"></span>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Игрок</th>
+                                                            <th>Результат</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr th:each="penalty : ${team1Penalties}">
+                                                            <td th:text="${penalty.player.name}"></td>
+                                                            <td>
+                                                                <span th:if="${penalty.scored}" class="badge bg-success">Забит</span>
+                                                                <span th:unless="${penalty.scored}" class="badge bg-danger">Промах</span>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <h6 th:text="${match.team2.name} + ' Penalties'"></h6>
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>Player</th>
-                                                <th>Success</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr th:each="penalty : ${team2Penalties}">
-                                                <td th:text="${penalty.player.name}"></td>
-                                                <td th:text="${penalty.scored ? 'Yes' : 'No'}"></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <i class="bi bi-shield me-2"></i>
+                                            <span th:text="${match.team2.name} + ' - Пенальти'"></span>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Игрок</th>
+                                                            <th>Результат</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr th:each="penalty : ${team2Penalties}">
+                                                            <td th:text="${penalty.player.name}"></td>
+                                                            <td>
+                                                                <span th:if="${penalty.scored}" class="badge bg-success">Забит</span>
+                                                                <span th:unless="${penalty.scored}" class="badge bg-danger">Промах</span>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Basketball Results -->
                         <div th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).BASKETBALL}">
-                            <h5>Shots</h5>
-                            <div class="row">
+                            <h5 class="mb-4">Броски</h5>
+                            <div class="row g-4">
                                 <div class="col-md-6">
-                                    <h6 th:text="${match.team1.name} + ' Shots'"></h6>
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>Player</th>
-                                                <th>Minute</th>
-                                                <th>Points</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr th:each="shot : ${team1Goals}">
-                                                <td th:text="${shot.player.name}"></td>
-                                                <td th:text="${shot.time}"></td>
-                                                <td th:text="${shot.points}"></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <i class="bi bi-shield me-2"></i>
+                                            <span th:text="${match.team1.name} + ' - Броски'"></span>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Игрок</th>
+                                                            <th>Минута</th>
+                                                            <th>Очки</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr th:each="shot : ${team1Goals}">
+                                                            <td th:text="${shot.player.name}"></td>
+                                                            <td th:text="${shot.time}"></td>
+                                                            <td>
+                                                                <span class="badge" th:classappend="${shot.points == 3 ? 'bg-danger' : (shot.points == 2 ? 'bg-warning' : 'bg-success')}"
+                                                                      th:text="${shot.points + ' очка'}"></span>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <h6 th:text="${match.team2.name} + ' Shots'"></h6>
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>Player</th>
-                                                <th>Minute</th>
-                                                <th>Points</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr th:each="shot : ${team2Goals}">
-                                                <td th:text="${shot.player.name}"></td>
-                                                <td th:text="${shot.time}"></td>
-                                                <td th:text="${shot.points}"></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <i class="bi bi-shield me-2"></i>
+                                            <span th:text="${match.team2.name} + ' - Броски'"></span>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Игрок</th>
+                                                            <th>Минута</th>
+                                                            <th>Очки</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr th:each="shot : ${team2Goals}">
+                                                            <td th:text="${shot.player.name}"></td>
+                                                            <td th:text="${shot.time}"></td>
+                                                            <td>
+                                                                <span class="badge" th:classappend="${shot.points == 3 ? 'bg-danger' : (shot.points == 2 ? 'bg-warning' : 'bg-success')}"
+                                                                      th:text="${shot.points + ' очка'}"></span>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Volleyball Results -->
                         <div th:if="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL}">
-                            <h5>Points</h5>
-                            <div class="row">
+                            <h5 class="mb-4">Очки</h5>
+                            <div class="row g-4">
                                 <div class="col-md-6">
-                                    <h6 th:text="${match.team1.name} + ' Points'"></h6>
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>Player</th>
-                                                <th>Minute</th>
-                                                <th>Set</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr th:each="point : ${team1Goals}">
-                                                <td th:text="${point.player.name}"></td>
-                                                <td th:text="${point.time}"></td>
-                                                <td th:text="${point.setNumber}"></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <i class="bi bi-shield me-2"></i>
+                                            <span th:text="${match.team1.name} + ' - Очки'"></span>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Игрок</th>
+                                                            <th>Минута</th>
+                                                            <th>Сет</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr th:each="point : ${team1Goals}">
+                                                            <td th:text="${point.player.name}"></td>
+                                                            <td th:text="${point.time}"></td>
+                                                            <td>
+                                                                <span class="badge bg-primary" th:text="${point.setNumber + ' сет'}"></span>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <h6 th:text="${match.team2.name} + ' Points'"></h6>
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>Player</th>
-                                                <th>Minute</th>
-                                                <th>Set</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr th:each="point : ${team2Goals}">
-                                                <td th:text="${point.player.name}"></td>
-                                                <td th:text="${point.time}"></td>
-                                                <td th:text="${point.setNumber}"></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <i class="bi bi-shield me-2"></i>
+                                            <span th:text="${match.team2.name} + ' - Очки'"></span>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Игрок</th>
+                                                            <th>Минута</th>
+                                                            <th>Сет</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr th:each="point : ${team2Goals}">
+                                                            <td th:text="${point.player.name}"></td>
+                                                            <td th:text="${point.time}"></td>
+                                                            <td>
+                                                                <span class="badge bg-primary" th:text="${point.setNumber + ' сет'}"></span>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Закрыть
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script th:inline="javascript">
         // Получаем данные о игроках из Thymeleaf
         const playersData = /*[[${players}]]*/ {};
@@ -702,7 +1129,7 @@
         // Функция для обновления списка игроков при выборе команды
         function updatePlayers(teamId) {
             const playerSelect = document.getElementById('playerId');
-            playerSelect.innerHTML = '<option value="">-- Select Player --</option>';
+            playerSelect.innerHTML = '<option value="">Выберите игрока</option>';
             
             if (teamId && playersData[teamId]) {
                 playersData[teamId].forEach(player => {
@@ -726,24 +1153,24 @@
                     <div class="col-md-6">
                         <div class="team-penalty">
                             <span>${teams[0].name}:</span>
-                            <select name="team1PlayerId" required>
-                                <option value="">Select Player</option>
+                            <select class="form-select" name="team1PlayerId" required>
+                                <option value="">Выберите игрока</option>
                             </select>
-                            <div class="penalty-result">
-                                <button type="button" class="btn btn-success" onclick="updatePenaltyResult(this, 1, true)">Scored</button>
-                                <button type="button" class="btn btn-danger" onclick="updatePenaltyResult(this, 1, false)">Missed</button>
+                            <div class="penalty-result mt-2">
+                                <button type="button" class="btn btn-success" onclick="updatePenaltyResult(this, 1, true)">Забит</button>
+                                <button type="button" class="btn btn-danger" onclick="updatePenaltyResult(this, 1, false)">Промах</button>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="team-penalty text-right">
+                        <div class="team-penalty text-end">
                             <span>${teams[1].name}:</span>
-                            <select name="team2PlayerId" required>
-                                <option value="">Select Player</option>
+                            <select class="form-select" name="team2PlayerId" required>
+                                <option value="">Выберите игрока</option>
                             </select>
-                            <div class="penalty-result">
-                                <button type="button" class="btn btn-success" onclick="updatePenaltyResult(this, 2, true)">Scored</button>
-                                <button type="button" class="btn btn-danger" onclick="updatePenaltyResult(this, 2, false)">Missed</button>
+                            <div class="penalty-result mt-2">
+                                <button type="button" class="btn btn-success" onclick="updatePenaltyResult(this, 2, true)">Забит</button>
+                                <button type="button" class="btn btn-danger" onclick="updatePenaltyResult(this, 2, false)">Промах</button>
                             </div>
                         </div>
                     </div>
@@ -861,9 +1288,9 @@
             form.submit();
         }
 
-        // Function to handle withdrawal confirmation
+        // Функция для подтверждения отказа от матча
         function confirmWithdrawal(button) {
-            if (confirm('Are you sure you want to withdraw from the match? This will result in a technical defeat.')) {
+            if (confirm('Вы уверены, что хотите отказаться от матча? Это приведет к техническому поражению.')) {
                 const matchId = button.getAttribute('data-match-id');
                 const teamId = button.getAttribute('data-team-id');
                 

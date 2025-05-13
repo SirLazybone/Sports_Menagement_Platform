@@ -68,7 +68,11 @@ public class OrgComServiceImpl implements OrgComService {
     @Override
     @Transactional
     public List<OrgCom> getAllActiveOrgComByUser(User user) {
-        return userOrgComRepository.findActiveOrgComsByUserId(user.getId());
+        List<OrgCom> orgComs = userOrgComRepository.findActiveOrgComsByUserId(user.getId());
+        if (orgComs == null || orgComs.isEmpty()) {
+            throw new RuntimeException("Вы не принадлежите ни к одной ораганизации");
+        }
+        return orgComs;
     }
 
     @Override

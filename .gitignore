@@ -32,3 +32,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+ApiHands.txt
+match.json
+tournament.json
+user.json

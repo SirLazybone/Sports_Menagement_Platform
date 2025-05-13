@@ -1,136 +1,327 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Детали турнира</title>
+    <title>Детали турнира - Sports Management Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body { 
+            background: #f8fafc;
+            min-height: 100vh;
+        }
+        .tournament-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .tournament-header {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 2px solid #eaf6ff;
+        }
+        .tournament-logo {
+            width: 120px;
+            height: 120px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 3px solid #3498db;
+        }
+        .default-logo {
+            width: 120px;
+            height: 120px;
+            background-color: #eaf6ff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: #3498db;
+            border: 3px solid #3498db;
+        }
+        .tournament-info {
+            flex: 1;
+        }
+        .tournament-title {
+            color: #2c3e50;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .tournament-subtitle {
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+        .section-title {
+            color: #2c3e50;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 2rem 0 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #eaf6ff;
+        }
+        .info-table {
+            width: 100%;
+            margin-bottom: 2rem;
+        }
+        .info-table th {
+            width: 250px;
+            color: #64748b;
+            font-weight: 500;
+            padding: 1rem;
+            vertical-align: top;
+        }
+        .info-table td {
+            color: #2c3e50;
+            font-weight: 500;
+            padding: 1rem;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-primary {
+            background: #3498db;
+            border: none;
+        }
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        .btn-success {
+            background: #2ecc71;
+            border: none;
+        }
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        .btn-danger {
+            background: #ef4444;
+            border: none;
+        }
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        .btn-info {
+            background: #0ea5e9;
+            border: none;
+            color: white;
+        }
+        .btn-info:hover {
+            background: #0284c7;
+            color: white;
+        }
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .stage-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.2s ease;
+        }
+        .stage-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-color: #3498db;
+        }
+        .cancelled-badge {
+            background-color: #fee2e2;
+            color: #991b1b;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+        .registration-status {
+            background-color: #dcfce7;
+            color: #166534;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+    </style>
 </head>
 <body>
-<h1>Детали турнира</h1>
+    <header th:replace="~{fragments/header :: header}"></header>
 
+    <div class="container">
+        <div class="tournament-container">
+            <div class="tournament-header">
 <div th:if="${tournament.logo != null}">
-  <img th:src="@{'/uploads/' + ${tournament.logo}}" alt="Tournament Logo">
+                    <img th:src="@{'/uploads/' + ${tournament.logo}}" class="tournament-logo" alt="Tournament Logo">
 </div>
-<div th:unless="${tournament.logo != null}">
+                <div th:unless="${tournament.logo != null}" class="default-logo">
   <span>T</span>
+                </div>
+                <div class="tournament-info">
+                    <h1 class="tournament-title" th:text="${tournament.name}">Название турнира</h1>
+                    <p class="tournament-subtitle">
+                        <i class="bi bi-trophy me-2"></i>
+                        <span th:text="${tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).FOOTBALL ? 'Футбол' : 
+                                      tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).BASKETBALL ? 'Баскетбол' :
+                                      tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).VOLLEYBALL ? 'Волейбол' :
+                                      tournament.sport == T(com.course_work.Sports_Menagement_Platform.data.enums.Sport).HOCKEY ? 'Хоккей' : tournament.sport}"></span>
+                    </p>
+                    <div th:if="${tournament.is_stopped}" class="cancelled-badge">
+                        <i class="bi bi-x-circle me-2"></i>Чемпионат отменен
+                    </div>
+                    <div th:if="${registrationOpen}" class="registration-status">
+                        <i class="bi bi-pencil-square me-2"></i>Регистрация активна
+                    </div>
+                </div>
 </div>
 
-<h2 th:if="${tournament.is_stopped}">
-  Чемпионат отменен
-</h2>
-
-<table>
+            <table class="info-table">
   <tr>
-    <th>Название</th>
-    <td th:text="${tournament.name}"></td>
-  </tr>
-  <tr>
-    <th>Вид спорта</th>
-    <td th:text="${tournament.sport}"></td>
-  </tr>
-  <tr>
-    <th>Оргкомитет</th>
+                    <th><i class="bi bi-building me-2"></i>Оргкомитет</th>
     <td th:text="${tournament.userOrgCom.orgCom.name}"></td>
   </tr>
   <tr>
-    <th>Город</th>
+                    <th><i class="bi bi-geo-alt me-2"></i>Город</th>
     <td th:text="${tournament.city.name}"></td>
   </tr>
   <tr>
-    <th>Количество игроков в команде</th>
+                    <th><i class="bi bi-people me-2"></i>Количество игроков в команде</th>
     <td th:text="${tournament.minMembers}"></td>
   </tr>
   <tr>
-    <th>Дедлайн регистрации</th>
+                    <th><i class="bi bi-calendar me-2"></i>Дедлайн регистрации</th>
     <td th:text="${#temporals.format(tournament.registerDeadline, 'dd.MM.yyyy')}"></td>
   </tr>
-  <tr>
-    <th th:if="${tournament.description!=''}">Описание</th>
+                <tr th:if="${tournament.description != null and tournament.description != ''}">
+                    <th><i class="bi bi-info-circle me-2"></i>Описание</th>
     <td th:text="${tournament.description}"></td>
   </tr>
 </table>
 
-<div>
-  <form th:action="@{/applications/applications/{id}(id=${tournament.id})}" method="get">
-    <button type="submit">Команды</button>
-  </form>
-</div>
-
-<div th:if="${registrationOpen}">
-  <form th:action="@{/applications/create_application/{id}(id=${tournament.id})}" method="get">
-    <button type="submit">Подать заявку</button>
-  </form>
-</div>
+            <div class="button-group flex-wrap">
+                <div class="d-flex flex-wrap gap-2 flex-grow-1 align-items-center">
+                    <a th:href="@{/applications/applications/{id}(id=${tournament.id})}" class="btn btn-info">
+                        <i class="bi bi-people"></i>Команды
+                    </a>
+                    <a th:if="${registrationOpen}" th:href="@{/applications/create_application/{id}(id=${tournament.id})}" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i>Подать заявку
+                    </a>
+                    
+                    <!-- Dropdown for secondary actions -->
+                    <div th:if="${isUserOrg}" class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="secondaryActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-three-dots"></i> Другие действия
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="secondaryActionsDropdown">
+                            <li th:unless="${registrationOpen}">
+                                <a class="dropdown-item" th:href="@{/applications/rating/{id}(id=${tournament.id})}">
+                                    <i class="bi bi-trophy me-2"></i>Рейтинг команд
+                                </a>
+                            </li>
+                            <li th:unless="${registrationOpen}">
+                                <a class="dropdown-item" th:href="@{/match/additional/{id}(id=${tournament.id})}">
+                                    <i class="bi bi-plus-circle me-2"></i>Дополнительные матчи
+                                </a>
+                            </li>
+                            <li th:if="${isUserChiefOrg}">
+                                <a class="dropdown-item" th:href="@{/tournament/prolong_reg/{id}(id=${tournament.id})}">
+                                    <i class="bi bi-calendar-plus me-2"></i>Изменить дату окончания регистрации
+                                </a>
+                            </li>
+                            <li th:if="${isUserChiefOrg}">
+                                <a class="dropdown-item" th:href="@{/tournament/edit/{id}(id=${tournament.id})}">
+                                    <i class="bi bi-pencil me-2"></i>Редактировать чемпионат
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" th:href="@{/slot/all/{id}(id=${tournament.id})}">
+                                    <i class="bi bi-calendar-check me-2"></i>Слоты
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" th:href="@{/location/all/{id}(id=${tournament.id})}">
+                                    <i class="bi bi-geo-alt me-2"></i>Локации
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div th:if="${isUserChiefOrg}" class="d-flex justify-content-end mt-3">
+                <a th:href="@{/tournament/cancel/{id}(id=${tournament.id})}" class="btn btn-danger px-4 py-2">
+                    <i class="bi bi-x-circle"></i> Отменить чемпионат
+                </a>
+            </div>
 
 <div th:if="${isUserOrg}">
-  <form th:action="@{/slot/all/{id}(id=${tournament.id})}" method="get">
-    <button type="submit">Слоты</button>
-  </form>
+                <h2 class="section-title">
+                    <i class="bi bi-gear me-2"></i>Этапы в разработке
+                </h2>
+                <div class="row g-4">
+                    <div th:each="stage : ${stagesTeamsKnown}" class="col-md-4">
+                        <div class="stage-card">
+                            <a th:href="@{/stage/view/{id}(id=${stage.id})}" class="btn btn-primary w-100">
+                                <span th:if="${stage.bestPlace == 0}">Групповой этап</span>
+                                <span th:if="${stage.bestPlace == 1}" th:text="${stage.bestPlace + '/' + stage.worstPlace + ' финала'}"></span>
+                                <span th:if="${stage.bestPlace > 1}" th:text="'Матчи за ' + ${stage.bestPlace} + '-' + ${stage.worstPlace} + ' места'"></span>
+                            </a>
 </div>
-
-<div th:unless="${registrationOpen}">
-  <form th:action="@{/applications/rating/{id}(id=${tournament.id})}" method="get">
-    <button type="submit">Рейтинг команд</button>
-  </form>
 </div>
-
-
-<div th:if="${isUserOrg}">
-  <h2>Этапы в разработке</h2>
-  <div th:each="stage : ${stagesTeamsKnown}">
-  <form th:action="@{/stage/view/{id}(id=${stage.id})}" method="get">
-    <button th:if="${stage.bestPlace == 0}">Групповой этап</button>
-    <button th:if="${stage.bestPlace == 1}" th:text="${stage.bestPlace} + '/' + ${stage.worstPlace} + ' финала'"></button>
-    <button th:if="${stage.bestPlace > 1}" th:text="$'Матчи за ' {stage.bestPlace} + '-' + ${stage.worstPlace} + ' места'"></button>
-  </form>
   </div>
 </div>
 
 <div>
-  <h2>Текущие этапы</h2>
-  <div th:each="stage : ${stagesPublished}">
-    <form th:action="@{/stage/view/{id}(id=${stage.id})}" method="get">
-      <button th:if="${stage.bestPlace == 0}">Групповой этап</button>
-      <button th:if="${stage.bestPlace == 1}" th:text="${stage.bestPlace} + '/' + ${stage.worstPlace} + ' финала'"></button>
-      <button th:if="${stage.bestPlace > 1}" th:text="$'Матчи за ' {stage.bestPlace} + '-' + ${stage.worstPlace} + ' места'"></button>
-    </form>
+                <h2 class="section-title">
+                    <i class="bi bi-play-circle me-2"></i>Текущие этапы
+                </h2>
+                <div class="row g-4">
+                    <div th:each="stage : ${stagesPublished}" class="col-md-4">
+                        <div class="stage-card">
+                            <a th:href="@{/stage/view/{id}(id=${stage.id})}" class="btn btn-success w-100">
+                                <span th:if="${stage.bestPlace == 0}">Групповой этап</span>
+                                <span th:if="${stage.bestPlace == 1}" th:text="${stage.bestPlace + '/' + stage.worstPlace + ' финала'}"></span>
+                                <span th:if="${stage.bestPlace > 1}" th:text="'Матчи за ' + ${stage.bestPlace} + '-' + ${stage.worstPlace} + ' места'"></span>
+                            </a>
+                        </div>
+                    </div>
   </div>
 </div>
-
 
 <div>
-  <h2>Завершенные этапы</h2>
-  <div th:each="stage : ${stagesFinished}">
-    <form th:action="@{/stage/view/{id}(id=${stage.id})}" method="get">
-      <button th:if="${stage.bestPlace == 0}">Групповой этап</button>
-      <button th:if="${stage.bestPlace == 1}" th:text="${stage.bestPlace} + '/' + ${stage.worstPlace} + ' финала'"></button>
-      <button th:if="${stage.bestPlace > 1}" th:text="$'Матчи за ' {stage.bestPlace} + '-' + ${stage.worstPlace} + ' места'"></button>
-    </form>
+                <h2 class="section-title">
+                    <i class="bi bi-check-circle me-2"></i>Завершенные этапы
+                </h2>
+                <div class="row g-4">
+                    <div th:each="stage : ${stagesFinished}" class="col-md-4">
+                        <div class="stage-card">
+                            <a th:href="@{/stage/view/{id}(id=${stage.id})}" class="btn btn-info w-100">
+                                <span th:if="${stage.bestPlace == 0}">Групповой этап</span>
+                                <span th:if="${stage.bestPlace == 1}" th:text="${stage.bestPlace + '/' + stage.worstPlace + ' финала'}"></span>
+                                <span th:if="${stage.bestPlace > 1}" th:text="'Матчи за ' + ${stage.bestPlace} + '-' + ${stage.worstPlace} + ' места'"></span>
+                            </a>
   </div>
 </div>
-
-<div th:unless="${registrationOpen}">
-  <form th:action="@{/match/additional/{id}(id=${tournament.id})}" method="get">
-    <button type="submit">Дополнительные матчи</button>
-  </form>
+</div>
+</div>
+</div>
 </div>
 
-<div th:if="${isUserChiefOrg}">
-  <form th:action="@{/tournament/prolong_reg/{id}(id=${tournament.id})}" method="get">
-    <button type="submit">Изменить дату окончания регистрации</button>
-  </form>
-</div>
-
-<div th:if="${isUserChiefOrg}">
-  <form th:action="@{/tournament/edit/{id}(id=${tournament.id})}" method="get">
-    <button type="submit">Редкитировать чемпионат</button>
-  </form>
-</div>
-
-<div th:if="${isUserChiefOrg}">
-  <form th:action="@{/tournament/cancel/{id}(id=${tournament.id})}" method="get">
-    <button type="submit">Отменить чемпионат</button>
-  </form>
-</div>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

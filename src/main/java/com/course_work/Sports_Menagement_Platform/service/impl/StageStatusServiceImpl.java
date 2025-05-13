@@ -6,6 +6,7 @@ import com.course_work.Sports_Menagement_Platform.data.models.Match;
 import com.course_work.Sports_Menagement_Platform.data.models.Stage;
 import com.course_work.Sports_Menagement_Platform.data.models.Team;
 import com.course_work.Sports_Menagement_Platform.data.models.TeamTournament;
+import com.course_work.Sports_Menagement_Platform.data.models.Group;
 import com.course_work.Sports_Menagement_Platform.repositories.GroupRepository;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.StageStatusService;
 import org.springframework.stereotype.Service;
@@ -25,25 +26,35 @@ public class StageStatusServiceImpl implements StageStatusService {
     @Override
     public StageStatus getStageStatus(Stage stage) {
         List<Match> matches = stage.getMatches();
-        if (matches.stream().allMatch(i -> i.isResultPublished()) && matches.size() > 0) {
+        if (matches != null && !matches.isEmpty() && matches.stream().allMatch(i -> i.isResultPublished())) {
             return StageStatus.FINISHED;
         }
         if (stage.isPublished()) return StageStatus.SCHEDULE_PUBLISHED;
-        if (stage.getWorstPlace() == 0 && stage.getWorstPlace() == 0) { // групповой этап
-
-
-            List<List<Team>> teamsByGroups = groupRepository.findByStageId(stage.getId()).stream().map(i -> i.getTeams()).collect(Collectors.toList());
+        if (stage.getBestPlace() == 0 && stage.getWorstPlace() == 0) { // групповой этап
+            List<Group> groups = groupRepository.findByStageId(stage.getId());
+            if (groups.isEmpty()) {
+                return StageStatus.TEAMS_UNKNOWN;
+            }
+            
+            List<List<Team>> teamsByGroups = groups.stream().map(i -> i.getTeams()).collect(Collectors.toList());
             List<String> teamsInGroups = teamsByGroups.stream()
                     .flatMap(List::stream).map(i -> i.getId().toString())
                     .collect(Collectors.toList());
-            List<TeamTournament> tournamentTeams = stage.getTournament().getTeamTournamentList().stream().filter(i -> i.getApplicationStatus() == ApplicationStatus.ACCEPTED).collect(Collectors.toList());
+            List<TeamTournament> tournamentTeams = stage.getTournament().getTeamTournamentList().stream()
+                    .filter(i -> i.getApplicationStatus() == ApplicationStatus.ACCEPTED)
+                    .collect(Collectors.toList());
             if (tournamentTeams.isEmpty()) return StageStatus.TEAMS_UNKNOWN;
-            List<String> teamsInTournament = tournamentTeams.stream().map(i -> i.getTeam().getId().toString()).collect(Collectors.toList());
-            if (teamsInTournament.size() == teamsInGroups.size()
-                    && teamsInTournament.containsAll(teamsInGroups)) {
+            List<String> teamsInTournament = tournamentTeams.stream()
+                    .map(i -> i.getTeam().getId().toString())
+                    .collect(Collectors.toList());
+            
+            // Проверяем, что все команды турнира распределены по группам
+            if (teamsInTournament.size() == teamsInGroups.size() && 
+                teamsInTournament.containsAll(teamsInGroups) && 
+                teamsInGroups.containsAll(teamsInTournament)) {
                 return StageStatus.TEAMS_KNOWN;
             }
-            else return StageStatus.TEAMS_UNKNOWN;
+            return StageStatus.TEAMS_UNKNOWN;
         }
         if (stage.getWorstPlace() < 0) {  // Доп. матчи
             return StageStatus.TEAMS_KNOWN;

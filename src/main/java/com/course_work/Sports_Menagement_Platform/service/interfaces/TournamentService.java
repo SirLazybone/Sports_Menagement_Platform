@@ -60,4 +60,6 @@ public interface TournamentService {
     List<TeamTournament> getOtherTeamTournament(UUID teamId);
 
     TeamTournament getTeamTournament(UUID teamId, UUID tournamentId);
+
+    public boolean cancelTournament(UUID tournamentId);
 }

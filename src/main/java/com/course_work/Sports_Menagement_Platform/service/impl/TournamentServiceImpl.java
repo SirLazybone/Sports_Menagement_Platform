@@ -217,18 +217,21 @@ public class TournamentServiceImpl implements TournamentService {
         stageRepository.deleteAll(playOffStages);
         Tournament tournament = getById(tournamentId);
 
-        Stage.builder().worstPlace(teamTournamentIds.size()).bestPlace(1).isPublished(false).tournament(tournament).build();
+        Stage stage = Stage.builder()
+            .worstPlace(teamTournamentIds.size())
+            .bestPlace(1)
+            .isPublished(false)
+            .tournament(tournament)
+            .build();
+        stageRepository.save(stage);
+
         List<String> teamTournamentIdsString = teamTournamentIds.stream().map(i -> i.toString()).collect(Collectors.toList());
-        tournament.getTeamTournamentList().forEach( teamTournament ->{
-
-                if (teamTournament.isGoToPlayOff() != teamTournamentIdsString.contains(teamTournament.getId().toString())) {
-                    teamTournament.setGoToPlayOff(teamTournamentIdsString.contains(teamTournament.getId().toString()));
-                    teamTournamentRepository.save(teamTournament);
-                }
-
-                }
-        );
-
+        tournament.getTeamTournamentList().forEach(teamTournament -> {
+            if (teamTournament.isGoToPlayOff() != teamTournamentIdsString.contains(teamTournament.getId().toString())) {
+                teamTournament.setGoToPlayOff(teamTournamentIdsString.contains(teamTournament.getId().toString()));
+                teamTournamentRepository.save(teamTournament);
+            }
+        });
     }
 
     @Override
@@ -462,5 +465,13 @@ public class TournamentServiceImpl implements TournamentService {
     @Override
     public TeamTournament getTeamTournament(UUID teamId, UUID tournamentId) {
         return teamTournamentRepository.findByTournamentIdAndTeamId(tournamentId, teamId).orElseThrow(() -> new RuntimeException("Команда не состоит в данном турнире"));
+    }
+
+    @Override
+    public boolean cancelTournament(UUID tournamentId) {
+        Tournament tournament = getById(tournamentId);
+        tournament.set_stopped(true);
+        tournamentRepository.save(tournament);
+        return true;
     }
 }

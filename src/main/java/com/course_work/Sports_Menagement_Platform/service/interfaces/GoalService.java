@@ -13,4 +13,7 @@ public interface GoalService {
     void addGoal(GoalDTO goalDTO);
     List<Goal> getGoalsByMatch(UUID matchId);
 
+    int getGoalsByMatchAndTeamCount(UUID matchId, UUID teamId);
+
+    void deleteGoal(UUID goalId);
 }

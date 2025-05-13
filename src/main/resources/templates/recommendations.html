@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Рекомендации - Sports Management Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .recommendation-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s;
+        }
+        .recommendation-card:hover {
+            transform: translateY(-5px);
+        }
+        .score-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #2ecc71;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
+        }
+        .metadata-item {
+            margin-bottom: 0.5rem;
+        }
+        .metadata-label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <h1 class="mb-4">Рекомендации для вас</h1>
+        
+        <div id="recommendations-container">
+            <!-- Recommendations will be loaded here -->
+        </div>
+    </div>
+
+    <script>
+        function loadRecommendations() {
+            fetch('/api/recommendations')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('recommendations-container');
+                    container.innerHTML = '';
+
+                    data.recommendations.forEach(rec => {
+                        const card = document.createElement('div');
+                        card.className = 'recommendation-card p-4 position-relative';
+                        
+                        const score = document.createElement('div');
+                        score.className = 'score-badge';
+                        score.textContent = `Релевантность: ${(rec.score * 100).toFixed(0)}%`;
+                        
+                        const content = document.createElement('div');
+                        content.innerHTML = `
+                            <h3 class="mb-3">${rec.metadata.name}</h3>
+                            <div class="metadata-item">
+                                <span class="metadata-label">Вид спорта:</span>
+                                <span>${rec.metadata.sport}</span>
+                            </div>
+                            <div class="metadata-item">
+                                <span class="metadata-label">Город:</span>
+                                <span>${rec.metadata.city}</span>
+                            </div>
+                            ${rec.metadata.date ? `
+                            <div class="metadata-item">
+                                <span class="metadata-label">Дата:</span>
+                                <span>${rec.metadata.date}</span>
+                            </div>
+                            ` : ''}
+                            ${rec.metadata.teams ? `
+                            <div class="metadata-item">
+                                <span class="metadata-label">Команды:</span>
+                                <span>${rec.metadata.teams}</span>
+                            </div>
+                            ` : ''}
+                            ${rec.metadata.location ? `
+                            <div class="metadata-item">
+                                <span class="metadata-label">Место проведения:</span>
+                                <span>${rec.metadata.location}</span>
+                            </div>
+                            ` : ''}
+                        `;
+                        
+                        card.appendChild(score);
+                        card.appendChild(content);
+                        container.appendChild(card);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading recommendations:', error);
+                    document.getElementById('recommendations-container').innerHTML = 
+                        '<div class="alert alert-danger">Ошибка при загрузке рекомендаций</div>';
+                });
+        }
+
+        // Load recommendations when page loads
+        document.addEventListener('DOMContentLoaded', loadRecommendations);
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

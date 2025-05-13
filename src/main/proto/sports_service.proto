@@ -1,0 +1,174 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.course_work.Sports_Menagement_Platform.grpc";
+
+package sports;
+
+service SportsService {
+  rpc GetUserData (UserRequest) returns (UserResponse) {}
+  rpc GetMatchData (MatchRequest) returns (MatchResponse) {}
+  rpc GetTournamentData (TournamentRequest) returns (TournamentResponse) {}
+  rpc GetRecommendations(RecommendationRequest) returns (RecommendationResponse);
+  rpc GetTournamentVisualization(TournamentVisualizationRequest) returns (TournamentVisualizationResponse);
+  rpc GetMatchVisualization(MatchVisualizationRequest) returns (MatchVisualizationResponse);
+}
+
+message UserRequest {
+  string user_id = 1;
+}
+
+message UserResponse {
+  string name = 1;
+  string surname = 2;
+  repeated OrganizationInfo org_info = 3;
+  repeated TeamInfo teams = 4;
+  repeated TournamentInfo tournaments = 5;
+}
+
+message OrganizationInfo {
+  string name = 1;
+  string role = 2;
+  bool is_ref = 3;
+}
+
+message TeamInfo {
+  string name = 1;
+  string logo = 2;
+  string sport = 3;
+  bool is_cap = 4;
+  string invitation_status = 5;
+}
+
+message TournamentInfo {
+  string name = 1;
+  string logo = 2;
+  string team_name = 3;
+  string sport = 4;
+  string city = 5;
+}
+
+message MatchRequest {
+  string match_id = 1;
+}
+
+message MatchResponse {
+  string match_id = 1;
+  string stage_id = 2;
+  string tournament_id = 3;
+  string sport = 4;
+  repeated TeamProto teams = 5;
+  ScoreProto score = 6;
+  repeated GoalProto goals = 7;
+  repeated AfterMatchPenaltyProto after_match_penalties = 8;
+  LocationProto location = 9;
+  string date = 10;
+  bool is_finished = 11;
+}
+
+message TeamProto {
+  string team_id = 1;
+  string name = 2;
+  string logo = 3;
+}
+
+message ScoreProto {
+  int32 team_1 = 1;
+  int32 team_2 = 2;
+}
+
+message GoalProto {
+  string team_id = 1;
+  string user_id = 2;
+  int32 set_number = 3;
+  string time = 4;
+  bool is_penalty = 5;
+}
+
+message AfterMatchPenaltyProto {
+  string user_id = 1;
+  string team_id = 2;
+  bool is_success = 3;
+}
+
+message LocationProto {
+  string name = 1;
+  string address = 2;
+  string city = 3;
+}
+
+message TournamentRequest {
+  string tournament_id = 1;
+}
+
+message TournamentResponse {
+  string tournament_id = 1;
+  string name = 2;
+  string sport = 3;
+  string organization_name = 4;
+  string logo = 5;
+  string description = 6;
+  string city = 7;
+  string registration_deadline = 8;
+  bool is_stopped = 9;
+  repeated StageProto stages = 10;
+  repeated TeamInfo teams = 11;
+  repeated SlotProto slots = 12;
+  repeated GroupProto groups = 13;
+}
+
+message StageProto {
+  string stage_id = 1;
+  bool is_published = 2;
+  int32 best_place = 3;
+  int32 worst_place = 4;
+  repeated MatchResponse matches = 5;
+}
+
+message SlotProto {
+  string slot_id = 1;
+  string tournament_id = 2;
+  string date = 3;
+  string location_id = 4;
+}
+
+message GroupProto {
+  string group_id = 1;
+  string name = 2;
+  int32 count_teams = 3;
+  repeated TeamProto teams = 4;
+}
+
+message RecommendationRequest {
+  string user_id = 1;
+}
+
+message RecommendationResponse {
+  repeated Recommendation recommendations = 1;
+}
+
+message Recommendation {
+  string item_id = 1;
+  float score = 2;
+  map<string, string> metadata = 3;
+}
+
+message TournamentVisualizationRequest {
+  string tournament_id = 1;
+  TournamentResponse tournament_data = 2;
+}
+
+message TournamentVisualizationResponse {
+  bytes image_data = 1;
+  string image_format = 2;  // e.g., "png", "jpg"
+}
+
+message MatchVisualizationRequest {
+  string match_id = 1;
+  MatchResponse match_data = 2;
+}
+
+message MatchVisualizationResponse {
+  bytes image_data = 1;
+  string image_format = 2;  // e.g., "png", "jpg"
+} 

@@ -10,6 +10,7 @@ import com.course_work.Sports_Menagement_Platform.repositories.StageRepository;
 import com.course_work.Sports_Menagement_Platform.repositories.GroupRepository;
 import com.course_work.Sports_Menagement_Platform.repositories.TeamRepository;
 import com.course_work.Sports_Menagement_Platform.service.interfaces.*;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -74,8 +75,98 @@ public class StageServiceImpl implements StageService {
     }
 
     @Override
+    @Transactional
     public void publishStage(UUID stageId) {
         Stage stage = getStageById(stageId);
+        
+        // Check if all matches have slots assigned
+        List<Match> matches = stage.getMatches();
+        if (matches == null || matches.isEmpty()) {
+            throw new RuntimeException("Нельзя опубликовать этап: не все данные заполнены");
+        }
+        List<Match> matchesWithoutSlots = matches.stream()
+            .filter(match -> match.getSlot() == null)
+            .collect(Collectors.toList());
+
+        if (!matchesWithoutSlots.isEmpty()) {
+            throw new RuntimeException("Нельзя опубликовать этап: не все матчи имеют назначенные слоты");
+        }
+
+        // For group stages, ensure matches are properly synchronized
+        if (isGroupStage(stageId)) {
+            // Get existing matches and groups
+            List<Match> existingMatches = stage.getMatches();
+            List<Group> groups = getGroupsByStage(stageId);
+            
+            // Create a set of valid team pairs from groups
+            Set<Pair<UUID, UUID>> validTeamPairs = new HashSet<>();
+            for (Group group : groups) {
+                List<Team> teams = group.getTeams();
+                for (int i = 0; i < teams.size(); i++) {
+                    for (int j = i + 1; j < teams.size(); j++) {
+                        Team team1 = teams.get(i);
+                        Team team2 = teams.get(j);
+                        // Store pairs in a consistent order (smaller UUID first)
+                        if (team1.getId().compareTo(team2.getId()) < 0) {
+                            validTeamPairs.add(Pair.of(team1.getId(), team2.getId()));
+                        } else {
+                            validTeamPairs.add(Pair.of(team2.getId(), team1.getId()));
+                        }
+                    }
+                }
+            }
+            
+            // Remove matches that don't correspond to valid team pairs
+            if (existingMatches != null) {
+                existingMatches.removeIf(match -> {
+                    if (match.getTeam1() == null || match.getTeam2() == null) {
+                        return true;
+                    }
+                    UUID team1Id = match.getTeam1().getId();
+                    UUID team2Id = match.getTeam2().getId();
+                    Pair<UUID, UUID> pair = team1Id.compareTo(team2Id) < 0 
+                        ? Pair.of(team1Id, team2Id) 
+                        : Pair.of(team2Id, team1Id);
+                    return !validTeamPairs.contains(pair);
+                });
+            }
+            
+            // Create any missing matches for valid team pairs
+            for (Group group : groups) {
+                List<Team> teams = group.getTeams();
+                for (int i = 0; i < teams.size(); i++) {
+                    for (int j = i + 1; j < teams.size(); j++) {
+                        Team team1 = teams.get(i);
+                        Team team2 = teams.get(j);
+                        UUID team1Id = team1.getId();
+                        UUID team2Id = team2.getId();
+                        Pair<UUID, UUID> pair = team1Id.compareTo(team2Id) < 0 
+                            ? Pair.of(team1Id, team2Id) 
+                            : Pair.of(team2Id, team1Id);
+                            
+                        // Check if match already exists
+                        boolean matchExists = existingMatches.stream()
+                            .anyMatch(m -> {
+                                UUID m1 = m.getTeam1().getId();
+                                UUID m2 = m.getTeam2().getId();
+                                return (m1.equals(team1Id) && m2.equals(team2Id)) || 
+                                       (m1.equals(team2Id) && m2.equals(team1Id));
+                            });
+                            
+                        if (!matchExists) {
+                            Match match = Match.builder()
+                                .stage(stage)
+                                .team1(team1)
+                                .team2(team2)
+                                .isResultPublished(false)
+                                .build();
+                            existingMatches.add(match);
+                        }
+                    }
+                }
+            }
+        }
+        
         stage.setPublished(true);
         stageRepository.save(stage);
     }
@@ -128,11 +219,17 @@ public class StageServiceImpl implements StageService {
             throw new RuntimeException("This stage is not a group stage");
         }
 
-        // Check for duplicate group names
-        Set<String> groupNames = new HashSet<>();
+        // Get existing groups in this stage
+        List<Group> existingGroups = groupRepository.findByStageId(stage.getId());
+        Set<String> existingGroupNames = existingGroups.stream()
+            .map(Group::getName)
+            .collect(Collectors.toSet());
+
+        // Check for duplicate group names within this stage
+        Set<String> newGroupNames = new HashSet<>();
         for (GroupDTO groupDTO : groupsDTO.getGroups()) {
-            if (!groupNames.add(groupDTO.getName())) {
-                throw new RuntimeException("Duplicate group name: " + groupDTO.getName());
+            if (existingGroupNames.contains(groupDTO.getName()) || !newGroupNames.add(groupDTO.getName())) {
+                throw new RuntimeException("Duplicate group name within the same tournament: " + groupDTO.getName());
             }
         }
 
@@ -149,20 +246,45 @@ public class StageServiceImpl implements StageService {
 
 
     @Override
+    @Transactional
     public Stage createGroupStageIfNotExists(UUID tournamentId) {
-        if (tournamentService.getById(tournamentId).getRegisterDeadline().isBefore(LocalDate.now())) {
-            List<TeamTournament> pendingTeams = tournamentService.getById(tournamentId).getTeamTournamentList().stream().filter(i -> i.getApplicationStatus() == ApplicationStatus.PENDING).collect(Collectors.toList());
-            if (!pendingTeams.isEmpty()) return null;
-
-            Optional<Stage> optional = stageRepository.findByPlaceAndTournamentId(0, 0, tournamentId);
-            if (optional.isPresent()) return optional.get();
-            Stage newStage = Stage.builder().bestPlace(0).worstPlace(0).isPublished(false).tournament(tournamentService.getById(tournamentId)).build();
-            return stageRepository.save(newStage);
-
+        Tournament tournament = tournamentService.getById(tournamentId);
+        System.out.println("DEBUG: Creating/checking group stage for tournament: " + tournament.getName());
+        
+        // Check if registration deadline has passed
+        if (tournament.getRegisterDeadline().isAfter(LocalDate.now())) {
+            System.out.println("DEBUG: Registration deadline not passed: " + tournament.getRegisterDeadline());
+            return null;  // Registration not finished yet
         }
-        else {
-            return null;  // групповой этап не может быть создан
+        
+        // Check for pending applications
+        boolean hasPendingApplications = tournament.getTeamTournamentList().stream()
+            .anyMatch(tt -> tt.getApplicationStatus() == ApplicationStatus.PENDING);
+        if (hasPendingApplications) {
+            System.out.println("DEBUG: Has pending applications");
+            return null;  // Cannot create group stage while there are pending applications
         }
+        
+        // Check if group stage already exists
+        Optional<Stage> existingStage = stageRepository.findByPlaceAndTournamentId(0, 0, tournamentId);
+        System.out.println("DEBUG: Existing stage check: " + existingStage);
+        if (existingStage.isPresent()) {
+            System.out.println("DEBUG: Found existing stage: " + existingStage.get().getId());
+            return existingStage.get();
+        }
+        
+        // Create new group stage
+        System.out.println("DEBUG: Creating new group stage");
+        Stage newStage = Stage.builder()
+            .bestPlace(0)
+            .worstPlace(0)
+            .isPublished(false)
+            .tournament(tournament)
+            .build();
+        
+        Stage savedStage = stageRepository.save(newStage);
+        System.out.println("DEBUG: Created new stage: " + savedStage.getId());
+        return savedStage;
     }
 
     @Override

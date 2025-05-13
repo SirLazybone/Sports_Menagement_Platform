@@ -3,29 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <title>Продление регистрации на турнир</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body { 
+            background: #f8fafc;
+            min-height: 100vh;
+        }
+        .container_main {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+        }
+        .page-title {
+            color: #2c3e50;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #eaf6ff;
+        }
+        .form-label {
+            color: #2c3e50;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        .form-control {
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem 1rem;
+        }
+        .form-control:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-primary {
+            background: #3498db;
+            border: none;
+        }
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        .btn-secondary {
+            background: #64748b;
+            border: none;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #475569;
+            color: white;
+        }
+    </style>
 </head>
 <body>
-    <div class="container mt-4">
-        <h2>Продление регистрации на турнир</h2>
+    <header th:replace="~{fragments/header :: header}"></header>
+    
+    <div class="container_main">
+        <h1 class="page-title">
+            <i class="bi bi-calendar-plus me-2"></i>Продление регистрации на турнир
+        </h1>
         
-        <!-- Error message -->
-        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+        <div th:if="${error}" class="alert alert-danger mb-4">
+            <i class="bi bi-exclamation-circle me-2"></i>
+            <span th:text="${error}"></span>
+        </div>
 
         <form th:action="@{/tournament/prolong_reg/{tournamentId}(tournamentId=${tournamentId})}" th:object="${prolongReg}" method="post">
-            <div class="form-group">
-                <label for="registerDeadline">Новая дата окончания регистрации:</label>
+            <div class="mb-4">
+                <label for="registerDeadline" class="form-label">Новая дата окончания регистрации:</label>
                 <input type="date" class="form-control" id="registerDeadline" th:field="*{registerDeadline}" required>
-                <small class="form-text text-muted">Выберите новую дату окончания регистрации на турнир</small>
+                <div class="form-text text-muted mt-2">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Выберите новую дату окончания регистрации на турнир
+                </div>
             </div>
             
-            <button type="submit" class="btn btn-primary">Продлить регистрацию</button>
-            <a th:href="@{/tournament/view/{id}(id=${tournamentId})}" class="btn btn-secondary">Отмена</a>
+            <div class="d-flex gap-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check2-circle me-2"></i>Продлить регистрацию
+                </button>
+                <a th:href="@{/tournament/view/{id}(id=${tournamentId})}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle me-2"></i>Отмена
+                </a>
+            </div>
         </form>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html> 

@@ -13,4 +13,7 @@ import java.util.UUID;
 public interface GoalRepository extends JpaRepository<Goal, UUID> {
     @Query("SELECT g FROM Goal g WHERE g.match.id = :matchId")
     List<Goal> findAllByMatchId(@Param("matchId") UUID matchId);
+
+    @Query("SELECT COUNT(g) FROM Goal g WHERE g.match.id = :matchId AND g.team.id = :teamId")
+    int countGoalsByTeam(@Param("matchId") UUID matchId, @Param("teamId") UUID teamId);
 }

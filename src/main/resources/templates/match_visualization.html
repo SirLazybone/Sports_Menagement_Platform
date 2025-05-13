@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Визуализация матча - Sports Management Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .visualization-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+        .match-image {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .loading {
+            text-align: center;
+            padding: 2rem;
+        }
+        .error {
+            color: #dc3545;
+            text-align: center;
+            padding: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container visualization-container">
+        <h1 class="mb-4">Визуализация матча</h1>
+        
+        <div id="visualization-content">
+            <div class="loading">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Загрузка...</span>
+                </div>
+                <p class="mt-2">Загрузка визуализации...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function loadVisualization() {
+            const matchId = new URLSearchParams(window.location.search).get('id');
+            if (!matchId) {
+                document.getElementById('visualization-content').innerHTML = 
+                    '<div class="error">ID матча не указан</div>';
+                return;
+            }
+
+            fetch(`/api/match/${matchId}/visualization`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Ошибка при загрузке визуализации');
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    const imageUrl = URL.createObjectURL(blob);
+                    document.getElementById('visualization-content').innerHTML = `
+                        <img src="${imageUrl}" alt="Визуализация матча" class="match-image">
+                    `;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('visualization-content').innerHTML = `
+                        <div class="error">
+                            <p>Ошибка при загрузке визуализации</p>
+                            <p class="text-muted">${error.message}</p>
+                        </div>
+                    `;
+                });
+        }
+
+        // Load visualization when page loads
+        document.addEventListener('DOMContentLoaded', loadVisualization);
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

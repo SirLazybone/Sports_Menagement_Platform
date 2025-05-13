@@ -3,45 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <title>Этап турнира</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
-        .group-container {
+        body { background: #f8fafc; min-height: 100vh; }
+        .container_main {
+            max-width: 1100px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+        }
+        .page-title {
+            color: #2c3e50;
+            font-size: 2rem;
+            font-weight: 600;
             margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #eaf6ff;
         }
         .group-title {
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 1rem;
+            background: #eaf6ff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
         }
-        .match-row {
-            border-bottom: 1px solid #dee2e6;
-            padding: 10px 0;
+        .table {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .table th {
+            background: #f1f5f9;
+            color: #222;
+            font-weight: 600;
+            border-bottom: 2px solid #eaf6ff;
+        }
+        .table td, .table th {
+            vertical-align: middle;
+        }
+        .match-link {
+            color: #2c3e50;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .match-link:hover {
+            color: #3498db;
+            text-decoration: underline;
         }
         .match-info {
             color: #6c757d;
+            font-size: 1rem;
         }
-        .stage-header {
-            margin-bottom: 2rem;
+        .btn-details {
+            padding: 0.4rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .btn-primary {
+            background: #3498db;
+            border: none;
+        }
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 2.5rem 0 1.5rem;
+            border-bottom: 2px solid #eaf6ff;
+            padding-bottom: 0.5rem;
         }
     </style>
 </head>
 <body>
-<div class="container mt-4">
-    <div class="stage-header">
-        <h1 th:text="${tournament.name}">Название турнира</h1>
-        <p class="text-muted" th:text="${tournament.description}">Описание турнира</p>
+<header th:replace="~{fragments/header :: header}"></header>
+<div class="container_main">
+    <div class="mb-4">
+        <h1 class="page-title">
+            <i class="bi bi-diagram-3 me-2"></i>
+            <span th:text="${tournament.name}">Название турнира</span>
+        </h1>
+        <p class="text-muted mb-4" th:text="${tournament.description}">Описание турнира</p>
     </div>
 
     <!-- Групповой этап -->
     <div th:if="${stage.bestPlace == 0}">
-        <div th:each="groupEntry : ${groups}" class="group-container">
+        <div th:each="groupEntry : ${groups}" class="mb-5">
             <div class="group-title">
-                <h3 th:text="${groupEntry.key.name}">Группа A</h3>
+                <i class="bi bi-people me-2"></i>
+                <span th:text="${groupEntry.key.name}">Группа A</span>
             </div>
-            
             <div class="table-responsive">
-                <table class="table">
+                <table class="table align-middle">
                     <thead>
                         <tr>
                             <th>Команда 1</th>
@@ -51,38 +117,46 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="match : ${groupEntry.value}" class="match-row">
-                            <td th:text="${match.team1.name}">Команда 1</td>
-                            <td th:text="${match.team2.name}">Команда 2</td>
+                        <tr th:each="match : ${groupEntry.value}">
+                            <td>
+                                <a th:href="@{/team/view/{id}(id=${match.team1.id})}" class="match-link">
+                                    <i class="bi bi-shield-person me-1"></i>
+                                    <span th:text="${match.team1.name}">Команда 1</span>
+                                </a>
+                            </td>
+                            <td>
+                                <a th:href="@{/team/view/{id}(id=${match.team2.id})}" class="match-link">
+                                    <i class="bi bi-shield-person me-1"></i>
+                                    <span th:text="${match.team2.name}">Команда 2</span>
+                                </a>
+                            </td>
                             <td class="match-info">
                                 <div th:if="${match.slot != null}">
                                     <div th:if="${match.slot.date != null && (match.slot.date.isAfter(T(java.time.LocalDate).now()) || match.slot.date.equals(T(java.time.LocalDate).now()))}">
-                                        <div th:text="${match.slot.date} + ' ' + ${match.slot.time}">Дата и время</div>
-                                        <div th:if="${match.slot.location != null}" 
-                                             th:text="${match.slot.location.name} + ' (' + ${match.slot.location.address} + ')'">
-                                            Место проведения
+                                        <div>
+                                            <i class="bi bi-calendar-event me-1"></i>
+                                            <span th:text="${match.slot.date} + ' ' + ${match.slot.time}">Дата и время</span>
+                                        </div>
+                                        <div th:if="${match.slot.location != null}">
+                                            <i class="bi bi-geo-alt me-1"></i>
+                                            <span th:text="${match.slot.location.name} + ' (' + ${match.slot.location.address} + ')'">Место проведения</span>
                                         </div>
                                     </div>
                                     <div th:if="${match.slot.date != null && match.slot.date.isBefore(T(java.time.LocalDate).now())}">
                                         <span th:if="${match.isResultPublished}">
-                                            <span th:text="${match.team1.name} + ' ' + ${match.team1Score} + ' - ' + ${match.team2Score} + ' ' + ${match.team2.name}">
-                                                Результат
-                                            </span>
+                                            <i class="bi bi-trophy me-1"></i>
+                                            <span th:text="${match.team1.name} + ' ' + ${match.team1Score} + ' - ' + ${match.team2Score} + ' ' + ${match.team2.name}">Результат</span>
                                         </span>
                                         <span th:unless="${match.isResultPublished}" class="text-muted">
-                                            Результат не опубликован
+                                            <i class="bi bi-hourglass-split me-1"></i>Результат не опубликован
                                         </span>
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <div th:if="${match.slot != null}">
-                                    <div th:if="${match.slot.date != null && match.slot.date.isBefore(T(java.time.LocalDate).now())}">
-                                        <a th:href="@{/match/view/{id}(id=${match.id})}" class="btn btn-primary btn-sm">
-                                            Подробности
-                                        </a>
-                                    </div>
-                                </div>
+                                <a th:href="@{/match/view/{id}(id=${match.id})}" class="btn btn-primary btn-details">
+                                    <i class="bi bi-search me-1"></i>Подробности
+                                </a>
                             </td>
                         </tr>
                     </tbody>
@@ -93,8 +167,11 @@
 
     <!-- Плей-офф -->
     <div th:if="${stage.bestPlace > 0}">
+        <div class="section-title">
+            <i class="bi bi-trophy me-2"></i>Плей-офф матчи
+        </div>
         <div class="table-responsive">
-            <table class="table">
+            <table class="table align-middle">
                 <thead>
                     <tr>
                         <th>Команда 1</th>
@@ -104,38 +181,46 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="match : ${matches}" class="match-row">
-                        <td th:text="${match.team1.name}">Команда 1</td>
-                        <td th:text="${match.team2.name}">Команда 2</td>
+                    <tr th:each="match : ${matches}">
+                        <td>
+                            <a th:href="@{/team/view/{id}(id=${match.team1.id})}" class="match-link">
+                                <i class="bi bi-shield-person me-1"></i>
+                                <span th:text="${match.team1.name}">Команда 1</span>
+                            </a>
+                        </td>
+                        <td>
+                            <a th:href="@{/team/view/{id}(id=${match.team2.id})}" class="match-link">
+                                <i class="bi bi-shield-person me-1"></i>
+                                <span th:text="${match.team2.name}">Команда 2</span>
+                            </a>
+                        </td>
                         <td class="match-info">
                             <div th:if="${match.slot != null}">
                                 <div th:if="${match.slot.date != null && (match.slot.date.isAfter(T(java.time.LocalDate).now()) || match.slot.date.equals(T(java.time.LocalDate).now()))}">
-                                    <div th:text="${match.slot.date} + ' ' + ${match.slot.time}">Дата и время</div>
-                                    <div th:if="${match.slot.location != null}" 
-                                         th:text="${match.slot.location.name} + ' (' + ${match.slot.location.address} + ')'">
-                                        Место проведения
+                                    <div>
+                                        <i class="bi bi-calendar-event me-1"></i>
+                                        <span th:text="${match.slot.date} + ' ' + ${match.slot.time}">Дата и время</span>
+                                    </div>
+                                    <div th:if="${match.slot.location != null}">
+                                        <i class="bi bi-geo-alt me-1"></i>
+                                        <span th:text="${match.slot.location.name} + ' (' + ${match.slot.location.address} + ')'">Место проведения</span>
                                     </div>
                                 </div>
                                 <div th:if="${match.slot.date != null && match.slot.date.isBefore(T(java.time.LocalDate).now())}">
                                     <span th:if="${match.isResultPublished}">
-                                        <span th:text="${match.team1.name} + ' ' + ${match.team1Score} + ' - ' + ${match.team2Score} + ' ' + ${match.team2.name}">
-                                            Результат
-                                        </span>
+                                        <i class="bi bi-trophy me-1"></i>
+                                        <span th:text="${match.team1.name} + ' ' + ${match.team1Score} + ' - ' + ${match.team2Score} + ' ' + ${match.team2.name}">Результат</span>
                                     </span>
                                     <span th:unless="${match.isResultPublished}" class="text-muted">
-                                        Результат не опубликован
+                                        <i class="bi bi-hourglass-split me-1"></i>Результат не опубликован
                                     </span>
                                 </div>
                             </div>
                         </td>
                         <td>
-                            <div th:if="${match.slot != null}">
-                                <div th:if="${match.slot.date != null && match.slot.date.isBefore(T(java.time.LocalDate).now())}">
-                                    <a th:href="@{/match/view/{id}(id=${match.id})}" class="btn btn-primary btn-sm">
-                                        Подробности
-                                    </a>
-                                </div>
-                            </div>
+                            <a th:href="@{/match/view/{id}(id=${match.id})}" class="btn btn-primary btn-details">
+                                <i class="bi bi-search me-1"></i>Подробности
+                            </a>
                         </td>
                     </tr>
                 </tbody>
@@ -143,9 +228,6 @@
         </div>
     </div>
 </div>
-
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

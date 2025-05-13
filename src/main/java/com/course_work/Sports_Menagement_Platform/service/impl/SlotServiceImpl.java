@@ -1,6 +1,7 @@
 package com.course_work.Sports_Menagement_Platform.service.impl;
 
 import com.course_work.Sports_Menagement_Platform.data.models.Location;
+import com.course_work.Sports_Menagement_Platform.data.models.Match;
 import com.course_work.Sports_Menagement_Platform.data.models.Slot;
 import com.course_work.Sports_Menagement_Platform.data.models.Stage;
 import com.course_work.Sports_Menagement_Platform.data.models.Tournament;
@@ -50,20 +51,32 @@ public class SlotServiceImpl implements SlotService {
         return slotRepository.findAllNotInUse();
     }
 
-
-
-    @Override  //Свободные слоты и выбранные для этой stage
+    @Override
     public List<Slot> getAllSlotsForStage(Stage stage) {
         List<Slot> allSlots = getAllByTournament(stage.getTournament().getId());
         List<Slot> freeSlots = new ArrayList<>();
+        
         for (Slot slot : allSlots) {
-            if (slot.getMatches().isEmpty() || slot.getMatches().get(0).getStage().equals(stage.getId())) {
+            boolean isSlotForThisStage = false;
+            boolean isSlotFree = slot.getMatches().isEmpty();
+            
+            // Check if slot is used by this stage
+            if (!isSlotFree) {
+                for (Match match : slot.getMatches()) {
+                    if (match.getStage() != null && match.getStage().getId().equals(stage.getId())) {
+                        isSlotForThisStage = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (isSlotFree || isSlotForThisStage) {
                 freeSlots.add(slot);
             }
         }
+        
         return freeSlots;
     }
-
 
     @Override  
     public List<Slot> getFreeSlots(Tournament tournament) {
@@ -81,8 +94,8 @@ public class SlotServiceImpl implements SlotService {
     public List<Slot> getAllByTournament(UUID tournamentId) {
         List<Location> locationList = tournamentRepository.getById(tournamentId).getLocations();
         List<List<Slot>> slotsListsList = locationList.stream().map(i -> i.getSlots()).collect(Collectors.toList());
-        return slotsListsList.stream().flatMap(List::stream).collect(Collectors.toList());
-
+        List<Slot> allSlots = slotsListsList.stream().flatMap(List::stream).collect(Collectors.toList());
+        return allSlots;
     }
 
     @Override

@@ -25,12 +25,15 @@ public class Team {
     private Sport sport;
     private String logo;
 
+    @Builder.Default
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserTeam> userTeamList = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TeamTournament> teamTournamentList = new ArrayList<>();
 
+    @Builder.Default
     @ManyToMany(mappedBy = "teams")
     private List<Group> groupList = new ArrayList<>();
 

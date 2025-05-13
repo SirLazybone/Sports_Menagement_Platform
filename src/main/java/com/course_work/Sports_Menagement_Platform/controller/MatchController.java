@@ -37,12 +37,13 @@ public class MatchController {
     private final AfterMatchPenaltyService afterMatchPenaltyService;
     private final GettingTeamsForPlayOffService gettingTeamsForPlayOffService;
     private final AccessService accessService;
+    private final GroupService groupService;
 
     public MatchController(MatchService matchService, StageService stageService,
                            TournamentService tournamentService, GoalService goalService,
                            SlotService slotService, TeamService teamService, UserService userService,
                            AfterMatchPenaltyService afterMatchPenaltyService, GettingTeamsForPlayOffService gettingTeamsForPlayOffService,
-                           AccessService accessService) {
+                           AccessService accessService, GroupService groupService) {
         this.matchService = matchService;
         this.stageService = stageService;
         this.tournamentService = tournamentService;
@@ -53,6 +54,7 @@ public class MatchController {
         this.afterMatchPenaltyService = afterMatchPenaltyService;
         this.gettingTeamsForPlayOffService = gettingTeamsForPlayOffService;
         this.accessService = accessService;
+        this.groupService = groupService;
     }
 
 
@@ -107,74 +109,153 @@ public class MatchController {
 
 
     @GetMapping("/fill_group_stage/{stageId}")
-    public String fillGroupStage(@PathVariable UUID stageId, Model model, @AuthenticationPrincipal User user, RedirectAttributes redirectAttributes) {
-        Stage stage = stageService.getStageById(stageId);
-        if (stage.getBestPlace() != 0) {
-            model.addAttribute("error", "Выбран не групповой этап");
-            return "redirect:/home";
-        }
+    public String fillGroupStage(@PathVariable UUID stageId, Model model, @AuthenticationPrincipal User user) {
         try {
-            stageService.getStageById(stageId);
+            Stage stage = stageService.getStageById(stageId);
+            Tournament tournament = stage.getTournament();
+            
+            if (!accessService.isUserOrgOfTournament(user.getId(), tournament.getId())) {
+                throw new AccessDeniedException("У вас нет доступа");
+            }
+
+            // Get all teams for the tournament
+            List<Team> teams = tournamentService.getAllTeamsByTournamentId(tournament.getId());
+            List<Pair<UUID, String>> teamsPairs = teams.stream()
+                .map(team -> Pair.of(team.getId(), team.getName()))
+                .collect(Collectors.toList());
+
+            // Get groups and their teams
+            List<Group> groups = groupService.getGroups(tournament.getId());
+            Map<String, List<Pair<UUID, String>>> groupsMap = new TreeMap<>(); // Using TreeMap for natural sorting
+            for (Group group : groups) {
+                List<Pair<UUID, String>> teamsPair = group.getTeams().stream()
+                    .map(team -> Pair.of(team.getId(), team.getName()))
+                    .collect(Collectors.toList());
+                groupsMap.put(group.getName(), teamsPair);
+            }
+
+            // Get matches for each group
+            Map<Group, List<Match>> matches = matchService.createGroupMatchIfNotCreated(stageId);
+            // Sort matches by group name
+            Map<Group, List<Match>> sortedMatches = new TreeMap<>(Comparator.comparing(Group::getName));
+            sortedMatches.putAll(matches);
+            
+            // Get available slots
+            List<Slot> slots = slotService.getAllSlotsForStage(stage);
+
+            model.addAttribute("stage", stage);
+            model.addAttribute("tournament", tournament);
+            model.addAttribute("tournamentId", tournament.getId());
+            model.addAttribute("stageId", stageId);
+            model.addAttribute("isPublished", stage.isPublished());
+            model.addAttribute("isUserChief", tournamentService.isUserChiefOfTournament(user.getId(), tournament.getId()));
+            model.addAttribute("matches", sortedMatches);
+            model.addAttribute("slot", slots);
+            model.addAttribute("teams", teamsPairs);
+            model.addAttribute("groups", groupsMap);
+            model.addAttribute("newGroupName", "");
+
+            return "match/fill_group";
         } catch (RuntimeException e) {
+            System.out.println("ОШИБКА: " + e.getMessage());
             throw new ResourceNotFoundException("Этап не найден");
         }
-        boolean isUserOrg = false;
-        boolean isUserChief = false;
-        try {
-            isUserOrg = accessService.isUserOrgOfTournament(user.getId(), stage.getTournament().getId());
-             if (!isUserOrg) {
-                 throw new AccessDeniedException("У вас нет доступа");
-             }
-             isUserChief = accessService.isUserChiefOfTournament(user.getId(), stage.getTournament().getId());
-        } catch (RuntimeException e) {
-            throw new AccessDeniedException("У вас нет доступа");
-        }
-        Map<Group, List<Match>> matches = matchService.createGroupMatchIfNotCreated(stageId);
-
-        StageStatus stageStatus = stageService.getStageStatus(stage);
-        if (stageStatus != StageStatus.TEAMS_KNOWN) {
-            model.addAttribute("error", "Распределение команд по группам некорректно, настройка расписания этапа недоступна");
-            return "redirect:/home";
-        }
-        List<Slot> availableSlots = slotService.getAllSlotsForStage(stage);
-        model.addAttribute("isPublished", stage.isPublished());
-        model.addAttribute("matches", matches);
-        model.addAttribute("slot", availableSlots);
-        model.addAttribute("stageId", stageId);
-        model.addAttribute("tournamentId", stage.getTournament().getId());
-
-        model.addAttribute("isUserOrg", isUserOrg);
-        model.addAttribute("isUserChief", isUserChief);
-
-        return "match/fill_group";
     }
 
     @PostMapping("/fill_group_stage/{stageId}")
     public String fillGroupStagePost(@PathVariable UUID stageId, Model model, @AuthenticationPrincipal User user, RedirectAttributes redirectAttributes, @RequestParam Map<String, String> slotAssignments) {
-        Set<UUID> assignedTeams = new HashSet<>();
-        for (Map.Entry<String, String> entry : slotAssignments.entrySet()) {
-            if (!entry.getValue().isEmpty()) {
-                UUID matchId = UUID.fromString(entry.getKey().substring(
-                        entry.getKey().indexOf('[') + 1,
-                        entry.getKey().indexOf(']')));
-                Match match = matchService.getById(matchId);
-                if (!assignedTeams.add(match.getTeam1().getId()) || !assignedTeams.add(match.getTeam2().getId())) {
-                    redirectAttributes.addFlashAttribute("error", "Одна команда не может играть в нескольких матчах одновременно");
-                    return "redirect:/match/fill_group_stage/" + stageId.toString();
+        try {
+            Stage stage = stageService.getStageById(stageId);
+            if (!accessService.isUserOrgOfTournament(user.getId(), stage.getTournament().getId())) {
+                redirectAttributes.addFlashAttribute("error", "У вас нет доступа для управления матчами");
+                return "redirect:/home";
+            }
+
+            // Получаем все матчи этапа
+            Map<Group, List<Match>> allMatches = matchService.createGroupMatchIfNotCreated(stageId);
+            
+            // Создаем карту для отслеживания слотов команд
+            Map<UUID, Map<UUID, Match>> teamSlots = new HashMap<>(); // teamId -> (slotId -> match)
+
+            // Сначала собираем существующие назначения
+            for (List<Match> matches : allMatches.values()) {
+                for (Match match : matches) {
+                    if (match.getSlot() != null) {
+                        UUID slotId = match.getSlot().getId();
+                        for (UUID teamId : Arrays.asList(match.getTeam1().getId(), match.getTeam2().getId())) {
+                            teamSlots.computeIfAbsent(teamId, k -> new HashMap<>()).put(slotId, match);
+                        }
+                    }
                 }
             }
+
+            // Проверяем новые назначения на конфликты
+            for (Map.Entry<String, String> entry : slotAssignments.entrySet()) {
+                if (entry.getValue().isEmpty()) continue;
+                
+                String matchIdStr = entry.getKey().substring(
+                    entry.getKey().indexOf('[') + 1,
+                    entry.getKey().indexOf(']')
+                );
+                UUID matchId = UUID.fromString(matchIdStr);
+                UUID newSlotId = UUID.fromString(entry.getValue());
+
+                // Находим матч
+                Match currentMatch = null;
+                for (List<Match> matches : allMatches.values()) {
+                    for (Match match : matches) {
+                        if (match.getId().equals(matchId)) {
+                            currentMatch = match;
+                            break;
+                        }
+                    }
+                    if (currentMatch != null) break;
+                }
+
+                if (currentMatch != null) {
+                    // Проверяем конфликты для обеих команд
+                    for (UUID teamId : Arrays.asList(currentMatch.getTeam1().getId(), currentMatch.getTeam2().getId())) {
+                        Map<UUID, Match> teamExistingSlots = teamSlots.getOrDefault(teamId, new HashMap<>());
+                        
+                        // Проверяем, не назначен ли уже слот для этой команды
+                        if (teamExistingSlots.containsKey(newSlotId)) {
+                            Match conflictingMatch = teamExistingSlots.get(newSlotId);
+                            if (!conflictingMatch.getId().equals(currentMatch.getId())) {
+                                redirectAttributes.addFlashAttribute("error", 
+                                    String.format("Конфликт: команда %s уже играет в это время в матче %s vs %s",
+                                        currentMatch.getTeam1().getId().equals(teamId) ? currentMatch.getTeam1().getName() : currentMatch.getTeam2().getName(),
+                                        conflictingMatch.getTeam1().getName(),
+                                        conflictingMatch.getTeam2().getName()));
+                                return "redirect:/match/fill_group_stage/" + stageId.toString();
+                            }
+                        }
+                        
+                        // Добавляем новое назначение
+                        teamExistingSlots.put(newSlotId, currentMatch);
+                        teamSlots.put(teamId, teamExistingSlots);
+                    }
+                }
+            }
+
+            // Преобразуем назначения слотов
+            Map<UUID, UUID> assignments = slotAssignments.entrySet().stream()
+                    .filter(entry -> !entry.getValue().isEmpty())
+                    .collect(Collectors.toMap(
+                            entry -> UUID.fromString(entry.getKey().substring(
+                                    entry.getKey().indexOf('[') + 1,
+                                    entry.getKey().indexOf(']'))),
+                            entry -> UUID.fromString(entry.getValue())
+                    ));
+
+            if (!assignments.isEmpty()) {
+                matchService.setSlots(stageId, assignments);
+                redirectAttributes.addFlashAttribute("success", "Слоты успешно назначены");
+            } else {
+                redirectAttributes.addFlashAttribute("info", "Не было выбрано ни одного слота для назначения");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Ошибка при назначении слотов: " + e.getMessage());
         }
-
-        Map<UUID, UUID> assignments = slotAssignments.entrySet().stream()
-                .filter(entry -> !entry.getValue().isEmpty())
-                .collect(Collectors.toMap(
-                        entry -> UUID.fromString(entry.getKey().substring(
-                                entry.getKey().indexOf('[') + 1,
-                                entry.getKey().indexOf(']'))),
-                        entry -> UUID.fromString(entry.getValue())
-                ));  // {match : slot}
-
-        matchService.setSlots(stageId, assignments);
 
         return "redirect:/match/fill_group_stage/" + stageId.toString();
     }
@@ -209,58 +290,92 @@ public class MatchController {
         }
         List<Team> teams = gettingTeamsForPlayOffService.getTeamsForPlayOffStage(stage);
         List<Match> matches = stage.getMatches();
+        
+        // Create empty matches if they don't exist or if there are fewer matches than needed
+        int maxMatches = stage.getWorstPlace() / 2;
+        if (matches.size() < maxMatches) {
+            for (int i = matches.size(); i < maxMatches; i++) {
+                Match match = Match.builder()
+                    .stage(stage)
+                    .isResultPublished(false)
+                    .build();
+                matches.add(match);
+            }
+        }
+        
         List<Slot> availableSlots = slotService.getAllSlotsForStage(stage);
+        
+        // Add success/error messages if they exist
+        if (redirectAttributes.getFlashAttributes().containsKey("success")) {
+            model.addAttribute("success", redirectAttributes.getFlashAttributes().get("success"));
+        }
+        if (redirectAttributes.getFlashAttributes().containsKey("error")) {
+            model.addAttribute("error", redirectAttributes.getFlashAttributes().get("error"));
+        }
+        
         model.addAttribute("matches", matches);
         model.addAttribute("teams", teams);
-
         model.addAttribute("slots", availableSlots);
         model.addAttribute("stageId", stageId);
         model.addAttribute("isPublished", stage.isPublished());
         model.addAttribute("isUserChief", isUserChief);
+        model.addAttribute("isUserOrg", isUserOrg);
 
-        model.addAttribute("notFilledMatches", matches.size());
-        model.addAttribute("matchesCount", (stage.getWorstPlace() - stage.getBestPlace() + 1) / 2 - 1);
         return "match/fill_playoff_stage";
     }
 
 
     @PostMapping("/fill_playoff_stage/{stageId}")
     public String fillPlayOffStagePost(@PathVariable UUID stageId, Model model, @AuthenticationPrincipal User user, RedirectAttributes redirectAttributes, @RequestParam Map<String, String> formData) {
-        Map<Pair<UUID, UUID>, UUID> assigments = new HashMap<>();
-        List<Pair<UUID, UUID>> assigmentsWithNoSlot = new ArrayList<>();
-        for (int i = 0; i < formData.size() / 3; i++) {
-            String team1Id = formData.get("[" + i + "].team1");
-            String team2Id = formData.get("[" + i + "].team2");
-            String slotId = formData.get("rows[" + i + "].slot");
-                if (slotId != "" && team1Id != "" && team2Id != "") {
-                    try {
-                        assigments.put(
-                                Pair.of(UUID.fromString(team1Id), UUID.fromString(team2Id)),
-                                UUID.fromString(slotId)
-                        );
-                    } catch (IllegalArgumentException e) {
+        try {
+            Stage stage = stageService.getStageById(stageId);
+            int maxMatches = stage.getWorstPlace() / 2;
+            Map<Pair<UUID, UUID>, UUID> assignments = new HashMap<>();
+            List<Pair<UUID, UUID>> assignmentsWithNoSlot = new ArrayList<>();
 
-                    }
-                    catch (NullPointerException e) {
+            for (int i = 0; i < maxMatches; i++) {
+                String team1Id = formData.get("[" + i + "].team1");
+                String team2Id = formData.get("[" + i + "].team2");
+                String slotId = formData.get("rows[" + i + "].slot");
 
-                    }
-
-                }
-                else if (team1Id != "" && team2Id != "") {
-                    try {
-                        assigmentsWithNoSlot.add(Pair.of(UUID.fromString(team1Id), UUID.fromString(team2Id)));
-                    } catch (IllegalArgumentException e) {
-
-                    }
-                    catch (NullPointerException e) {
-
-                    }
+                // Skip if both teams are empty
+                if ((team1Id == null || team1Id.isEmpty()) && (team2Id == null || team2Id.isEmpty())) {
+                    continue;
                 }
 
+                // Validate that both teams are selected if either is selected
+                if ((team1Id == null || team1Id.isEmpty()) != (team2Id == null || team2Id.isEmpty())) {
+                    redirectAttributes.addFlashAttribute("error", "Для каждого матча должны быть выбраны обе команды");
+                    return "redirect:/match/fill_playoff_stage/" + stageId.toString();
+                }
+
+                try {
+                    UUID team1 = UUID.fromString(team1Id);
+                    UUID team2 = UUID.fromString(team2Id);
+
+                    // Check if teams are different
+                    if (team1.equals(team2)) {
+                        redirectAttributes.addFlashAttribute("error", "Команда не может играть сама с собой");
+                        return "redirect:/match/fill_playoff_stage/" + stageId.toString();
+                    }
+
+                    if (slotId != null && !slotId.isEmpty()) {
+                        assignments.put(Pair.of(team1, team2), UUID.fromString(slotId));
+                    } else {
+                        assignmentsWithNoSlot.add(Pair.of(team1, team2));
+                    }
+                } catch (IllegalArgumentException e) {
+                    redirectAttributes.addFlashAttribute("error", "Некорректные данные матча");
+                    return "redirect:/match/fill_playoff_stage/" + stageId.toString();
+                }
+            }
+
+            matchService.setSlotsForPlayOff(stageId, assignments, assignmentsWithNoSlot);
+            redirectAttributes.addFlashAttribute("success", "Матчи успешно сохранены");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Ошибка при сохранении матчей: " + e.getMessage());
         }
-        matchService.setSlotsForPlayOff(stageId, assigments, assigmentsWithNoSlot);
         return "redirect:/match/fill_playoff_stage/" + stageId.toString();
-
     }
 
 
@@ -707,4 +822,24 @@ public class MatchController {
             return "redirect:/match/view/" + matchId.toString();
         }
     }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/delete_goal")
+    public String deleteGoal(@RequestParam UUID goalId, @RequestParam UUID matchId, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
+        try {
+            Match match = matchService.getById(matchId);
+            UUID tournamentId = match.getStage().getTournament().getId();
+            if (!tournamentService.isUserRefOfTournament(user.getId(), tournamentId)) {
+                redirectAttributes.addFlashAttribute("error", "Только судья турнира может удалять голы");
+                return "redirect:/tournament/view/" + tournamentId;
+            }
+            goalService.deleteGoal(goalId);
+            redirectAttributes.addFlashAttribute("success", "Гол успешно удалён");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Ошибка при удалении гола: " + e.getMessage());
+        }
+        return "redirect:/match/view/" + matchId;
+    }
+
+    
 }

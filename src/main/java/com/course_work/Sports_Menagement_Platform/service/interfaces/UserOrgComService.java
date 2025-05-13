@@ -18,4 +18,8 @@ public interface UserOrgComService {
     void setRefereeStatus(UUID userId, UUID orgComId, boolean status);
 
     List<UserOrgCom> getUsersOrgComByOrgComId(UUID orgComId);
+
+    List<UserOrgCom> findAllByUserId(UUID userId);
+
+    int countChiefs(UUID orgComId);
 }

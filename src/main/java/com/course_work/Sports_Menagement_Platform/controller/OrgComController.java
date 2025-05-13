@@ -100,13 +100,14 @@ public class OrgComController {
 
     @GetMapping("/show_all")
     public String showAllOrgComs(Model model, @AuthenticationPrincipal User user) {
-        List<OrgCom> list = orgComService.getAllActiveOrgComByUser(user);
+        List<OrgCom> list;
+        try {
+            list = orgComService.getAllActiveOrgComByUser(user);
 
-        if (list == null || list.isEmpty()) {
-            model.addAttribute("error", "There are no any orgcoms yet");
-            return "org_com/show_all";
+            model.addAttribute("orgcoms", list);
+        } catch (RuntimeException e) {
+            model.addAttribute("error", e.getMessage());
         }
-        model.addAttribute("orgcoms", list);
         return "org_com/show_all";
     }
 
@@ -132,6 +133,10 @@ public class OrgComController {
         } catch (RuntimeException e) {
             throw new AccessDeniedException("У вас нет доступа");
         }
+        boolean isUserOnlyChief = true;
+        try {
+            isUserOnlyChief = accessService.isOnlyChiefOfOrgCom(user.getId(), id);
+        } catch (RuntimeException ignored) {}
         model.addAttribute("members", list);
         model.addAttribute("role", orgRole);
         model.addAttribute("orgComId", id);
@@ -139,6 +144,7 @@ public class OrgComController {
         model.addAttribute("orgRoles", new OrgRoleDTO());
         model.addAttribute("invitationStatuses", new InvitationStatusDTO());
         model.addAttribute("tournaments", tournaments);
+        model.addAttribute("isUserOnlyChief", isUserOnlyChief);
         return "org_com/view";
     }
 

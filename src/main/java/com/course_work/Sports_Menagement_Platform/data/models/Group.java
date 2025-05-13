@@ -25,6 +25,7 @@ public class Group {
     @JoinColumn(name = "stage_id")
     private Stage stage;
 
+    @Builder.Default
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "group_team",

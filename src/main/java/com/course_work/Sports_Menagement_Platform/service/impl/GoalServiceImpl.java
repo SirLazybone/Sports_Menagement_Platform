@@ -49,6 +49,13 @@ public class GoalServiceImpl implements GoalService {
         return goalRepository.findAllByMatchId(matchId);
     }
 
+    @Override
+    public int getGoalsByMatchAndTeamCount(UUID matchId, UUID teamId) {
+        return goalRepository.countGoalsByTeam(matchId, teamId);
+    }
 
-
+    @Override
+    public void deleteGoal(UUID goalId) {
+        goalRepository.deleteById(goalId);
+    }
 }

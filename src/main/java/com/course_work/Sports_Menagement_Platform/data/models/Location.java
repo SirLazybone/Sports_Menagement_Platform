@@ -26,6 +26,7 @@ public class Location {
     @JoinColumn(name = "tournament_id")
     private Tournament tournament;
 
+    @Builder.Default
     @OneToMany(mappedBy = "location", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Slot> slots = new ArrayList<>();
 }

@@ -43,9 +43,11 @@ public class User implements UserDetails {
 
     private String photo;
 
+    @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserOrgCom> userOrgComList = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserTeam> userTeamList = new ArrayList<>();
 

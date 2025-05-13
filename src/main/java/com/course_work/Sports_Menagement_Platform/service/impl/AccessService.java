@@ -5,10 +5,7 @@ import com.course_work.Sports_Menagement_Platform.data.models.OrgCom;
 import com.course_work.Sports_Menagement_Platform.data.models.Tournament;
 import com.course_work.Sports_Menagement_Platform.data.models.UserOrgCom;
 import com.course_work.Sports_Menagement_Platform.data.models.UserTeam;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.OrgComService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.TeamService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.TournamentService;
-import com.course_work.Sports_Menagement_Platform.service.interfaces.UserTeamService;
+import com.course_work.Sports_Menagement_Platform.service.interfaces.*;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -18,11 +15,13 @@ public class AccessService {
     private final TournamentService tournamentService;
     private final OrgComService orgComService;
     private final TeamService teamService;
+    private final UserOrgComService userOrgComService;
     public AccessService(TournamentService tournamentService, OrgComService orgComService,
-                         TeamService teamService) {
+                         TeamService teamService, UserOrgComService userOrgComService) {
         this.tournamentService = tournamentService;
         this.orgComService = orgComService;
         this.teamService = teamService;
+        this.userOrgComService = userOrgComService;
     }
 
 
@@ -68,5 +67,10 @@ public class AccessService {
 
     public boolean isOnlyActiveCap(UserTeam userTeam) {
         return teamService.isOnlyActiveCaptain(userTeam.getTeam().getId(), userTeam.getUser().getId());
+    }
+
+    public boolean isOnlyChiefOfOrgCom(UUID userId, UUID orgComId) {
+        int countChiefs = userOrgComService.countChiefs(orgComId);
+        return countChiefs == 1;
     }
 }

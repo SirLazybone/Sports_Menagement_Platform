@@ -52,7 +52,7 @@ public class TeamServiceImpl implements TeamService {
         List<Team> list = userTeamRepository.findAllActiveTeamByUser(user.getId());
 
         if (list == null || list.isEmpty()) {
-            throw new RuntimeException("There are no teams yet");
+            throw new RuntimeException("У вак пока нет команды");
         }
         return list;
     }

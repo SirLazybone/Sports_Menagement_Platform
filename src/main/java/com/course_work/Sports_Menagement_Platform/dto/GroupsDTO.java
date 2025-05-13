@@ -12,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class GroupsDTO {
+    @Builder.Default
     @Valid
     private List<GroupDTO> groups = new ArrayList<>();
 } 

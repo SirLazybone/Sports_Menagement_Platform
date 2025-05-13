@@ -47,4 +47,6 @@ public interface TournamentRepository extends JpaRepository<Tournament, UUID> {
                             @Param("teamSizeTo") int teamSizeTo,
                             @Param("registrationUntil") LocalDate registrationUntil);
 
+    Tournament findByName(String name);
+
 }

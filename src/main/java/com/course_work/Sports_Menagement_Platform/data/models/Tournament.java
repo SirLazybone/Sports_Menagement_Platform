@@ -39,15 +39,17 @@ public class Tournament {
     @JoinColumn(name = "city_id", referencedColumnName = "id")
     private City city;
 
+    @Builder.Default
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "tournament_id")
     private List<TeamTournament> teamTournamentList = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "tournament_id")
     private List<Location> locations = new ArrayList<>();
 
-
+    @Builder.Default
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "tournament_id")
     private List<Stage> stages = new ArrayList<>();
