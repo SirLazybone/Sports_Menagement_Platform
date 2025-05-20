@@ -5,142 +5,139 @@ option java_package = "com.course_work.Sports_Menagement_Platform.grpc";
 
 package sports;
 
-service SportsService {
-  rpc GetUserData (UserRequest) returns (UserResponse) {}
-  rpc GetMatchData (MatchRequest) returns (MatchResponse) {}
-  rpc GetTournamentData (TournamentRequest) returns (TournamentResponse) {}
-  rpc GetRecommendations(RecommendationRequest) returns (RecommendationResponse);
-  rpc GetTournamentVisualization(TournamentVisualizationRequest) returns (TournamentVisualizationResponse);
-  rpc GetMatchVisualization(MatchVisualizationRequest) returns (MatchVisualizationResponse);
+service PDFService {
+    rpc CreateMatchPDF (MatchPDFRequest) returns (PDFResponse) {}
+    rpc CreateTournamentPDF (TournamentPDFRequest) returns (PDFResponse) {}
 }
 
-message UserRequest {
-  string user_id = 1;
+service RecommenderService {
+    rpc GetRecommendations (RecommendationRequest) returns (RecommendationResponse) {}
+    rpc UpdateUserData (UserDataRequest) returns (UserDataResponse) {}
+    rpc GetAvailableTournaments (Empty) returns (TournamentsResponse) {}
 }
 
-message UserResponse {
-  string name = 1;
-  string surname = 2;
-  repeated OrganizationInfo org_info = 3;
-  repeated TeamInfo teams = 4;
-  repeated TournamentInfo tournaments = 5;
-}
-
-message OrganizationInfo {
-  string name = 1;
-  string role = 2;
-  bool is_ref = 3;
-}
-
-message TeamInfo {
-  string name = 1;
-  string logo = 2;
-  string sport = 3;
-  bool is_cap = 4;
-  string invitation_status = 5;
-}
-
-message TournamentInfo {
-  string name = 1;
-  string logo = 2;
-  string team_name = 3;
-  string sport = 4;
-  string city = 5;
-}
-
-message MatchRequest {
-  string match_id = 1;
-}
-
-message MatchResponse {
+message MatchPDFRequest {
   string match_id = 1;
   string stage_id = 2;
   string tournament_id = 3;
   string sport = 4;
-  repeated TeamProto teams = 5;
-  ScoreProto score = 6;
-  repeated GoalProto goals = 7;
-  repeated AfterMatchPenaltyProto after_match_penalties = 8;
-  LocationProto location = 9;
+  repeated TeamInfo teams = 5;
+  ScoreInfo score = 6;
+  repeated GoalInfo goals = 7;
+  repeated AfterMatchPenaltyInfo after_match_penalties = 8;
+  LocationInfo location = 9;
   string date = 10;
   bool is_finished = 11;
 }
 
-message TeamProto {
-  string team_id = 1;
+message TournamentPDFRequest {
+  string tournament_id = 1;
   string name = 2;
-  string logo = 3;
+  string sport = 3;
+  string organization_name = 4;
+  bytes logo = 5;
+  string description = 6;
+  string city = 7;
+  string registration_deadline = 8;
+  bool is_stopped = 9;
+  repeated StageInfo stages = 10;
+  repeated TeamInfo teams = 11;
+  repeated SlotInfo slots = 12;
+  repeated GroupInfo groups = 13;
 }
 
-message ScoreProto {
+message TournamentsResponse {
+    repeated TournamentInfo tournaments = 1;
+}
+
+message PDFResponse {
+    string file_name = 1;
+    bytes file_data = 2;
+    string mime_type = 3;
+    string status = 4;
+}
+
+message TeamInfo {
+  string team_id = 1;
+  string name = 2;
+  bytes logo = 3;
+  string sport = 4;
+  optional string invitation_status = 5;
+}
+
+message ScoreInfo {
   int32 team_1 = 1;
   int32 team_2 = 2;
 }
 
-message GoalProto {
+message GoalInfo {
   string team_id = 1;
-  string user_id = 2;
-  int32 set_number = 3;
-  string time = 4;
-  bool is_penalty = 5;
+  string user_name = 2;
+  string user_surname = 3;
+  int32 set_number = 4;
+  string time = 5;
+  bool is_penalty = 6;
 }
 
-message AfterMatchPenaltyProto {
-  string user_id = 1;
-  string team_id = 2;
-  bool is_success = 3;
+message AfterMatchPenaltyInfo {
+  string team_id = 1;
+  string user_name = 2;
+  string user_surname = 3;
+  bool is_success = 4;
 }
 
-message LocationProto {
+message LocationInfo {
   string name = 1;
   string address = 2;
   string city = 3;
 }
 
-message TournamentRequest {
-  string tournament_id = 1;
-}
-
-message TournamentResponse {
-  string tournament_id = 1;
-  string name = 2;
-  string sport = 3;
-  string organization_name = 4;
-  string logo = 5;
-  string description = 6;
-  string city = 7;
-  string registration_deadline = 8;
-  bool is_stopped = 9;
-  repeated StageProto stages = 10;
-  repeated TeamInfo teams = 11;
-  repeated SlotProto slots = 12;
-  repeated GroupProto groups = 13;
-}
-
-message StageProto {
+message StageInfo {
   string stage_id = 1;
-  bool is_published = 2;
-  int32 best_place = 3;
-  int32 worst_place = 4;
-  repeated MatchResponse matches = 5;
+  string name = 2;
+  bool is_published = 3;
+  int32 best_place = 4;
+  int32 worst_place = 5;
+  repeated MatchInfo matches = 6;
 }
 
-message SlotProto {
+message MatchInfo {
+  repeated TeamInfo teams = 1;
+  ScoreInfo score = 2;
+  repeated GoalInfo goals = 3;
+  repeated AfterMatchPenaltyInfo after_match_penalties = 4;
+  LocationInfo location = 5;
+  string date = 6;
+  bool is_finished = 7;
+}
+
+message SlotInfo {
   string slot_id = 1;
   string tournament_id = 2;
   string date = 3;
   string location_id = 4;
 }
 
-message GroupProto {
+message GroupInfo {
   string group_id = 1;
   string name = 2;
   int32 count_teams = 3;
-  repeated TeamProto teams = 4;
+  repeated TeamInfo teams = 4;
+}
+
+message TournamentInfo {
+  string name = 1;
+  bytes logo = 2;
+  string organization_name = 3;
+  string sport = 4;
+  string city = 5;
+  string description = 6;
 }
 
 message RecommendationRequest {
   string user_id = 1;
+  int32 num_recommendations = 2;
+  map<string, string> context = 3;
 }
 
 message RecommendationResponse {
@@ -153,22 +150,31 @@ message Recommendation {
   map<string, string> metadata = 3;
 }
 
-message TournamentVisualizationRequest {
-  string tournament_id = 1;
-  TournamentResponse tournament_data = 2;
+// Запрос на обновление данных пользователя
+message UserDataRequest {
+  string user_id = 1;
 }
 
-message TournamentVisualizationResponse {
-  bytes image_data = 1;
-  string image_format = 2;  // e.g., "png", "jpg"
+message UserDataResponse {
+  string user_id = 1;
+  UserData user_data = 2;
 }
 
-message MatchVisualizationRequest {
-  string match_id = 1;
-  MatchResponse match_data = 2;
+// Данные пользователя
+message UserData {
+  string name = 1;
+  string surname = 2;
+  repeated OrgInfo org_info = 3;
+  repeated TeamInfo teams = 4;
+  repeated TournamentInfo tournaments = 5;
 }
 
-message MatchVisualizationResponse {
-  bytes image_data = 1;
-  string image_format = 2;  // e.g., "png", "jpg"
-} 
+message OrgInfo {
+  string name = 1;
+  string role = 2;
+  bool is_ref = 3;
+}
+
+message Empty{
+
+}

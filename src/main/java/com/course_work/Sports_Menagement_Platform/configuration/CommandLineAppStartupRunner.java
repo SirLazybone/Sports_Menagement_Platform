@@ -217,9 +217,17 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        cityService.loadCitiesFromJson();
-        locationService.loadLocationsFromJson();
-        createFirstUsers();
-        createTeams(createOrgComAndChamp());
+        if (cityService.getCities() == null || cityService.getCities().isEmpty()) {
+            cityService.loadCitiesFromJson();
+        }
+        if (locationService.getAllLocations() == null || locationService.getAllLocations().isEmpty()) {
+            locationService.loadLocationsFromJson();
+        }
+        if (userRepository.count() == 0) {
+            createFirstUsers();
+        }
+        if (teamRepository.count() == 0) {
+            createTeams(createOrgComAndChamp());
+        }
     }
 }

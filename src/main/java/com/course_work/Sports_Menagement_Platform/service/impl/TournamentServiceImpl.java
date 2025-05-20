@@ -474,4 +474,9 @@ public class TournamentServiceImpl implements TournamentService {
         tournamentRepository.save(tournament);
         return true;
     }
+
+    @Override
+    public List<Tournament> findAllActive() {
+        return tournamentRepository.findAllActive(LocalDate.now());
+    }
 }

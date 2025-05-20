@@ -48,5 +48,8 @@ public interface TournamentRepository extends JpaRepository<Tournament, UUID> {
                             @Param("registrationUntil") LocalDate registrationUntil);
 
     Tournament findByName(String name);
+    
+    @Query("SELECT t FROM Tournament t WHERE t.is_stopped = false AND t.registerDeadline >= :currentDate")
+    List<Tournament> findAllActive(@Param("currentDate") LocalDate currentDate);
 
 }

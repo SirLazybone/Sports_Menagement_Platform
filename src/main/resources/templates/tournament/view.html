@@ -189,6 +189,12 @@
                         <i class="bi bi-pencil-square me-2"></i>Регистрация активна
                     </div>
                 </div>
+                
+                <div class="d-flex align-items-center gap-2">
+                    <a th:href="@{/api/pdf/tournament/{tournamentId}(tournamentId=${tournament.id})}" class="btn btn-primary">
+                        <i class="bi bi-file-pdf me-2"></i>Скачать PDF
+                    </a>
+                </div>
 </div>
 
             <table class="info-table">

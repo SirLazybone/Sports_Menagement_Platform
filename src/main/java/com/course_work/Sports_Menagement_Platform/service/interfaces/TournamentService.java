@@ -62,4 +62,6 @@ public interface TournamentService {
     TeamTournament getTeamTournament(UUID teamId, UUID tournamentId);
 
     public boolean cancelTournament(UUID tournamentId);
+    
+    List<Tournament> findAllActive();
 }

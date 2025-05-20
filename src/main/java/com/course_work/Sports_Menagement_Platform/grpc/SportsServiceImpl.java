@@ -20,6 +20,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+import com.course_work.Sports_Menagement_Platform.grpc.*;
+/*
 @GrpcService
 public class SportsServiceImpl extends SportsServiceGrpc.SportsServiceImplBase {
 
@@ -439,4 +441,5 @@ public class SportsServiceImpl extends SportsServiceGrpc.SportsServiceImplBase {
                 .asRuntimeException());
         }
     }
-} 
+}
+*/

@@ -1,6 +1,5 @@
 package com.course_work.Sports_Menagement_Platform.controller;
 
-import com.course_work.Sports_Menagement_Platform.grpc.*;
 import com.course_work.Sports_Menagement_Platform.data.models.User;
 import com.course_work.Sports_Menagement_Platform.data.models.Match;
 import com.course_work.Sports_Menagement_Platform.dto.UserCreationDTO;
@@ -37,7 +36,7 @@ import com.course_work.Sports_Menagement_Platform.service.interfaces.AfterMatchP
 @RequestMapping("/api")
 public class ApiController {
     
-    private final SportsServiceImpl sportsService;
+//    private final SportsServiceImpl sportsService;
     private final UserService userService;
     private final TeamService teamService;
     private final OrgComService orgComService;
@@ -52,8 +51,7 @@ public class ApiController {
     private final AfterMatchPenaltyService afterMatchPenaltyService;
 
     @Autowired
-    public ApiController(SportsServiceImpl sportsService,
-                        UserService userService,
+    public ApiController(UserService userService,
                         TeamService teamService,
                         OrgComService orgComService,
                         MatchService matchService,
@@ -65,7 +63,7 @@ public class ApiController {
                         AccessService accessService,
                         GoalService goalService,
                         AfterMatchPenaltyService afterMatchPenaltyService) {
-        this.sportsService = sportsService;
+//        this.sportsService = sportsService;
         this.userService = userService;
         this.teamService = teamService;
         this.orgComService = orgComService;
@@ -80,40 +78,40 @@ public class ApiController {
         this.afterMatchPenaltyService = afterMatchPenaltyService;
     }
 
-    @GetMapping("/recommendations")
-    public ResponseEntity<RecommendationResponse> getRecommendations(
-            @AuthenticationPrincipal User user) {
-        
-        // Create recommendation request with user ID
-        RecommendationRequest request = RecommendationRequest.newBuilder()
-            .setUserId(user.getId().toString())
-            .build();
-        
-        // Get recommendations through gRPC
-        RecommendationResponse response = sportsService.getRecommendations(request);
-        
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/tournament/{tournamentId}/visualization")
-    public ResponseEntity<byte[]> getTournamentVisualization(@PathVariable String tournamentId) {
-        TournamentVisualizationResponse response = sportsService.getTournamentVisualization(tournamentId);
-        
-        MediaType mediaType = MediaType.parseMediaType("image/" + response.getImageFormat());
-        return ResponseEntity.ok()
-                .contentType(mediaType)
-                .body(response.getImageData().toByteArray());
-    }
-
-    @GetMapping("/match/{matchId}/visualization")
-    public ResponseEntity<byte[]> getMatchVisualization(@PathVariable String matchId) {
-        MatchVisualizationResponse response = sportsService.getMatchVisualization(matchId);
-        
-        MediaType mediaType = MediaType.parseMediaType("image/" + response.getImageFormat());
-        return ResponseEntity.ok()
-                .contentType(mediaType)
-                .body(response.getImageData().toByteArray());
-    }
+//    @GetMapping("/recommendations")
+//    public ResponseEntity<RecommendationResponse> getRecommendations(
+//            @AuthenticationPrincipal User user) {
+//
+//        // Create recommendation request with user ID
+//        RecommendationRequest request = RecommendationRequest.newBuilder()
+//            .setUserId(user.getId().toString())
+//            .build();
+//
+//        // Get recommendations through gRPC
+//        RecommendationResponse response = sportsService.getRecommendations(request);
+//
+//        return ResponseEntity.ok(response);
+//    }
+//
+//    @GetMapping("/tournament/{tournamentId}/visualization")
+//    public ResponseEntity<byte[]> getTournamentVisualization(@PathVariable String tournamentId) {
+//        TournamentVisualizationResponse response = sportsService.getTournamentVisualization(tournamentId);
+//
+//        MediaType mediaType = MediaType.parseMediaType("image/" + response.getImageFormat());
+//        return ResponseEntity.ok()
+//                .contentType(mediaType)
+//                .body(response.getImageData().toByteArray());
+//    }
+//
+//    @GetMapping("/match/{matchId}/visualization")
+//    public ResponseEntity<byte[]> getMatchVisualization(@PathVariable String matchId) {
+//        MatchVisualizationResponse response = sportsService.getMatchVisualization(matchId);
+//
+//        MediaType mediaType = MediaType.parseMediaType("image/" + response.getImageFormat());
+//        return ResponseEntity.ok()
+//                .contentType(mediaType)
+//                .body(response.getImageData().toByteArray());
+//    }
 
     // --- AUTH ---
     @GetMapping("/auth/login")

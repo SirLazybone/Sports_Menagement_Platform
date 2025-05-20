@@ -180,6 +180,9 @@
     <div class="container_main">
         <h1 class="page-title">
             <i class="bi bi-trophy me-2"></i>Детали матча
+            <a th:href="@{/api/pdf/match/{matchId}(matchId=${match.id})}" class="btn btn-primary float-end">
+                <i class="bi bi-file-pdf me-2"></i>Скачать PDF
+            </a>
         </h1>
         
         <!-- Error message -->
