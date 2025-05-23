@@ -533,7 +533,7 @@ public class MatchController {
             redirectAttributes.addFlashAttribute("error", "Error while assigning slot: " + e.getMessage());
         }
 
-        return "redirect:/match/fill_stage/" + match.getStage().getId().toString();
+        return "redirect:/match/view/" + match.getStage().getId().toString();
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -607,12 +607,6 @@ public class MatchController {
         }
 
         try {
-            System.out.println("Match ID : " + goalDTO.getMatchId());
-            System.out.println("Time : " + goalDTO.getTime());
-            System.out.println("Team ID : " + goalDTO.getTeamId());
-            System.out.println("Match ID : " + goalDTO.getTime());
-
-
             goalService.addGoal(goalDTO);
             redirectAttributes.addFlashAttribute("success", "Гол успешно добавлен");
         } catch (Exception e) {

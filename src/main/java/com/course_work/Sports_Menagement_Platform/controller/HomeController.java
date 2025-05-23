@@ -26,7 +26,7 @@ public class HomeController {
             // Получаем рекомендации для пользователя (до 5 рекомендаций)
             RecommendationResponse recommendations = recommenderServiceClient.getRecommendations(
                     user.getId().toString(), 5);
-                    
+            System.out.println("\n\n\nRECOMMENDATIONS!!! : \n" + recommendations.getRecommendationsList().toString() + "\n\n\n");
             // Добавляем рекомендации в модель
             model.addAttribute("recommendations", recommendations.getRecommendationsList());
             model.addAttribute("hasRecommendations", !recommendations.getRecommendationsList().isEmpty());

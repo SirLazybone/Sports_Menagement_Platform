@@ -1,14 +1,17 @@
 package com.course_work.Sports_Menagement_Platform.grpc;
 
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
-import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
 
 /**
  * Клиент для вызова удаленного gRPC сервиса RecommenderService
@@ -18,8 +21,18 @@ public class RecommenderServiceClient {
     
     private static final Logger logger = LoggerFactory.getLogger(RecommenderServiceClient.class);
     
-    @GrpcClient("recommender-service")
-    private RecommenderServiceGrpc.RecommenderServiceBlockingStub recommenderServiceStub;
+    private final ManagedChannel channel;
+    private final RecommenderServiceGrpc.RecommenderServiceBlockingStub recommenderServiceStub;
+    
+    public RecommenderServiceClient(
+            @Value("${grpc.python.server.host}") String host,
+            @Value("${grpc.python.server.port}") int port) {
+        this.channel = ManagedChannelBuilder.forAddress(host, port)
+                .usePlaintext()
+                .build();
+        this.recommenderServiceStub = RecommenderServiceGrpc.newBlockingStub(channel);
+        logger.info("Recommender Service client initialized with server at {}:{}", host, port);
+    }
     
     /**
      * Получает рекомендации для пользователя
@@ -60,5 +73,9 @@ public class RecommenderServiceClient {
             logger.error("Error calling getRecommendations: {}", e.getMessage());
             return RecommendationResponse.newBuilder().build(); // Возвращаем пустой список рекомендаций
         }
+    }
+    
+    public void shutdown() throws InterruptedException {
+        channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }
 } 

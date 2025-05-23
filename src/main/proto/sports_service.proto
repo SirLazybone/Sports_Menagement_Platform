@@ -3,7 +3,7 @@ syntax = "proto3";
 option java_multiple_files = true;
 option java_package = "com.course_work.Sports_Menagement_Platform.grpc";
 
-package sports;
+package services;
 
 service PDFService {
     rpc CreateMatchPDF (MatchPDFRequest) returns (PDFResponse) {}
@@ -51,10 +51,11 @@ message TournamentsResponse {
 }
 
 message PDFResponse {
-    string file_name = 1;
-    bytes file_data = 2;
-    string mime_type = 3;
-    string status = 4;
+    string task_id = 1;
+    string file_name = 2;
+    bytes file_data = 3;
+    string mime_type = 4;
+    string status = 5;
 }
 
 message TeamInfo {

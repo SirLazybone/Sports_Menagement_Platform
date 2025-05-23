@@ -34,8 +34,8 @@ public class PDFServiceClient {
     private final PDFServiceGrpc.PDFServiceBlockingStub blockingStub;
     
     public PDFServiceClient(
-            @Value("${grpc.pdf.server.host}") String host,
-            @Value("${grpc.pdf.server.port}") int port, 
+            @Value("${grpc.python.server.host}") String host,
+            @Value("${grpc.python.server.port}") int port,
             StageService stageService,
             GoalService goalService,
             AfterMatchPenaltyService afterMatchPenaltyService,
