@@ -14,9 +14,11 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class WebSecurityConfig {
     private final CustomAuthenticationProvider customAuthenticationProvider;
+    
     public WebSecurityConfig(CustomAuthenticationProvider customAuthenticationProvider) {
         this.customAuthenticationProvider = customAuthenticationProvider;
     }
+    
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
@@ -24,6 +26,7 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(
                         authorizeRequest -> authorizeRequest
                                 .requestMatchers("/admin").hasAuthority("ADMIN")
+                                .requestMatchers("/api/**").permitAll()
                                 .requestMatchers("/user/**").authenticated()
                                 .requestMatchers("/org_com/**").authenticated()
                                 .requestMatchers("/team/view/**").permitAll()

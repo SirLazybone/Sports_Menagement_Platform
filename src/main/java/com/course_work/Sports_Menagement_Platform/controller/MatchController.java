@@ -674,25 +674,49 @@ public class MatchController {
             boolean isCap1 = false;
             boolean isCap2 = false;
 
-            try {
-                isRef = accessService.isUserRefOfTournament(user.getId(), tournament.getId());
-            } catch (RuntimeException ignored) {
+            // Debug logging
+            System.out.println("=== MATCH VIEW DEBUG ===");
+            System.out.println("User: " + (user != null ? user.getName() + " (ID: " + user.getId() + ")" : "null"));
+            System.out.println("Match ID: " + matchId);
+            System.out.println("Tournament ID: " + tournament.getId());
+            System.out.println("Team1 ID: " + match.getTeam1().getId());
+            System.out.println("Team2 ID: " + match.getTeam2().getId());
+
+            // Check if user is authenticated before calling methods
+            if (user != null) {
+                try {
+                    isRef = accessService.isUserRefOfTournament(user.getId(), tournament.getId());
+                    System.out.println("isRef: " + isRef);
+                } catch (RuntimeException e) {
+                    System.out.println("isRef check failed: " + e.getMessage());
+                }
+
+                try {
+                    isOrg = accessService.isUserChiefOfTournament(user.getId(), tournament.getId());
+                    System.out.println("isOrg: " + isOrg);
+                } catch (RuntimeException e) {
+                    System.out.println("isOrg check failed: " + e.getMessage());
+                }
+
+                try {
+                    isCap1 = accessService.isUserCapOfTeam(user.getId(), match.getTeam1().getId());
+                    System.out.println("isCap1: " + isCap1);
+                } catch (RuntimeException e) {
+                    System.out.println("isCap1 check failed: " + e.getMessage());
+                }
+
+                try {
+                    isCap2 = accessService.isUserCapOfTeam(user.getId(), match.getTeam2().getId());
+                    System.out.println("isCap2: " + isCap2);
+                } catch (RuntimeException e) {
+                    System.out.println("isCap2 check failed: " + e.getMessage());
+                }
+            } else {
+                System.out.println("User is null - all permissions set to false");
             }
 
-            try {
-                isOrg = accessService.isUserChiefOfTournament(user.getId(), tournament.getId());
-            } catch (RuntimeException ignored) {
-            }
-
-            try {
-                isCap1 = accessService.isUserCapOfTeam(user.getId(), match.getTeam1().getId());
-            } catch (RuntimeException ignored) {
-            }
-
-            try {
-                isCap2 = accessService.isUserCapOfTeam(user.getId(), match.getTeam2().getId());
-            } catch (RuntimeException ignored) {
-            }
+            System.out.println("Final values - isRef: " + isRef + ", isOrg: " + isOrg + ", isCap1: " + isCap1 + ", isCap2: " + isCap2);
+            System.out.println("========================");
 
             List<Goal> goals = goalService.getGoalsByMatch(matchId);
             List<Goal> team1Goals = goals.stream()
@@ -783,12 +807,17 @@ public class MatchController {
         boolean isCap1 = false;
         boolean isCap2 = false;
         Match match = matchService.getById(matchId);
-        try {
-            isCap1 = accessService.isUserCapOfTeam(user.getId(), match.getTeam1().getId());
-        } catch (RuntimeException ignored) {}
-        try {
-            isCap2 = accessService.isUserCapOfTeam(user.getId(), match.getTeam2().getId());
-        } catch (RuntimeException ignored) {}
+        
+        // Check if user is authenticated before calling methods
+        if (user != null) {
+            try {
+                isCap1 = accessService.isUserCapOfTeam(user.getId(), match.getTeam1().getId());
+            } catch (RuntimeException ignored) {}
+            try {
+                isCap2 = accessService.isUserCapOfTeam(user.getId(), match.getTeam2().getId());
+            } catch (RuntimeException ignored) {}
+        }
+        
         try {
             if (!isCap1 && !isCap2) {
                 redirectAttributes.addFlashAttribute("error", "Only team captains can withdraw from a match");

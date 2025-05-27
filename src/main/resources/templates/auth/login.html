@@ -81,7 +81,8 @@
             <form th:action="@{/auth/login}" method="post">
                 <div class="mb-3">
                     <label for="tel" class="form-label">Телефон</label>
-                    <input type="tel" class="form-control" id="tel" name="username" required placeholder="Введите номер телефона">
+                    <input type="tel" class="form-control" id="tel" name="username" required 
+                           placeholder="+7 (XXX) XXX-XX-XX" maxlength="18">
                 </div>
                 
                 <div class="mb-4">
@@ -101,5 +102,89 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Функция для форматирования номера телефона
+        function formatPhoneNumber(input) {
+            // Удаляем все символы кроме цифр
+            let value = input.value.replace(/\D/g, '');
+            
+            // Если номер начинается с 8, заменяем на 7
+            if (value.startsWith('8')) {
+                value = '7' + value.substring(1);
+            }
+            
+            // Если номер не начинается с 7, добавляем 7
+            if (!value.startsWith('7')) {
+                value = '7' + value;
+            }
+            
+            // Ограничиваем длину до 11 цифр (7 + 10 цифр номера)
+            if (value.length > 11) {
+                value = value.substring(0, 11);
+            }
+            
+            // Форматируем номер
+            let formattedValue = '';
+            if (value.length >= 1) {
+                formattedValue = '+7';
+                if (value.length > 1) {
+                    formattedValue += ' (' + value.substring(1, 4);
+                    if (value.length >= 4) {
+                        formattedValue += ')';
+                        if (value.length > 4) {
+                            formattedValue += ' ' + value.substring(4, 7);
+                            if (value.length > 7) {
+                                formattedValue += '-' + value.substring(7, 9);
+                                if (value.length > 9) {
+                                    formattedValue += '-' + value.substring(9, 11);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            input.value = formattedValue;
+        }
+        
+        // Применяем форматирование при вводе
+        document.getElementById('tel').addEventListener('input', function(e) {
+            formatPhoneNumber(e.target);
+        });
+        
+        // Применяем форматирование при вставке текста
+        document.getElementById('tel').addEventListener('paste', function(e) {
+            setTimeout(() => formatPhoneNumber(e.target), 0);
+        });
+        
+        // Устанавливаем начальное значение при фокусе на пустое поле
+        document.getElementById('tel').addEventListener('focus', function(e) {
+            if (e.target.value === '') {
+                e.target.value = '+7 (';
+            }
+        });
+        
+        // Предотвращаем удаление префикса +7 (
+        document.getElementById('tel').addEventListener('keydown', function(e) {
+            const cursorPosition = e.target.selectionStart;
+            const value = e.target.value;
+            
+            // Предотвращаем удаление префикса +7 (
+            if ((e.key === 'Backspace' || e.key === 'Delete') && cursorPosition <= 4) {
+                e.preventDefault();
+            }
+        });
+        
+        // Перед отправкой формы нормализуем номер телефона
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const telInput = document.getElementById('tel');
+            const value = telInput.value.replace(/\D/g, '');
+            
+            if (value.startsWith('7') && value.length === 11) {
+                telInput.value = '+' + value;
+            }
+        });
+    </script>
 </body>
 </html>

@@ -110,6 +110,12 @@ public class PDFServiceClient {
                     .setSport(match.getTeam1().getSport().toString())
                     .build();
             requestBuilder.addTeams(team1Info);
+
+            if (match.getTeam1().getLogo() != null && !match.getTeam1().getLogo().isEmpty()) {
+                team1Info = team1Info.toBuilder()
+                        .setLogo(com.google.protobuf.ByteString.copyFromUtf8(match.getTeam1().getLogo()))
+                        .build();
+            }
         }
         
         if (match.getTeam2() != null) {
@@ -119,6 +125,12 @@ public class PDFServiceClient {
                     .setSport(match.getTeam2().getSport().toString())
                     .build();
             requestBuilder.addTeams(team2Info);
+
+            if (match.getTeam2().getLogo() != null && !match.getTeam2().getLogo().isEmpty()) {
+                team2Info = team2Info.toBuilder()
+                        .setLogo(com.google.protobuf.ByteString.copyFromUtf8(match.getTeam2().getLogo()))
+                        .build();
+            }
         }
         
         // Добавляем информацию о месте проведения (из слота)

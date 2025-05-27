@@ -1,9 +1,6 @@
 package com.course_work.Sports_Menagement_Platform.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.UUID;
 
@@ -16,5 +13,7 @@ public class GoalDTO {
     private UUID teamId;
     private UUID playerId;
     private int time;
-    private boolean isPenalty;
+    private boolean penalty;
+    private int points;
+    private int setNumber;
 }

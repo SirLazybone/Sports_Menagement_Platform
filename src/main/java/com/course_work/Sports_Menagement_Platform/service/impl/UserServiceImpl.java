@@ -48,6 +48,33 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     public User findById(UUID id) {
         return userRepository.findById(id).orElseThrow(() -> new UsernameNotFoundException("User not found " + id.toString()));
     }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public User findByIdWithRelations(UUID id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new UsernameNotFoundException("User not found " + id.toString()));
+        
+        user.getUserOrgComList().size(); 
+        user.getUserTeamList().size();
+        
+
+        user.getUserOrgComList().forEach(userOrgCom -> {
+            userOrgCom.getOrgCom().getName(); 
+        });
+        
+        user.getUserTeamList().forEach(userTeam -> {
+            userTeam.getTeam().getName();
+            userTeam.getTeam().getTeamTournamentList().size();
+            userTeam.getTeam().getTeamTournamentList().forEach(teamTournament -> {
+                teamTournament.getTournament().getName();
+                teamTournament.getTournament().getUserOrgCom().getOrgCom().getName();
+                teamTournament.getTournament().getCity().getName();
+            });
+        });
+        
+        return user;
+    }
+
     @Override
     public User findByTel(String tel) {
         return userRepository.findByTel(tel).orElseThrow(() -> new UsernameNotFoundException("User with tel: " + tel + " not found"));
@@ -55,15 +82,49 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public User saveNewUser(UserCreationDTO newUser) {
-        if (userRepository.findByTel(newUser.getTel()).isPresent()) {
+        // Нормализуем номер телефона перед проверкой и сохранением
+        String normalizedTel = normalizePhoneNumber(newUser.getTel());
+        
+        if (userRepository.findByTel(normalizedTel).isPresent()) {
             throw new RuntimeException("Пользователь с таким телефоном уже существует");
         }
 
         User user = userMapper.DTOToEntity(newUser);
+        user.setTel(normalizedTel); // Сохраняем нормализованный номер
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRole(Role.USER);
 
         return userRepository.save(user);
+    }
+    
+    /**
+     * Нормализует номер телефона, удаляя все символы кроме цифр и приводя к формату +7XXXXXXXXXX
+     */
+    private String normalizePhoneNumber(String phoneNumber) {
+        if (phoneNumber == null) {
+            return null;
+        }
+        
+        // Удаляем все символы кроме цифр
+        String digitsOnly = phoneNumber.replaceAll("\\D", "");
+        
+        // Если номер начинается с 8, заменяем на 7
+        if (digitsOnly.startsWith("8") && digitsOnly.length() == 11) {
+            digitsOnly = "7" + digitsOnly.substring(1);
+        }
+        
+        // Если номер начинается с 7 и имеет 11 цифр, добавляем +
+        if (digitsOnly.startsWith("7") && digitsOnly.length() == 11) {
+            return "+" + digitsOnly;
+        }
+        
+        // Если номер имеет 10 цифр, добавляем +7
+        if (digitsOnly.length() == 10) {
+            return "+7" + digitsOnly;
+        }
+        
+        // Возвращаем исходный номер если не удалось нормализовать
+        return phoneNumber;
     }
 
     @Override
@@ -91,7 +152,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             user.setSurname(userDTO.getSurname());
         }
         if (!userDTO.getTel().isEmpty()) {
-            user.setTel(userDTO.getTel());
+            String normalizedTel = normalizePhoneNumber(userDTO.getTel());
+            user.setTel(normalizedTel);
         }
         if (userDTO.getPhoto() != null) {
             user.setPhoto(userDTO.getPhoto());

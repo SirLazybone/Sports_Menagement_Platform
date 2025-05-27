@@ -9,6 +9,7 @@ import net.devh.boot.grpc.server.service.GrpcService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -32,17 +33,17 @@ public class RecommenderServiceImpl extends RecommenderServiceGrpc.RecommenderSe
      * Обработка запроса на обновление данных пользователя
      */
     @Override
+    @Transactional(readOnly = true)
     public void updateUserData(UserDataRequest request, StreamObserver<UserDataResponse> responseObserver) {
         try {
             logger.info("Received updateUserData request for user ID: {}", request.getUserId());
             
-            // Получаем пользователя из базы данных
-            User user = userService.findById(UUID.fromString(request.getUserId()));
+            User user = userService.findByIdWithRelations(UUID.fromString(request.getUserId()));
             
-            // Создаем ответ с данными пользователя
             UserDataResponse response = buildUserDataResponse(user);
+            System.out.println("!!! User Data Response:");
+            printUserDataResponse(response);
             
-            // Отправляем ответ клиенту
             responseObserver.onNext(response);
             responseObserver.onCompleted();
             
@@ -57,6 +58,7 @@ public class RecommenderServiceImpl extends RecommenderServiceGrpc.RecommenderSe
      * Обработка запроса на получение доступных турниров
      */
     @Override
+    @Transactional(readOnly = true)
     public void getAvailableTournaments(Empty request, StreamObserver<TournamentsResponse> responseObserver) {
         try {
             logger.info("Received getAvailableTournaments request");
@@ -66,6 +68,8 @@ public class RecommenderServiceImpl extends RecommenderServiceGrpc.RecommenderSe
             
             // Создаем ответ с данными о турнирах
             TournamentsResponse response = buildTournamentsResponse(tournaments);
+            System.out.println("!!! Tournament Response:");
+            printTournamentsResponse(response);
             
             // Отправляем ответ клиенту
             responseObserver.onNext(response);
@@ -179,5 +183,47 @@ public class RecommenderServiceImpl extends RecommenderServiceGrpc.RecommenderSe
         });
         
         return responseBuilder.build();
+    }
+
+    /**
+     * Выводит данные пользователя в читаемом формате
+     */
+    private void printUserDataResponse(UserDataResponse response) {
+        System.out.println("User ID: " + response.getUserId());
+        UserData userData = response.getUserData();
+        System.out.println("Name: " + userData.getName());
+        System.out.println("Surname: " + userData.getSurname());
+        
+        System.out.println("Organizations (" + userData.getOrgInfoCount() + "):");
+        for (OrgInfo orgInfo : userData.getOrgInfoList()) {
+            System.out.println("  - " + orgInfo.getName() + " (Role: " + orgInfo.getRole() + ", Ref: " + orgInfo.getIsRef() + ")");
+        }
+        
+        System.out.println("Teams (" + userData.getTeamsCount() + "):");
+        for (TeamInfo teamInfo : userData.getTeamsList()) {
+            System.out.println("  - " + teamInfo.getName() + " (Sport: " + teamInfo.getSport() + ")");
+        }
+        
+        System.out.println("Tournaments (" + userData.getTournamentsCount() + "):");
+        for (TournamentInfo tournamentInfo : userData.getTournamentsList()) {
+            System.out.println("  - " + tournamentInfo.getName() + " (Sport: " + tournamentInfo.getSport() + ", City: " + tournamentInfo.getCity() + ")");
+        }
+    }
+    
+    /**
+     * Выводит данные турниров в читаемом формате
+     */
+    private void printTournamentsResponse(TournamentsResponse response) {
+        System.out.println("Available Tournaments (" + response.getTournamentsCount() + "):");
+        for (TournamentInfo tournament : response.getTournamentsList()) {
+            System.out.println("  - " + tournament.getName());
+            System.out.println("    Sport: " + tournament.getSport());
+            System.out.println("    City: " + tournament.getCity());
+            System.out.println("    Organization: " + tournament.getOrganizationName());
+            if (!tournament.getDescription().isEmpty()) {
+                System.out.println("    Description: " + tournament.getDescription());
+            }
+            System.out.println();
+        }
     }
 } 

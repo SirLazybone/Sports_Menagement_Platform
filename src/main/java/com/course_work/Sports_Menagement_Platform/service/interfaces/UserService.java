@@ -18,10 +18,11 @@ public interface UserService {
 
     User findById(UUID id);
 
+    User findByIdWithRelations(UUID id);
+
     User findByTel(String tel);
 
     void updateUser(User user, UserDTO userDTO);
-
 
     boolean changePassword(UUID userId, ChangePasswordDTO changePasswordDTO);
 }
