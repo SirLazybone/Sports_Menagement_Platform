@@ -165,6 +165,7 @@ public class RecommenderServiceImpl extends RecommenderServiceGrpc.RecommenderSe
         // Добавляем данные о каждом турнире
         tournaments.forEach(tournament -> {
             TournamentInfo.Builder tournamentInfoBuilder = TournamentInfo.newBuilder()
+                    .setId(tournament.getId().toString())
                     .setName(tournament.getName())
                     .setOrganizationName(tournament.getUserOrgCom().getOrgCom().getName())
                     .setSport(tournament.getSport().toString())
@@ -216,6 +217,7 @@ public class RecommenderServiceImpl extends RecommenderServiceGrpc.RecommenderSe
     private void printTournamentsResponse(TournamentsResponse response) {
         System.out.println("Available Tournaments (" + response.getTournamentsCount() + "):");
         for (TournamentInfo tournament : response.getTournamentsList()) {
+            System.out.println("    id: " + tournament.getId());
             System.out.println("  - " + tournament.getName());
             System.out.println("    Sport: " + tournament.getSport());
             System.out.println("    City: " + tournament.getCity());

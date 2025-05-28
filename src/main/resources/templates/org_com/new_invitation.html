@@ -1,41 +1,129 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>New Invitation</title>
+    <title>Новое приглашение - Sports Management Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body { 
+            background: #f8fafc;
+            min-height: 100vh;
+        }
+        .create-container {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .form-label {
+            font-weight: 500;
+            color: #333;
+        }
+        .form-control, .form-select {
+            border-radius: 8px;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+        .form-check-input:checked {
+            background-color: #3498db;
+            border-color: #3498db;
+        }
+        .form-check-input:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        .btn-primary {
+            background: #3498db;
+            border: none;
+        }
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        .btn-secondary {
+            background: #64748b;
+            border: none;
+        }
+        .btn-secondary:hover {
+            background: #475569;
+        }
+        .error-message {
+            color: #dc2626;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+    </style>
 </head>
 <body>
-<form th:action="@{/org_com/send_invitation/{orgComId}(orgComId=${orgComId})}" th:object="${invitation}" method="post">
-    <div>
-        <label for="tel">Телефон:</label>
-        <input type="text" th:field="*{tel}" id="tel" />
-        <span th:if="${#fields.hasErrors('tel')}" th:errors="*{tel}"></span>
+    <header th:replace="~{fragments/header :: header}"></header>
+
+    <div class="container">
+        <div class="create-container">
+            <h2 class="mb-4">
+                <i class="bi bi-envelope-plus me-2"></i>Новое приглашение
+            </h2>
+            
+            <div th:if="${error}" class="alert alert-danger" role="alert">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <span th:text="${error}"></span>
+            </div>
+
+            <form th:action="@{/org_com/send_invitation/{orgComId}(orgComId=${orgComId})}" th:object="${invitation}" method="post">
+                <div class="mb-4">
+                    <label for="tel" class="form-label">
+                        <i class="bi bi-telephone me-1"></i>Телефон
+                    </label>
+                    <input type="text" class="form-control" th:field="*{tel}" id="tel" 
+                           placeholder="Введите номер телефона" required>
+                    <span class="error-message" th:if="${#fields.hasErrors('tel')}" th:errors="*{tel}"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label for="orgRole" class="form-label">
+                        <i class="bi bi-person-badge me-1"></i>Роль в организации
+                    </label>
+                    <select class="form-select" th:field="*{orgRole}" id="orgRole" required>
+                        <option value="" disabled selected>Выберите роль</option>
+                        <option th:each="role : ${T(com.course_work.Sports_Menagement_Platform.data.enums.Org).values()}"
+                                th:value="${role}"
+                                th:text="${role}"></option>
+                    </select>
+                    <span class="error-message" th:if="${#fields.hasErrors('orgRole')}" th:errors="*{orgRole}"></span>
+                </div>
+
+                <div class="mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" th:field="*{isRef}" id="isReferee">
+                        <label class="form-check-label" for="isReferee">
+                            <i class="bi bi-whistle me-1"></i>Судья
+                        </label>
+                    </div>
+                    <small class="form-text text-muted">Отметьте, если приглашаемый будет выполнять функции судьи</small>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send me-1"></i>Отправить приглашение
+                    </button>
+                    <a th:href="@{/org_com/view/{orgComId}(orgComId=${orgComId})}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Назад
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <div>
-        <label for="orgRole">Роль:</label>
-        <select th:field="*{orgRole}" id="orgRole">
-            <option value="" disabled selected>Выберите роль</option>
-            <option th:each="role : ${T(com.course_work.Sports_Menagement_Platform.data.enums.Org).values()}"
-                    th:value="${role}"
-                    th:text="${role}"></option>
-        </select>
-        <span th:if="${#fields.hasErrors('orgRole')}" th:errors="*{orgRole}"></span>
-    </div>
-
-    <div>
-        <label for="isReferee">
-            <input type="checkbox" th:field="*{isRef}" id="isReferee" /> Судья
-        </label>
-    </div>
-    <div>
-        <button type="submit">Отправить</button>
-    </div>
-
-    <div th:if="${error}">
-        <p style="color: red;" th:text="${error}"></p>
-    </div>
-</form>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

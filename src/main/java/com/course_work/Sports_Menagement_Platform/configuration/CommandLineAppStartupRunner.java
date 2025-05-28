@@ -105,6 +105,8 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
             } else {
                 System.out.println("База данных уже содержит данные, пропускаем создание синтетических данных");
             }
+
+            createSpecialBasketballChampionship();
             
             System.out.println("CommandLineAppStartupRunner завершён успешно!");
             
@@ -199,6 +201,9 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
         
         // 13. Создание приглашений (уменьшено количество)
         createInvitations(users, orgComs, teams);
+        
+        // 14. Создание специального баскетбольного чемпионата
+        
         
         System.out.println("Синтетические данные созданы успешно!");
         System.out.println("=".repeat(50));
@@ -1078,5 +1083,102 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
                 invitationRepository.save(invitation);
             }
         }
+    }
+    
+    private void createSpecialBasketballChampionship() {
+        System.out.println("🏀 Создание специального баскетбольного чемпионата...");
+        
+        // Найдем оргкомитет "Баскетбольная ассоциация 1"
+        OrgCom basketballOrgCom = orgComRepository.findAll().stream()
+                .filter(org -> org.getName().contains("Баскетбольная ассоциация"))
+                .findFirst()
+                .orElse(orgComRepository.findAll().stream().findFirst().orElse(null)); // Если не найден, берем первый
+        
+        if (basketballOrgCom == null) {
+            System.out.println("❌ Не найдено ни одного оргкомитета!");
+            return;
+        }
+        
+        System.out.println("📋 Найден оргкомитет: " + basketballOrgCom.getName());
+        
+        // Находим организатора из этого оргкомитета
+        List<UserOrgCom> orgMembers = userOrgComRepository.findUsersByOrgComIdNotDTO(basketballOrgCom.getId());
+        UserOrgCom organizer = orgMembers.stream()
+                .filter(uoc -> uoc.getOrgRole() == Org.CHIEF)
+                .findFirst()
+                .orElse(orgMembers.get(0));
+        
+        // Находим случайный город
+        List<City> cities = cityService.getCities();
+        City randomCity = cities.get(random.nextInt(cities.size()));
+        
+        // Создаем турнир с будущим дедлайном регистрации
+        LocalDate futureDeadline = LocalDate.now().plusDays(15); // 15 дней в будущем
+        
+        Tournament tournament = Tournament.builder()
+                .name("Специальный чемпионат по баскетболу 2025")
+                .sport(Sport.BASKETBALL)
+                .minMembers(5) // Минимум для баскетбола
+                .registerDeadline(futureDeadline)
+                .description("Специальный чемпионат по баскетболу с групповым этапом. Регистрация команд открыта до " + futureDeadline)
+                .is_stopped(false)
+                .userOrgCom(organizer)
+                .city(randomCity)
+                .build();
+        
+        tournament = tournamentRepository.save(tournament);
+        System.out.println("🏆 Создан турнир: " + tournament.getName() + " (ID: " + tournament.getId() + ")");
+        System.out.println("📅 Дедлайн регистрации: " + futureDeadline);
+        
+        // Находим все баскетбольные команды
+        List<Team> basketballTeams = teamRepository.findAll().stream()
+                .filter(team -> team.getSport() == Sport.BASKETBALL)
+                .limit(10) // Берем все 10 команд по баскетболу
+                .collect(Collectors.toList());
+        
+        System.out.println("🏀 Найдено баскетбольных команд: " + basketballTeams.size());
+        
+        // Регистрируем все команды на турнир (все команды приняты)
+        for (Team team : basketballTeams) {
+            TeamTournament teamTournament = TeamTournament.builder()
+                    .team(team)
+                    .tournament(tournament)
+                    .applicationStatus(ApplicationStatus.ACCEPTED) // Все команды приняты
+                    .goToPlayOff(false) // Пока не определено
+                    .build();
+            
+            teamTournamentRepository.save(teamTournament);
+            System.out.println("  ✅ Команда " + team.getName() + " зарегистрирована (ACCEPTED)");
+        }
+        
+        // Создаем НЕОПУБЛИКОВАННЫЙ групповой этап
+        Stage groupStage = Stage.builder()
+                .tournament(tournament)
+                .isPublished(false) // Этап НЕ опубликован
+                .bestPlace(0)
+                .worstPlace(0)
+                .build();
+        
+        groupStage = stageRepository.save(groupStage);
+        System.out.println("📋 Создан групповой этап (НЕОПУБЛИКОВАННЫЙ) с ID: " + groupStage.getId());
+        
+        // Создаем одну группу A с командами
+        Group group = Group.builder()
+                .name("A")
+                .stage(groupStage)
+                .teams(basketballTeams)
+                .build();
+        
+        Group savedGroup = groupRepository.save(group);
+        System.out.println("👥 Создана группа A с " + basketballTeams.size() + " командами (ID: " + savedGroup.getId() + ")");
+        
+        System.out.println("🎯 ИТОГ:");
+        System.out.println("  🏆 Турнир: " + tournament.getName());
+        System.out.println("  🏢 Оргкомитет: " + basketballOrgCom.getName());
+        System.out.println("  📅 Дедлайн: " + futureDeadline + " (ещё не прошёл)");
+        System.out.println("  👥 Команд: " + basketballTeams.size() + " (все ACCEPTED)");
+        System.out.println("  📋 Групповой этап: создан, НЕ опубликован");
+        System.out.println("  🎮 Матчи: НЕ созданы (этап не опубликован)");
+        System.out.println("✅ Специальный баскетбольный чемпионат готов!");
     }
 }

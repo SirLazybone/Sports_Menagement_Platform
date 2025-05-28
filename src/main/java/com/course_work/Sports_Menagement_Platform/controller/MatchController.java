@@ -533,7 +533,7 @@ public class MatchController {
             redirectAttributes.addFlashAttribute("error", "Error while assigning slot: " + e.getMessage());
         }
 
-        return "redirect:/match/view/" + match.getStage().getId().toString();
+        return "redirect:/match/view/" + match.getId().toString();
     }
 
     @PreAuthorize("isAuthenticated()")

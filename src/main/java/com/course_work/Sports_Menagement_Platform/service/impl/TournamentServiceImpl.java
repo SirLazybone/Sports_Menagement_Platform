@@ -401,7 +401,7 @@ public class TournamentServiceImpl implements TournamentService {
 
         ratingLines.sort(Comparator
                 .comparing(RatingLineDTO::getPoints).reversed()
-                .thenComparing(RatingLineDTO::getDiffGoals).reversed()
+                .thenComparing(RatingLineDTO::getDiffGoals)
                 .thenComparing(RatingLineDTO::getScoredGoals));
 
         return ratingLines;
