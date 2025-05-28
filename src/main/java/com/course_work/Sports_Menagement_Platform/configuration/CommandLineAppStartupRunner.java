@@ -413,7 +413,7 @@ public class CommandLineAppStartupRunner implements CommandLineRunner {
                         .sport(sport)
                         .minMembers(minMembers)
                         .registerDeadline(futureDeadline)
-                        .description(descriptions[random.nextInt(descriptions.length)] + " (Предстоящий турнир)")
+                        .description(descriptions[random.nextInt(descriptions.length)])
                         .is_stopped(false)
                         .userOrgCom(organizer)
                         .city(cities.get(random.nextInt(cities.size())))

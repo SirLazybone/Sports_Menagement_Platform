@@ -99,7 +99,7 @@
                         <div>
                             <span class="badge bg-primary" th:text="'Релевантность: ' + ${#numbers.formatDecimal(rec.score * 100, 0, 0)} + '%'">Релевантность</span>
                         </div>
-                        <a th:href="@{/tournament/view/{id}(id=${rec.item_id)}" class="btn btn-outline-primary btn-sm">Подробнее</a>
+                        <a th:href="@{/tournament/view/{id}(id=${rec.itemId})}" class="btn btn-outline-primary btn-sm">Подробнее</a>
                     </div>
                 </div>
             </div>
